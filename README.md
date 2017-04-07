@@ -2,6 +2,6 @@
 
 ## now loadding!!
 
-## [MarioCash WIKI Open](wiki/home)
+## [MarioCash WIKI Open](https://github.com/zhihexireng/mariocash/wiki)
 
 [MarioCash Homepage](https://mariocash.io)
