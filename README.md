@@ -1,7 +1,15 @@
 # mariocash
+_We will change the world by blockchain._
 
-## now loadding!!
+## [MarioCash WIKI](https://github.com/zhihexireng/mariocash/wiki)
+* mariocash concept and description, 이그드라시 문서
 
-## [MarioCash WIKI Open](https://github.com/zhihexireng/mariocash/wiki)
+## [MarioCash Technical Document](docs)
+* 이그드라시 기술문서
 
 [MarioCash Homepage](https://mariocash.io)
+
+# [LICENSE](LICENSE)
+
+### Follow me if you can.
+ 
