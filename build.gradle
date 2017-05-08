@@ -22,7 +22,6 @@ sourceCompatibility = 1.8
 ext {
     grpcVersion = '1.11.0'
     leveldbVersion = '0.10'
-    commonsCodec = '1.10'
 }
 
 allprojects {
@@ -57,7 +56,6 @@ project(':mariocash-core') {
         compile "io.grpc:grpc-stub:${grpcVersion}"
         compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
         compile('org.lognet:grpc-spring-boot-starter:2.3.1')
-        compile "commons-codec:commons-codec:${commonsCodec}"
 
         testCompile "io.grpc:grpc-testing:${grpcVersion}"
     }
