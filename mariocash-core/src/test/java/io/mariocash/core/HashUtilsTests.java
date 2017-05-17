@@ -1,6 +1,5 @@
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.HashUtils;
 import org.junit.Test;
 
 import java.security.NoSuchAlgorithmException;
