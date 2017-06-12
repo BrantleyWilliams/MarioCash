@@ -86,3 +86,10 @@ project(':mariocash-core') {
         }
     }
 }
+
+project(':mariocash-node') {
+    dependencies {
+        compile project(':mariocash-core')
+        compile("org.springframework.boot:spring-boot-starter-web")
+    }
+}
