@@ -27,8 +27,4 @@ public class BlockGenerator {
     public Block generate(String data) {
         return generate(data, System.currentTimeMillis());
     }
-
-    public void init() {
-        this.previousBlock = null;
-    }
 }
