@@ -40,10 +40,6 @@ public class Transactions implements Serializable {
             tx.printTransaction();
         }
     }
-
-    public byte[] getMerkleRoot(Transactions txs) {
-        return "merkleroot1234567890123456789012".getBytes();
-    }
 }
 
 
