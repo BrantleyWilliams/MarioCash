@@ -1,6 +1,5 @@
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.blockchain.Blockchain;
 import dev.zhihexireng.crypto.Signature;
 import dev.zhihexireng.util.HashUtils;
 import dev.zhihexireng.util.SerializeUtils;
