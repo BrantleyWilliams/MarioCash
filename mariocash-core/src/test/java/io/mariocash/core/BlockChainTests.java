@@ -3,8 +3,6 @@ package dev.zhihexireng.core;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BlockChainTests {
@@ -16,7 +14,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void 가장_긴_체인_선택() throws IOException {
+    public void 가장_긴_체인_선택() {
         BlockChain blockChain = new BlockChain();
         Block b0 = blockGenerator.generate("0");
         Block b1 = blockGenerator.generate("1");
@@ -58,7 +56,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void hash로_블록_가져오기() throws IOException {
+    public void hash로_블록_가져오기() {
         Block b0 = blockGenerator.generate("0");
         Block b1 = blockGenerator.generate("1");
         Block b2 = blockGenerator.generate("2");
@@ -73,7 +71,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void Index로_블록_가져오기() throws IOException {
+    public void Index로_블록_가져오기() {
         Block b0 = blockGenerator.generate("0");
         Block b1 = blockGenerator.generate("1");
         Block b2 = blockGenerator.generate("2");
@@ -88,7 +86,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void 블록체인_검증() throws IOException {
+    public void 블록체인_검증() {
         BlockChain blockChain = new BlockChain();
         Block genesisBlock = blockGenerator.generate("0");
         blockChain.addBlock(genesisBlock);
@@ -109,7 +107,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void 블록체인_블록_추가시_검증() throws IOException {
+    public void 블록체인_블록_추가시_검증() {
         Block b1 = blockGenerator.generate("0");
         Block b2 = blockGenerator.generate("1");
         BlockChain blockChain = new BlockChain();
@@ -138,7 +136,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void 블록체인에_블록_추가() throws IOException {
+    public void 블록체인에_블록_추가() {
         Block genesisBlock = blockGenerator.generate("genesis");
         BlockChain blockChain = new BlockChain();
         blockChain.addBlock(genesisBlock);
