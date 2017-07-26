@@ -1,6 +1,8 @@
 package dev.zhihexireng.node;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.zhihexireng.core.BlockChain;
+import dev.zhihexireng.core.BlockGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +29,7 @@ public class BlockControllerTests {
     private MockMvc mockMvc;
 
     @Autowired
-    private BlockBuilder blockBuilder;
+    private BlockGenerator blockGenerator;
 
     @Autowired
     private BlockChain blockChain;
@@ -37,6 +39,8 @@ public class BlockControllerTests {
     @Before
     public void setUp() {
         JacksonTester.initFields(this, new ObjectMapper());
+        blockGenerator.init();
+        blockChain.clear();
     }
 
     @Test
@@ -83,7 +87,7 @@ public class BlockControllerTests {
     }
 
     @Test
-    public void 블록이_추가되어야_한다() throws Exception {
+    public void 블록_추가() throws Exception {
         mockMvc.perform(post("/blocks")
                 .contentType(MediaType.APPLICATION_JSON).content("dezang"))
                 .andDo(print())
