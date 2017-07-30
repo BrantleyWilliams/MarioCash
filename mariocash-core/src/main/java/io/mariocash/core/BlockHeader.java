@@ -5,15 +5,11 @@ import dev.zhihexireng.util.HashUtils;
 import dev.zhihexireng.util.SerializeUtils;
 import dev.zhihexireng.util.TimeUtils;
 import org.apache.commons.codec.binary.Hex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
 
 public class BlockHeader implements Serializable {
-    private static final Logger log = LoggerFactory.getLogger(BlockHeader.class);
-
 
     // <Variable>
     private byte version;
@@ -29,32 +25,18 @@ public class BlockHeader implements Serializable {
 
     // <Constructor>
 
-//    public BlockHeader(Account author, BlockChain bc, Transactions txs) throws IOException {
-//        // TODO Blockchain 제거
-//        this.version = 0x00;
-//        this.payload = new byte[7];
-//
-//        makeBlockHeader(author, bc, txs);
-//    }
+    public BlockHeader(Account author, BlockChain bc, Transactions txs) throws IOException {
+        this.version = 0x00;
+        this.payload = new byte[7];
+
+        makeBlockHeader(author, bc, txs);
+    }
 
     public BlockHeader(Account author, byte[] pre_block_hash, long index, Transactions txs) throws IOException {
         this.version = 0x00;
         this.payload = new byte[7];
 
         makeBlockHeader(author, pre_block_hash, index, txs);
-    }
-
-    public BlockHeader(Account author, BlockHeader prevBlockHeader, Transactions transactionList) throws IOException {
-        // TODO 정합성 검토
-        this.version = 0x00;
-        this.payload = new byte[7];
-        if(prevBlockHeader == null) {
-            // genensis block
-            makeBlockHeader(author, null, 0, transactionList);
-        }else{
-            makeBlockHeader(author, prevBlockHeader.getHash(), prevBlockHeader.getIndex()+1, transactionList);
-        }
-
     }
 
     // <Get_Set Method>
@@ -137,14 +119,12 @@ public class BlockHeader implements Serializable {
     public void makeBlockHeader(Account author, BlockChain bc, Transactions txs) throws IOException {
 
         // 1. set pre_block_info(index, pre_block_hash)
-        if(bc == null || bc.getPrevBlock() == null) {
-            // Genesys Block
+        if(bc == null || bc.getPreviousBlock() == null) {
             this.index = 0;
             this.pre_block_hash = null;
         } else {
-            log.debug(bc.getPrevBlock().getHeader().hashString());
-            this.index = bc.getPrevBlock().getHeader().getIndex() + 1;
-            this.pre_block_hash = bc.getPrevBlock().getHeader().getHash();
+            this.index = bc.getPreviousBlock().getHeader().getIndex() + 1;
+            this.pre_block_hash = bc.getPreviousBlock().getHeader().getHash();
         }
 
         // 2. set author
@@ -192,11 +172,6 @@ public class BlockHeader implements Serializable {
     public byte[] getHash() throws IOException {
         return HashUtils.sha256(SerializeUtils.serialize(this));
     }
-
-    public String hashString() throws IOException {
-        return Hex.encodeHexString(getHash());
-    }
-
 
     public void printBlockHeader() {
         System.out.println("<BlockHeader>");

@@ -21,7 +21,6 @@ public class Transactions implements Serializable {
 
     // generate Txs for testing
     public Transactions(String data) throws IOException {
-        // TODO 제거
         List<Transaction> txs_list;
         txs_list = new ArrayList<Transaction>();
         txs_list.add(new Transaction(data));

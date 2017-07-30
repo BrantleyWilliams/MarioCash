@@ -1,8 +1,6 @@
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockChain;
-import dev.zhihexireng.core.BlockGenerator;
+import dev.zhihexireng.node.mock.Block;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,18 +10,18 @@ import java.util.LinkedHashMap;
 @RestController
 @RequestMapping("blocks")
 class BlockController {
-    private final BlockGenerator blockGenerator;
+    private final BlockBuilder blockBuilder;
     private final BlockChain blockChain;
 
     @Autowired
-    public BlockController(BlockGenerator blockGenerator, BlockChain blockChain) {
-        this.blockGenerator = blockGenerator;
+    public BlockController(BlockBuilder blockBuilder, BlockChain blockChain) {
+        this.blockBuilder = blockBuilder;
         this.blockChain = blockChain;
     }
 
     @PostMapping
     public ResponseEntity add(@RequestBody String data) {
-        Block generatedBlock = blockGenerator.generate(data);
+        Block generatedBlock = blockBuilder.build(data);
         blockChain.addBlock(generatedBlock);
         return ResponseEntity.ok(generatedBlock);
     }

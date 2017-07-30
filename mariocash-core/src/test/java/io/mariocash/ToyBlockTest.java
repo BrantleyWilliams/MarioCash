@@ -2,20 +2,14 @@ package dev.zhihexireng;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.*;
-import dev.zhihexireng.core.exception.NotValidteException;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ToyBlockTest {
-
-    private static final Logger log = LoggerFactory.getLogger(TransactionTest.class);
 
     public Account from;
     public Account to;
@@ -59,31 +53,33 @@ public class ToyBlockTest {
     }
 
     @Test
-    public void TransactionGenTest() throws IOException, NotValidteException {
-        // 모든 테스트는 독립적으로 동작 해야 합니다
-        Transaction tx1 = new Transaction(from, from, new JsonObject());
-        Transaction tx2 = new Transaction(from, from, new JsonObject());
-        Transactions txList = new Transactions(Arrays.asList(new Transaction[]{tx1,tx2}));
-        int testBlock = 100;
+    public void TransactionGenTest() throws IOException {
+
+        this.tx1.printTransaction();
+
+        System.out.println();
+
+        this.tx2.printTransaction();
+
+        System.out.println();
+
+        this.txs.printTransactions();
+
+        System.out.println();
 
         // create blockchain with genesis block
-        bc = new BlockChain();
+        bc = new BlockChain(from);
+        bc.printBlockChain();
 
-        for(int i=0; i < testBlock; i++) {
+        for(int i=0; i < 100; i++) {
             // create next block
-            Block block = new Block(from, bc.getPrevBlock(), txList);
-            log.debug(""+block.getHeader().getIndex());
-            if(bc.getPrevBlock() != null) {
-                log.debug("chain prev block hash : "+bc.getPrevBlock().getHeader().hashString());
+            bk1 = new Block(from, bc, txs);
 
-            }
-
-            assert block.getHeader().getIndex() == i;
             // add next block in blockchain
-            bc.addBlock(block);
+            bc.add(bk1);
         }
 
-        assert bc.size() == testBlock;
+        this.bc.printBlockChain();
 
     }
 }
