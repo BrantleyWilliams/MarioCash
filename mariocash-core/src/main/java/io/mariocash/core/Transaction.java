@@ -17,10 +17,6 @@ public class Transaction implements Serializable {
 
 
     // Constructor
-    public Transaction() {
-
-    }
-
     public Transaction(Account from, Account to, JsonObject data) throws IOException {
         makeTransaction(from, to, data);
     }
