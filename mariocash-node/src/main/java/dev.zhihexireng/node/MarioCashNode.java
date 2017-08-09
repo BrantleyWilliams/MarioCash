@@ -1,7 +1,7 @@
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.node.mock.BlockBuilderMock;
-import dev.zhihexireng.node.mock.BlockChainMock;
+import dev.zhihexireng.core.BlockChain;
+import dev.zhihexireng.core.BlockGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -18,13 +18,13 @@ public class MarioCashNode {
     class NodeConfig {
 
         @Bean
-        BlockBuilder blockBuilder() {
-            return new BlockBuilderMock();
+        BlockGenerator blockGenerator() {
+            return new BlockGenerator();
         }
 
         @Bean
         BlockChain blockChain() {
-            return new BlockChainMock();
+            return new BlockChain();
         }
     }
 }
