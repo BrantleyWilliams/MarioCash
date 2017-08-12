@@ -14,21 +14,34 @@ import java.io.Serializable;
 public class BlockHeader implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(BlockHeader.class);
 
+
+    // <Variable>
     private byte version;
     private byte[] payload;
     private long index;
     private long timestamp;
-    private byte[] prevBlockHash;
+    private byte[] pre_block_hash;
     private byte[] author;
-    private byte[] merkleRoot;
+    private byte[] merkle_root;
     private long data_size;
     private byte[] signature;
 
-    public BlockHeader(Account author, byte[] prevBlockHash, long index, Transactions txs) throws IOException {
+
+    // <Constructor>
+
+//    public BlockHeader(Account author, BlockChain bc, Transactions txs) throws IOException {
+//        // TODO Blockchain 제거
+//        this.version = 0x00;
+//        this.payload = new byte[7];
+//
+//        makeBlockHeader(author, bc, txs);
+//    }
+
+    public BlockHeader(Account author, byte[] pre_block_hash, long index, Transactions txs) throws IOException {
         this.version = 0x00;
         this.payload = new byte[7];
 
-        makeBlockHeader(author, prevBlockHash, index, txs);
+        makeBlockHeader(author, pre_block_hash, index, txs);
     }
 
     public BlockHeader(Account author, BlockHeader prevBlockHeader, Transactions transactionList) throws IOException {
@@ -39,7 +52,7 @@ public class BlockHeader implements Serializable {
             // genensis block
             makeBlockHeader(author, null, 0, transactionList);
         }else{
-            makeBlockHeader(author, prevBlockHeader.getBlockHash(), prevBlockHeader.getIndex()+1, transactionList);
+            makeBlockHeader(author, prevBlockHeader.getHash(), prevBlockHeader.getIndex()+1, transactionList);
         }
 
     }
@@ -78,12 +91,12 @@ public class BlockHeader implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public byte[] getPrevBlockHash() {
-        return prevBlockHash;
+    public byte[] getPre_block_hash() {
+        return pre_block_hash;
     }
 
-    public void setPrevBlockHash(byte[] prevBlockHash) {
-        this.prevBlockHash = prevBlockHash;
+    public void setPre_block_hash(byte[] pre_block_hash) {
+        this.pre_block_hash = pre_block_hash;
     }
 
     public byte[] getAuthor() {
@@ -94,12 +107,12 @@ public class BlockHeader implements Serializable {
         this.author = author;
     }
 
-    public byte[] getMerkleRoot() {
-        return merkleRoot;
+    public byte[] getMerkle_root() {
+        return merkle_root;
     }
 
-    public void setMerkleRoot(byte[] merkleRoot) {
-        this.merkleRoot = merkleRoot;
+    public void setMerkle_root(byte[] merkle_root) {
+        this.merkle_root = merkle_root;
     }
 
     public long getData_size() {
@@ -123,26 +136,26 @@ public class BlockHeader implements Serializable {
 
     public void makeBlockHeader(Account author, BlockChain bc, Transactions txs) throws IOException {
 
-        // 1. set pre_block_info(index, prevBlockHash)
+        // 1. set pre_block_info(index, pre_block_hash)
         if(bc == null || bc.getPrevBlock() == null) {
             // Genesys Block
             this.index = 0;
-            this.prevBlockHash = null;
+            this.pre_block_hash = null;
         } else {
-            log.debug(bc.getPrevBlock().getBlockHash());
+            log.debug(bc.getPrevBlock().getHeader().hashString());
             this.index = bc.getPrevBlock().getHeader().getIndex() + 1;
-            this.prevBlockHash = bc.getPrevBlock().getHeader().getBlockHash();
+            this.pre_block_hash = bc.getPrevBlock().getHeader().getHash();
         }
 
         // 2. set author
         this.author = author.getKey().getPub_key();
 
-        // 3. set txs info (merkleRoot, data_size)
+        // 3. set txs info (merkle_root, data_size)
         if(txs == null) {
-            this.merkleRoot = null;
+            this.merkle_root = null;
             this.data_size = 0;
         } else {
-            this.merkleRoot = txs.getMerkleRoot();
+            this.merkle_root = txs.getMerkleRoot();
             this.data_size = txs.getSize();
         }
 
@@ -154,20 +167,20 @@ public class BlockHeader implements Serializable {
 
     public void makeBlockHeader(Account author, byte[] pre_block_hash, long index, Transactions txs) throws IOException {
 
-        // 1. set pre_block_info(index, prevBlockHash)
+        // 1. set pre_block_info(index, pre_block_hash)
         if(index == 0 && pre_block_hash == null) {
             this.index = 0;
-            this.prevBlockHash = null;
+            this.pre_block_hash = null;
         } else {
             this.index = index;
-            this.prevBlockHash = pre_block_hash;
+            this.pre_block_hash = pre_block_hash;
         }
 
         // 2. set author
         this.author = author.getKey().getPub_key();
 
-        // 3. set txs info (merkleRoot, data_size)
-        this.merkleRoot = null;
+        // 3. set txs info (merkle_root, data_size)
+        this.merkle_root = null;
         this.data_size = 0;
 
         // 4. set signature (with timestamp)
@@ -176,16 +189,12 @@ public class BlockHeader implements Serializable {
         this.signature = Signature.sign(author.getKey(), SerializeUtils.serialize(this));
     }
 
-    public byte[] getBlockHash() {
-        byte[] bytes = new byte[0];
+    public byte[] getHash() throws IOException {
+        return HashUtils.sha256(SerializeUtils.serialize(this));
+    }
 
-        try {
-            bytes = HashUtils.sha256(SerializeUtils.serialize(this));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return bytes;
+    public String hashString() throws IOException {
+        return Hex.encodeHexString(getHash());
     }
 
 
@@ -195,10 +204,12 @@ public class BlockHeader implements Serializable {
         if(this.payload != null) System.out.println("payload=" + Hex.encodeHexString(this.payload));
         System.out.println("index=" + this.index);
         System.out.println("timestamp=" + this.timestamp);
-        if(this.prevBlockHash != null) System.out.println("prevBlockHash="+Hex.encodeHexString(this.prevBlockHash));
+        if(this.pre_block_hash != null) System.out.println("pre_block_hash="+Hex.encodeHexString(this.pre_block_hash));
         if(this.author != null) System.out.println("author=" + Hex.encodeHexString(this.author));
-        if(this.merkleRoot != null) System.out.println("merkleRoot=" + Hex.encodeHexString(this.merkleRoot));
+        if(this.merkle_root != null) System.out.println("merkle_root=" + Hex.encodeHexString(this.merkle_root));
         System.out.println("data_size=" + this.data_size);
         if(this.signature != null) System.out.println("signature=" + Hex.encodeHexString(this.signature));
     }
+
+
 }
