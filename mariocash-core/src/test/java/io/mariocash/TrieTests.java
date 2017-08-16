@@ -3,6 +3,8 @@ package dev.zhihexireng;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.*;
 import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.trie.Trie;
+import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -13,9 +15,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ToyBlockTest {
-
-    private static final Logger log = LoggerFactory.getLogger(TransactionTest.class);
+public class TrieTests
+{
+    private static final Logger log = LoggerFactory.getLogger(Trie.class);
 
     public Account from;
     public Account to;
@@ -55,35 +57,22 @@ public class ToyBlockTest {
         txs_list = new ArrayList<Transaction>();
         txs_list.add(this.tx1);
         txs_list.add(this.tx2);
+        txs_list.add(this.tx1);
+        txs_list.add(this.tx1);
+        txs_list.add(this.tx1);
+        txs_list.add(this.tx2);
+        txs_list.add(this.tx2);
         this.txs = new Transactions(txs_list);
     }
 
     @Test
-    public void TransactionGenTest() throws IOException, NotValidteException {
-        // 모든 테스트는 독립적으로 동작 해야 합니다
-        Transaction tx1 = new Transaction(from, from, new JsonObject());
-        Transaction tx2 = new Transaction(from, from, new JsonObject());
-        Transactions txList = new Transactions(Arrays.asList(new Transaction[]{tx1,tx2}));
-        int testBlock = 100;
+    public void MerkleRootTest() throws IOException, NotValidteException {
 
-        // create blockchain with genesis block
-        bc = new BlockChain();
+        byte[] merkle_root;
 
-        for(int i=0; i < testBlock; i++) {
-            // create next block
-            Block block = new Block(from, bc.getPrevBlock(), txList);
-            log.debug(""+block.getHeader().getIndex());
-            if(bc.getPrevBlock() != null) {
-                log.debug("chain prev block hash : "+bc.getPrevBlock().getHeader().hashString());
+        merkle_root = Trie.getMerkleRoot(this.txs.getTxs());
 
-            }
-
-            assert block.getHeader().getIndex() == i;
-            // add next block in blockchain
-            bc.addBlock(block);
-        }
-
-        assert bc.size() == testBlock;
+        System.out.println("MerkelRoot="+ Hex.encodeHexString(merkle_root));
 
     }
 }
