@@ -1,7 +1,6 @@
 package dev.zhihexireng.trie;
 
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.Transactions;
 import dev.zhihexireng.util.HashUtils;
 
 import java.security.MessageDigest;
