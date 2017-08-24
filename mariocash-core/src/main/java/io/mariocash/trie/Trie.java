@@ -1,6 +1,7 @@
 package dev.zhihexireng.trie;
 
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.Transactions;
 import dev.zhihexireng.util.HashUtils;
 
 import java.security.MessageDigest;
@@ -13,6 +14,7 @@ public class Trie {
     public static byte[] getMerkleRoot(List<Transaction> txs) {
 
         ArrayList<byte[]> tree = new ArrayList<>();
+
         for (Transaction tx : txs) {
             tree.add(tx.getHash());
         }

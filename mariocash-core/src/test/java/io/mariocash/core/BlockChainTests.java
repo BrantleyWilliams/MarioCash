@@ -1,7 +1,11 @@
 package dev.zhihexireng.core;
 
+import com.google.gson.JsonObject;
 import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.proto.Blockchain;
+import dev.zhihexireng.util.HashUtils;
 import org.apache.commons.codec.binary.Hex;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +49,7 @@ public class BlockChainTests {
     public void 블록체인_블록_추가시_검증() throws IOException, NotValidteException {
         BlockChain blockChain = instantBlockchain();
         Account anotherAuth = new Account();
-        blockChain.addBlock(new Block(anotherAuth, blockChain.getPrevBlock(), new BlockBody(Arrays.asList())));
+        blockChain.addBlock(new Block(anotherAuth, blockChain.getPrevBlock(), new Transactions("6")));
         assertThat(blockChain.size()).isEqualTo(4);
     }
 
@@ -58,7 +62,7 @@ public class BlockChainTests {
         // create blockchain with genesis block
         for(int i=0; i < testBlock; i++) {
             // create next block
-            Block block = new Block(author, blockchain.getPrevBlock(), new BlockBody(Arrays.asList()));
+            Block block = new Block(author, blockchain.getPrevBlock(), new Transactions(""));
             log.debug(""+block.getHeader().getIndex());
             if(blockchain.getPrevBlock() != null) {
                 log.debug("chain prev block hash : "+blockchain.getPrevBlock().getPrevBlockHash());
@@ -76,11 +80,11 @@ public class BlockChainTests {
     private BlockChain instantBlockchain() throws IOException {
         Account author = new Account();
         BlockChain blockChain = new BlockChain();
-        Block b0 = new Block(author, null, new BlockBody(Arrays.asList()));
+        Block b0 = new Block(author, null, new Transactions("0"));
         try {
             blockChain.addBlock(b0);
-            blockChain.addBlock(new Block(author, blockChain.getPrevBlock(), new BlockBody(Arrays.asList())));
-            blockChain.addBlock(new Block(author, blockChain.getPrevBlock(), new BlockBody(Arrays.asList())));
+            blockChain.addBlock(new Block(author, blockChain.getPrevBlock(), new Transactions("1")));
+            blockChain.addBlock(new Block(author, blockChain.getPrevBlock(), new Transactions("2")));
         } catch (NotValidteException e) {
             e.printStackTrace();
             log.warn("invalid block....");
