@@ -1,11 +1,8 @@
 package dev.zhihexireng.util;
 
-
-import java.io.*;
-
 public class SerializeUtils {
 
-    public static byte[] serialize(Object obj) throws IOException {
+    public static byte[] serialize(Object obj) {
 
         return obj.toString().getBytes();
     }
