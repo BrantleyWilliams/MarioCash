@@ -1,5 +1,7 @@
 package dev.zhihexireng.util;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,4 +21,9 @@ public class HashUtils {
             throw new RuntimeException(e);
         }
     }
+
+    public static String hashString(String input) {
+        return Hex.encodeHexString(sha256(StringUtils.getBytesUtf8(input)));
+    }
+
 }

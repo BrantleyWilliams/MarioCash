@@ -20,13 +20,13 @@ public class BlockChain {
 
 
     // <Constructor>
-    public BlockChain() {
+    public BlockChain() throws IOException {
         this.packageInfo = new JsonObject();
         this.blocks = new HashMap<>();
     }
 
     // create blockchain & add genesis block
-    public BlockChain(JsonObject packageInfo) {
+    public BlockChain(JsonObject packageInfo) throws IOException {
         this.packageInfo = packageInfo;
         this.blocks = new HashMap<>();
     }
@@ -50,7 +50,7 @@ public class BlockChain {
 
     // <Method>
 
-    public void addBlock(Block nextBlock) throws NotValidteException {
+    public void addBlock(Block nextBlock) throws IOException, NotValidteException {
         if(isGenesisBlock(nextBlock)) {
                 this.genesisBlock = nextBlock;
         } else if(!isValidNewBlock(prevBlock, nextBlock)) {
@@ -60,23 +60,25 @@ public class BlockChain {
         // ADD List hash
         // TODO CHANGE DATABASE
         this.blocks.put(nextBlock.getBlockHash(), nextBlock);
-        this.blocks.put(nextBlock.getIndex(), nextBlock);
+        this.blocks.put(nextBlock.getHeader().getIndex(), nextBlock);
         this.prevBlock = nextBlock;
     }
 
     private boolean isGenesisBlock(Block newBlock) {
-        return genesisBlock == null && prevBlock == null && newBlock.getIndex() == 0;
+        return genesisBlock == null && prevBlock == null && newBlock.getHeader().getIndex() == 0;
     }
 
-    private boolean isValidNewBlock(Block prevBlock, Block nextBlock) {
+    private boolean isValidNewBlock(Block prevBlock, Block nextBlock) throws IOException {
         if (prevBlock == null) return true;
+        BlockHeader prevBlockHeader = prevBlock.getHeader();
+        BlockHeader nextBlockHeader = nextBlock.getHeader();
         log.debug(" prev : " + prevBlock.getBlockHash());
         log.debug(" new : " + nextBlock.getBlockHash());
 
-        if (prevBlock.getIndex() + 1 != nextBlock.getIndex()) {
-            log.warn("invalid index: prev:{} / new:{}", prevBlock.getIndex(), nextBlock.getIndex());
+        if (prevBlockHeader.getIndex() + 1 != nextBlockHeader.getIndex()) {
+            log.warn("invalid index: prev:{} / new:{}", prevBlockHeader.getIndex(), nextBlockHeader.getIndex());
             return false;
-        } else if (!prevBlock.getBlockHash().equals(nextBlock.getPrevBlockHash())) {
+        } else if (!Arrays.equals(prevBlockHeader.getBlockHash(), nextBlockHeader.getPrevBlockHash())) {
             log.warn("invalid previous hash");
             return false;
         }
@@ -95,10 +97,10 @@ public class BlockChain {
     public boolean isValidChain(BlockChain blockChain) throws IOException {
         if(blockChain.getPrevBlock() != null){
             Block block = blockChain.getPrevBlock(); // Get Last Block
-            while(block.getIndex() != 0L) {
-                block = blockChain.getBlockByHash(block.getPrevBlockHash());
+            while(block.getHeader().getIndex() != 0L) {
+                block = blockChain.getBlockByHash(Hex.encodeHexString(block.getHeader().getPrevBlockHash()));
             }
-            return block.getIndex() == 0L;
+            return block.getHeader().getIndex() == 0L;
         }
         return true;
     }
@@ -131,14 +133,18 @@ public class BlockChain {
         return (this.prevBlock == null);
     }
 
-    @Override
-    public String toString() {
-        return "BlockChain{" +
-                "genesisBlock=" + genesisBlock +
-                ", prevBlock=" + prevBlock +
-                ", blocks=" + blocks +
-                ", packageInfo=" + packageInfo +
-                '}';
+    public void printBlockChain() {
+        // TODO CHAINGE toString overwrite
+        System.out.println("BlockChain");
+        System.out.println("genesisBlock=");
+        this.genesisBlock.printBlock();
+        System.out.println("prevBlock=");
+        if(this.prevBlock != null) this.prevBlock.printBlock();
+
+        System.out.println("\nBlockChain");
+        for (Object key : this.blocks.keySet()) {
+            System.out.print("-"+this.blocks.get(key).getHeader().getIndex());
+        }
     }
 
     public void clear() {

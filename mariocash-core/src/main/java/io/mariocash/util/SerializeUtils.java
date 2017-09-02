@@ -1,8 +1,11 @@
 package dev.zhihexireng.util;
 
+
+import java.io.*;
+
 public class SerializeUtils {
 
-    public static byte[] serialize(Object obj) {
+    public static byte[] serialize(Object obj) throws IOException {
 
         return obj.toString().getBytes();
     }

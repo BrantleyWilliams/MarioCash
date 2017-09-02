@@ -6,10 +6,16 @@ import dev.zhihexireng.util.SerializeUtils;
 import dev.zhihexireng.util.TimeUtils;
 import org.apache.commons.codec.binary.Hex;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class TxHeader implements Serializable {
 
@@ -24,6 +30,10 @@ public class TxHeader implements Serializable {
     private byte[] txHash;
 
     // Constructor
+
+    public TxHeader() {
+    }
+
     public TxHeader(Account from, Account to, byte[] data_hash, long data_size) throws IOException {
         this.version  = 0x00;
         this.type = new byte[7];
@@ -35,6 +45,7 @@ public class TxHeader implements Serializable {
 
     // Method
     public void makeTxHeader(Account from, Account to, byte[] data_hash, long data_size) throws IOException {
+//        this.timestamp = TimeUtils.getCurrenttime();
         this.timestamp = TimeUtils.time();
         this.from = from.getKey().getPub_key();
         this.to = to.getKey().getPub_key();
@@ -46,13 +57,12 @@ public class TxHeader implements Serializable {
     }
 
     /**
-     * Make Transaction Hash
-     *
+     * Make Transction Hash
      * @throws IOException
      */
     private void makeTxHash() throws IOException {
-        // Transaction Merge Bytes
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        // Transction Merge Bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
 
         // Long Type to byte
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
@@ -85,9 +95,6 @@ public class TxHeader implements Serializable {
         return Hex.encodeHexString(this.txHash);
     }
 
-    public byte[] getFrom() {
-        return from;
-    }
 
     public void printTxHeader() {
         System.out.println("txHash=" + Hex.encodeHexString(this.txHash));
