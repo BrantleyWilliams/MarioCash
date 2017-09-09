@@ -12,9 +12,6 @@ public class Trie {
 
     public static byte[] getMerkleRoot(List<Transaction> txs) {
 
-        if(txs == null || txs.size() < 1)
-            return null;
-
         ArrayList<byte[]> tree = new ArrayList<>();
         for (Transaction tx : txs) {
             tree.add(tx.getHash());
