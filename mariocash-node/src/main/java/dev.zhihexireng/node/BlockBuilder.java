@@ -1,6 +1,6 @@
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.node.mock.Block;
+import dev.zhihexireng.core.Block;
 
 public interface BlockBuilder {
     Block build(String data);
