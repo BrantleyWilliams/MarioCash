@@ -32,8 +32,7 @@ public class Block implements Cloneable, Serializable {
     }
 
     public String getPrevBlockHash() {
-        return header.getPrevBlockHash() == null ? "" :
-                Hex.encodeHexString(header.getPrevBlockHash());
+        return Hex.encodeHexString(header.getPrevBlockHash());
     }
 
     byte[] getBlockByteHash() {
@@ -46,10 +45,6 @@ public class Block implements Cloneable, Serializable {
 
     public long nextIndex() {
         return header.getIndex() + 1;
-    }
-
-    public long getTimestamp() {
-        return header.getTimestamp();
     }
 
     public Object clone() throws CloneNotSupportedException {
