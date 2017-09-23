@@ -34,13 +34,12 @@ public class BlockBody implements Serializable {
         return this.txs.size(); // check byte
     }
 
-    public String toString() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("transactionList=>");
+    public void printTransactions() {
+        // TODO convert toString overwrite
+        System.out.println("TXs");
         for (Transaction tx : this.txs) {
-            buffer.append(tx.toString());
+            tx.printTransaction();
         }
-        return buffer.toString();
     }
 
 }

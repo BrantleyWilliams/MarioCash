@@ -20,8 +20,13 @@ public class TrieTests
     private static final Logger log = LoggerFactory.getLogger(Trie.class);
 
     public Account from;
+    public Account to;
     public Transaction tx1;
     public Transaction tx2;
+    public BlockChain bc;
+    public Block gbk;
+    public Block bk1;
+    public Block bk2;
 
     @Before
     public void setUp() throws Exception {
@@ -40,10 +45,11 @@ public class TrieTests
 
         // create account
         this.from = new Account();
+        this.to = new Account();
 
         // create sample tx
-        this.tx1 = new Transaction(from, data1);
-        this.tx2 = new Transaction(from, data2);
+        this.tx1 = new Transaction(from, to, data1);
+        this.tx2 = new Transaction(from, to, data2);
 
 
     }
@@ -93,6 +99,7 @@ public class TrieTests
         } else {
             System.out.println("MerkleRoot with tx 0 = null");
         }
+
 
         // 4. test with tx null
         merkle_root = Trie.getMerkleRoot(null);

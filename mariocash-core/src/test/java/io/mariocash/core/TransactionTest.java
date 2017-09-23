@@ -21,9 +21,10 @@ public class TransactionTest {
     @Test
     public void transactionTest() throws IOException {
         Account account1 = new Account();
+        Account account2 = new Account();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        Transaction t = new Transaction(account1, json);
+        Transaction t = new Transaction(account1, account2, json);
     }
 
     @Test
@@ -44,7 +45,7 @@ public class TransactionTest {
     public Transaction newTransaction() throws IOException {
         Account account = new Account();
         JsonObject json = new JsonObject();
-        return new Transaction(account, json);
+        return new Transaction(account, account, json);
     }
 
 
