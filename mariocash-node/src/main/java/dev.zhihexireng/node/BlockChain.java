@@ -1,6 +1,6 @@
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.node.mock.Block;
+import dev.zhihexireng.core.Block;
 
 import java.util.LinkedHashMap;
 
@@ -11,5 +11,5 @@ public interface BlockChain {
 
     Block getBlockByHash(String id);
 
-    LinkedHashMap<byte[],Block> getBlocks();
+    LinkedHashMap<byte[], Block> getBlocks();
 }
