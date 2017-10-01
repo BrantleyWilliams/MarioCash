@@ -1,6 +1,5 @@
 package dev.zhihexireng.node.mock;
 
-import dev.zhihexireng.core.Block;
 import dev.zhihexireng.node.BlockChain;
 
 import java.util.LinkedHashMap;
@@ -10,14 +9,13 @@ public class BlockChainMock implements BlockChain {
 
     @Override
     public Block addBlock(Block nextBlock) {
-        blocks.put(nextBlock.getBlockHash(), nextBlock);
-        blocks.put(String.valueOf(nextBlock.getIndex()), nextBlock);
+        blocks.put("Hash", nextBlock);
         return nextBlock;
     }
 
     @Override
     public Block getBlockByIndex(int index) {
-        return blocks.get(String.valueOf(index));
+        return new Block();
     }
 
     @Override

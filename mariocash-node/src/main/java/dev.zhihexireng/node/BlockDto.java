@@ -1,23 +1,11 @@
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockBody;
-
 public class BlockDto {
     private long index;
     private String hash;
     private String previousHash;
     private long timestamp;
-    private BlockBody body;
-
-    public static BlockDto createBy(Block block) {
-        BlockDto blockDto = new BlockDto();
-        blockDto.setIndex(block.getIndex());
-        blockDto.setHash(block.getBlockHash());
-        blockDto.setPreviousHash(block.getPrevBlockHash());
-        blockDto.setTimestamp(block.getTimestamp());
-        return blockDto;
-    }
+    private String data;
 
     public long getIndex() {
         return index;
@@ -51,11 +39,11 @@ public class BlockDto {
         this.timestamp = timestamp;
     }
 
-    public BlockBody getBody() {
-        return body;
+    public String getData() {
+        return data;
     }
 
-    public void setBody(BlockBody body) {
-        this.body = body;
+    public void setData(String data) {
+        this.data = data;
     }
 }

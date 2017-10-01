@@ -17,6 +17,11 @@ public class Transaction implements Serializable {
     private JsonObject data;
 
 
+    /**
+     * Transaction Constructor
+     * @param from account for creating transaction
+     * @param data transaction data(Json)
+     */
     public Transaction(Account from, JsonObject data) throws IOException {
         makeTransaction(from, data);
     }
@@ -36,27 +41,47 @@ public class Transaction implements Serializable {
 
     }
 
+    /**
+     * get transaction hash
+     * @return transaction hash
+     */
     public String getHashString() {
         return this.header.hashString();
     }
 
+    /**
+     * get transaction hash
+     * @return transaction hash
+     */
     public byte[] getHash() {
         return this.header.hash();
     }
 
+    /**
+     * get account for created tx
+     * @return transaction hash
+     */
     public String getFrom() {
         return Hex.encodeHexString(header.getFrom());
     }
 
+    /**
+     * get transaction data
+     * @return tx data
+     */
     public String getData() {
         return this.data.toString();
     }
 
-    @Override
+    /**
+     * print transaction
+     */
     public String toString() {
-        return "Transaction{" +
-                "header=" + header +
-                ", data=" + data +
-                '}';
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(this.header.toString());
+        buffer.append("transactionData=").append(this.data.toString());
+
+        return buffer.toString();
     }
+
 }

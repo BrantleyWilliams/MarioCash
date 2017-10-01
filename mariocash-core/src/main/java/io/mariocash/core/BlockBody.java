@@ -2,37 +2,42 @@ package dev.zhihexireng.core;
 
 import dev.zhihexireng.trie.Trie;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BlockBody implements Serializable {
 
-    private List<Transaction> transactionList;
+    // <Variable>
+    private List<Transaction> txs;
 
-    public BlockBody(List<Transaction> transactionList) {
-        this.transactionList = transactionList;
+    // Constructor
+    public BlockBody(List<Transaction> txs) {
+        this.txs = txs;
     }
 
-    public List<Transaction> getTransactionList() {
-        return transactionList;
+    // <Get_Set Method>
+    public List<Transaction> getTxs() {
+        return txs;
     }
 
-    public void setTransactionList(List<Transaction> transactionList) {
-        this.transactionList = transactionList;
+    public void setTxs(List<Transaction> txs) {
+        this.txs = txs;
     }
 
     public byte[] getMerkleRoot() {
-        return Trie.getMerkleRoot(this.transactionList);
+        return Trie.getMerkleRoot(this.txs);
     }
 
     public long getSize() {
-        return this.transactionList.size(); // check byte
+        return this.txs.size(); // check byte
     }
 
     public String toString() {
         StringBuffer buffer = new StringBuffer();
         buffer.append("transactionList=>");
-        for (Transaction tx : this.transactionList) {
+        for (Transaction tx : this.txs) {
             buffer.append(tx.toString());
         }
         return buffer.toString();

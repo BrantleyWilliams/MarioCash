@@ -1,6 +1,6 @@
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.core.Block;
+import dev.zhihexireng.node.mock.Block;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +20,10 @@ class BlockController {
     }
 
     @PostMapping
-    public ResponseEntity add() {
-        Block generatedBlock = blockBuilder.build("sample");
+    public ResponseEntity add(@RequestBody String data) {
+        Block generatedBlock = blockBuilder.build(data);
         blockChain.addBlock(generatedBlock);
-        return ResponseEntity.ok(BlockDto.createBy(generatedBlock));
+        return ResponseEntity.ok(generatedBlock);
     }
 
     @GetMapping("{id}")
@@ -38,7 +38,7 @@ class BlockController {
 
         if (foundBlock == null) return ResponseEntity.notFound().build();
 
-        return ResponseEntity.ok(BlockDto.createBy(foundBlock));
+        return ResponseEntity.ok(foundBlock);
     }
 
     @GetMapping

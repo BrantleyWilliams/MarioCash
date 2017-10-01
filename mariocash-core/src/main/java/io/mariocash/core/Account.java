@@ -1,63 +1,56 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.crypto.Key;
-import dev.zhihexireng.util.HashUtils;
 
 public class Account {
 
     // <Variable>
     private Key key;
-    private byte[] stateRoot;
-    private byte[] address;
+    private long balance;
+    private byte[] state_root;
 
-    /**
-     * Account Model
-     * @param key   Account Key
-     * @param stateRoot Account StateRoot
-     */
-    public Account(Key key, byte[] stateRoot) {
+    // <Constructor>
+    public Account(Key key, long balance, byte[] state_root) {
         this.key = key;
-        this.stateRoot = stateRoot;
+        this.balance = balance;
+        this.state_root = state_root;
     }
 
-    /**
-     * Account Model
-     */
     public Account() {
         generateAccount();
     }
 
-    /**
-     * get Account Key
-     * @return
-     */
+    // <Get_set method>
     public Key getKey() {
         return key;
     }
 
-    /**
-     * set Account Key
-     * @param key
-     */
     public void setKey(Key key) {
         this.key = key;
     }
 
-    public byte[] getStateRoot() {
-        return stateRoot;
+    public long getBalance() {
+        return balance;
     }
 
-    public void setStateRoot(byte[] stateRoot) {
-        this.stateRoot = stateRoot;
+    public void setBalance(long balance) {
+        this.balance = balance;
+    }
+
+    public byte[] getState_root() {
+        return state_root;
+    }
+
+    public void setState_root(byte[] state_root) {
+        this.state_root = state_root;
     }
 
     // <Method>
     public void generateAccount() {
         this.key = new Key();
-        this.stateRoot = new byte[32];
+        this.balance = 0;
+        this.state_root = new byte[32];
     }
 
-    public void generateAddress() {
-        this.address = HashUtils.sha256(this.getKey().getPublicKey());
-    }
+
 }
