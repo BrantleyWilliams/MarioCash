@@ -3,6 +3,9 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.crypto.Key;
 import dev.zhihexireng.util.HashUtils;
 
+/**
+ * Account Class
+ */
 public class Account {
 
     // <Variable>
@@ -10,18 +13,21 @@ public class Account {
     private byte[] stateRoot;
     private byte[] address;
 
+
     /**
-     * Account Model
-     * @param key   Account Key
-     * @param stateRoot Account StateRoot
+     * Account Constructor
+     * @param key account key
+     * @param balance account balance
+     * @param state_root account state_root
      */
-    public Account(Key key, byte[] stateRoot) {
+    public Account(Key key, long balance, byte[] state_root) {
         this.key = key;
         this.stateRoot = stateRoot;
     }
 
     /**
-     * Account Model
+     * Account Constructor
+     * - generate account with new key
      */
     public Account() {
         generateAccount();
