@@ -1,7 +1,6 @@
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.crypto.Signature;
-import dev.zhihexireng.util.HashUtils;
+import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.util.SerializeUtils;
 import dev.zhihexireng.util.TimeUtils;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ public class BlockHeader implements Serializable {
     }
 
     public byte[] getBlockHash() {
-        return HashUtils.sha256(SerializeUtils.serialize(this));
+        return HashUtil.sha256(SerializeUtils.serialize(this));
     }
     public byte[] getPrevBlockHash() {
         return prevBlockHash;
@@ -75,7 +74,7 @@ public class BlockHeader implements Serializable {
 
         public Builder account(Account account) {
             this.account = account;
-            this.author = account.getKey().getPublicKey();
+            this.author = account.getKey().getPubKey();
             return this;
         }
 
@@ -97,8 +96,7 @@ public class BlockHeader implements Serializable {
         }
 
         public BlockHeader build() {
-            this.signature = Signature.sign(
-                    this.account.getKey(), SerializeUtils.serialize(this));
+            this.signature = this.account.getKey().sign(HashUtil.sha256(SerializeUtils.serialize(this))).toByteArray();
             return new BlockHeader(this);
         }
     }

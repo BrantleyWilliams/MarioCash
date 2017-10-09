@@ -1,7 +1,7 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.util.HashUtils;
+import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.util.SerializeUtils;
 import org.apache.commons.codec.binary.Hex;
 
@@ -22,7 +22,7 @@ public class Transaction implements Serializable {
      * @param from account for creating transaction
      * @param data transaction data(Json)
      */
-    public Transaction(Account from, JsonObject data) throws IOException {
+    public Transaction(Account from, JsonObject data) {
         makeTransaction(from, data);
     }
 
@@ -34,7 +34,7 @@ public class Transaction implements Serializable {
         // 2. make header
         try {
             byte[] bin = SerializeUtils.serialize(data);
-            this.header = new TransactionHeader(from, HashUtils.sha256(bin), bin.length);
+            this.header = new TransactionHeader(from, HashUtil.sha256(bin), bin.length);
         } catch (IOException e) {
             e.printStackTrace(); // need to check error
         }
@@ -71,6 +71,14 @@ public class Transaction implements Serializable {
      */
     public String getData() {
         return this.data.toString();
+    }
+
+    /**
+     * get Transaction Header
+     * @return
+     */
+    public TransactionHeader getHeader() {
+        return header;
     }
 
     /**
