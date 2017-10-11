@@ -1,7 +1,7 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.crypto.HashUtil;
+import dev.zhihexireng.util.HashUtils;
 import dev.zhihexireng.util.SerializeUtils;
 import org.apache.commons.codec.binary.Hex;
 
@@ -19,10 +19,11 @@ public class Transaction implements Serializable {
 
     /**
      * Transaction Constructor
+     *
      * @param from account for creating transaction
      * @param data transaction data(Json)
      */
-    public Transaction(Account from, JsonObject data) {
+    public Transaction(Account from, JsonObject data) throws IOException {
         makeTransaction(from, data);
     }
 
@@ -34,7 +35,7 @@ public class Transaction implements Serializable {
         // 2. make header
         try {
             byte[] bin = SerializeUtils.serialize(data);
-            this.header = new TransactionHeader(from, HashUtil.sha256(bin), bin.length);
+            this.header = new TransactionHeader(from, HashUtils.sha256(bin), bin.length);
         } catch (IOException e) {
             e.printStackTrace(); // need to check error
         }
@@ -43,6 +44,7 @@ public class Transaction implements Serializable {
 
     /**
      * get transaction hash
+     *
      * @return transaction hash
      */
     public String getHashString() {
@@ -51,6 +53,7 @@ public class Transaction implements Serializable {
 
     /**
      * get transaction hash
+     *
      * @return transaction hash
      */
     public byte[] getHash() {
@@ -59,6 +62,7 @@ public class Transaction implements Serializable {
 
     /**
      * get account for created tx
+     *
      * @return transaction hash
      */
     public String getFrom() {
@@ -67,18 +71,11 @@ public class Transaction implements Serializable {
 
     /**
      * get transaction data
+     *
      * @return tx data
      */
     public String getData() {
         return this.data.toString();
-    }
-
-    /**
-     * get Transaction Header
-     * @return
-     */
-    public TransactionHeader getHeader() {
-        return header;
     }
 
     /**

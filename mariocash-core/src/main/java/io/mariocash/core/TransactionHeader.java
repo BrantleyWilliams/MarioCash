@@ -1,6 +1,7 @@
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.crypto.HashUtil;
+import dev.zhihexireng.crypto.Signature;
+import dev.zhihexireng.util.HashUtils;
 import dev.zhihexireng.util.TimeUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
@@ -25,28 +26,31 @@ public class TransactionHeader implements Serializable {
 
     /**
      * TransactionHeader Constructor
-     * @param from account for creating tx
+     *
+     * @param from     account for creating tx
      * @param dataHash data hash
      * @param dataSize data size
      * @throws IOException IOException
      */
     public TransactionHeader(Account from, byte[] dataHash, long dataSize) throws IOException {
-        this.version  = 0x00;
+        this.version = 0x00;
         this.type = new byte[7];
 
         makeTxHeader(from, dataHash, dataSize);
     }
 
+
     /**
-     * Transaction Header
-     * @param from
-     * @param dataHash
-     * @param dataSize
-     * @throws IOException
+     * Make tx header.
+     *
+     * @param from     the from
+     * @param dataHash the data hash
+     * @param dataSize the data size
+     * @throws IOException the io exception
      */
     public void makeTxHeader(Account from, byte[] dataHash, long dataSize) throws IOException {
         this.timestamp = TimeUtils.time();
-        this.from = from.getKey().getPubKey();
+        this.from = from.getKey().getPublicKey();
         this.dataHash = dataHash;
         this.dataSize = dataSize;
 
@@ -61,15 +65,10 @@ public class TransactionHeader implements Serializable {
         buffer.putLong(this.dataSize);
         transaction.write(buffer.array());
 
-        this.signature = from.getKey().sign(HashUtil.sha256(transaction.toByteArray())).toByteArray();
+        this.signature = Signature.sign(from.getKey(), transaction.toByteArray());
         makeTxHash();
     }
 
-    /**
-     * Make Transaction Hash
-     *
-     * @throws IOException
-     */
     private void makeTxHash() throws IOException {
         // Transaction Merge Bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -91,7 +90,7 @@ public class TransactionHeader implements Serializable {
 
         outputStream.write(signature);
 
-        this.transactionHash = HashUtil.sha256(outputStream.toByteArray());
+        this.transactionHash = HashUtils.sha256(outputStream.toByteArray());
     }
 
     public byte[] hash() {
@@ -106,22 +105,18 @@ public class TransactionHeader implements Serializable {
         return from;
     }
 
-    public byte[] getSignature() {
-        return signature;
-    }
-
     @Override
     public String toString() {
-        return "TransactionHeader{" +
-                "version=" + version +
-                ", type=" + Hex.encodeHexString(type) +
-                ", timestamp=" + timestamp +
-                ", from=" + Hex.encodeHexString(from) +
-                ", dataHash=" + Hex.encodeHexString(dataHash) +
-                ", dataSize=" + dataSize +
-                ", signature=" + Hex.encodeHexString(signature) +
-                ", transactionHash=" + Hex.encodeHexString(transactionHash) +
-                '}';
+        return "TransactionHeader{"
+                + "version=" + version
+                + ", type=" + Hex.encodeHexString(type)
+                + ", timestamp=" + timestamp
+                + ", from=" + Hex.encodeHexString(from)
+                + ", dataHash=" + Hex.encodeHexString(dataHash)
+                + ", dataSize=" + dataSize
+                + ", signature=" + Hex.encodeHexString(signature)
+                + ", transactionHash=" + Hex.encodeHexString(transactionHash)
+                + '}';
     }
 
 

@@ -1,53 +1,59 @@
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.crypto.ECKey;
-import dev.zhihexireng.crypto.HashUtil;
+import dev.zhihexireng.crypto.Key;
+import dev.zhihexireng.util.HashUtils;
 
-/**
- * Account Class
- */
 public class Account {
 
     // <Variable>
-    private ECKey key;
+    private Key key;
+    private byte[] stateRoot;
     private byte[] address;
 
 
     /**
-     * Account Constructor
-     * @param key account key
+     * Instantiates a new Account.
+     *
+     * @param key       the key
+     * @param balance   the balance
+     * @param stateRoot the state root
      */
-    public Account(ECKey key) {
+    public Account(Key key, long balance, byte[] stateRoot) {
         this.key = key;
-        this.address = key.getAddress();
+        this.stateRoot = this.stateRoot;
     }
 
     /**
-     * Account Constructor
+     * Account Constructor.
      * - generate account with new key
      */
     public Account() {
-        this.key = new ECKey();
-        this.address = this.key.getAddress();
+        generateAccount();
     }
 
-    /**
-     * get Account Key
-     * @return
-     */
-    public ECKey getKey() {
+    public Key getKey() {
         return key;
     }
 
-    /**
-     * get Account Address
-     * @return
-     */
-    public byte[] getAddress() {
-        return address;
+    public void setKey(Key key) {
+        this.key = key;
+    }
+
+    public byte[] getStateRoot() {
+        return stateRoot;
+    }
+
+    public void setStateRoot(byte[] stateRoot) {
+        this.stateRoot = stateRoot;
     }
 
     // <Method>
+    public void generateAccount() {
+        this.key = new Key();
+        this.stateRoot = new byte[32];
+    }
 
-
+    public void generateAddress() {
+        this.address = HashUtils.sha256(this.getKey().getPublicKey());
+    }
 }

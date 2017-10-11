@@ -3,7 +3,6 @@ package dev.zhihexireng.net;
 import io.grpc.stub.StreamObserver;
 import dev.zhihexireng.proto.Block;
 import dev.zhihexireng.proto.BlockServiceGrpc;
-import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
