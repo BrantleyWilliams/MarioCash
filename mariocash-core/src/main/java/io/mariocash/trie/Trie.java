@@ -1,8 +1,8 @@
 package dev.zhihexireng.trie;
 
 import dev.zhihexireng.core.Transaction;
-
 import dev.zhihexireng.crypto.HashUtil;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public class Trie {
             levelOffset += levelSize;
         }
 
-        return HashUtil.sha256(tree.get(tree.size()-1));
+        return HashUtil.sha256(tree.get(tree.size() - 1));
     }
 
     private static byte[] reverseBytes(byte[] bytes) {
