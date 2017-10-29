@@ -27,9 +27,11 @@ import java.util.concurrent.ConcurrentMap;
 @SpringBootTest
 public class CacheConfigurationTest {
 
-    private static final Logger log = LoggerFactory.getLogger(CacheConfigurationTest.class);
     @Autowired
     ApplicationContext applicationContext;
+
+    private static final Logger log = LoggerFactory.getLogger(CacheConfigurationTest.class);
+
     @Value("#{cacheManager.getCache('unconfirmTransaction')}")
     private ConcurrentMapCache uTx;
 

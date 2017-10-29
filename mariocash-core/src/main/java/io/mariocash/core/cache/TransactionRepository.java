@@ -7,9 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.stereotype.Repository;
 
-/**
- * The type Transaction repository.
- */
 @Repository("mariocash.transaction")
 public class TransactionRepository {
 
@@ -17,10 +14,9 @@ public class TransactionRepository {
     private ConcurrentMapCache transactionPool;
 
     /**
-     * Gets transaction.
-     *
-     * @param hash the hash
-     * @return the transaction
+     * get Transaction Cache
+     * @param hash
+     * @return
      */
     public Transaction getTransaction(byte[] hash) {
         // check Cache
@@ -33,11 +29,10 @@ public class TransactionRepository {
     }
 
     /**
-     * Gets transaction.
-     *
-     * @param hashString the hash string
-     * @return the transaction
-     * @throws DecoderException the decoder exception
+     * get Transaction By hashString from Transaction Cache
+     * @param hashString
+     * @return
+     * @throws DecoderException
      */
     public Transaction getTransaction(String hashString) throws DecoderException {
         byte[] hash = Hex.decodeHex(hashString.toCharArray());
@@ -51,10 +46,9 @@ public class TransactionRepository {
     }
 
     /**
-     * Add transaction int.
-     *
-     * @param transaction the transaction
-     * @return the int
+     * add Transaction to Transaction Cache
+     * @param transaction
+     * @return
      */
     public int addTransaction(Transaction transaction) {
         // FIXME get transaction hash value
@@ -65,6 +59,7 @@ public class TransactionRepository {
 
         return 0;
     }
+
 
 
 }

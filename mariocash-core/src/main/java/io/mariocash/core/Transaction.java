@@ -19,7 +19,6 @@ public class Transaction implements Serializable {
 
     /**
      * Transaction Constructor
-     *
      * @param from account for creating transaction
      * @param data transaction data(Json)
      */
@@ -44,7 +43,6 @@ public class Transaction implements Serializable {
 
     /**
      * get transaction hash
-     *
      * @return transaction hash
      */
     public String getHashString() {
@@ -53,7 +51,6 @@ public class Transaction implements Serializable {
 
     /**
      * get transaction hash
-     *
      * @return transaction hash
      */
     public byte[] getHash() {
@@ -62,7 +59,6 @@ public class Transaction implements Serializable {
 
     /**
      * get account for created tx
-     *
      * @return transaction hash
      */
     public String getFrom() {
@@ -71,7 +67,6 @@ public class Transaction implements Serializable {
 
     /**
      * get transaction data
-     *
      * @return tx data
      */
     public String getData() {

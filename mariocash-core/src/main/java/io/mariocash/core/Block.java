@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 
 public class Block implements Cloneable, Serializable {
-    private static final Logger log = LoggerFactory.getLogger(Block.class);
+    private final static Logger log = LoggerFactory.getLogger(Block.class);
 
     private final BlockHeader header;
     private final BlockBody data;
@@ -17,14 +17,6 @@ public class Block implements Cloneable, Serializable {
         this.data = data;
     }
 
-
-    /**
-     * Instantiates a new Block.
-     *
-     * @param author    the author
-     * @param prevBlock the prev block
-     * @param blockBody the block body
-     */
     public Block(Account author, Block prevBlock, BlockBody blockBody) {
         this.header = new BlockHeader.Builder()
                 .account(author)
@@ -66,9 +58,9 @@ public class Block implements Cloneable, Serializable {
 
     @Override
     public String toString() {
-        return "Block{"
-                + "header=" + header
-                + ", data=" + data
-                + '}';
+        return "Block{" +
+                "header=" + header +
+                ", data=" + data +
+                '}';
     }
 }

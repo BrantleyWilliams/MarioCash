@@ -9,11 +9,6 @@ public class BlockBody implements Serializable {
 
     private List<Transaction> transactionList;
 
-    /**
-     * Instantiates a new Block body.
-     *
-     * @param transactionList the transaction list
-     */
     public BlockBody(List<Transaction> transactionList) {
         this.transactionList = transactionList;
     }
@@ -34,7 +29,6 @@ public class BlockBody implements Serializable {
         return this.transactionList.size(); // check byte
     }
 
-    @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
         buffer.append("transactionList=>");
