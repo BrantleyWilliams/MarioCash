@@ -89,7 +89,7 @@ import java.util.Arrays;
 import javax.annotation.Nullable;
 import javax.crypto.KeyAgreement;
 
-import static dev.zhihexireng.util.BIUtil.isLessThan;
+import static dev.zhihexireng.util.BiUtil.isLessThan;
 import static dev.zhihexireng.util.ByteUtil.bigIntegerToBytes;
 
 /**
