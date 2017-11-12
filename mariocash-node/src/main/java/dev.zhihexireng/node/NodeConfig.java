@@ -18,6 +18,7 @@ package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.TransactionPool;
 import dev.zhihexireng.core.net.NodeSyncServer;
+import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.node.mock.BlockBuilderMock;
 import dev.zhihexireng.node.mock.BlockChainMock;
 import dev.zhihexireng.node.mock.TransactionPoolMock;
@@ -45,5 +46,10 @@ class NodeConfig {
     @Bean
     NodeSyncServer nodeSyncServer() {
         return new NodeSyncServer();
+    }
+
+    @Bean
+    PeerGroup peerGroup() {
+        return new PeerGroup();
     }
 }
