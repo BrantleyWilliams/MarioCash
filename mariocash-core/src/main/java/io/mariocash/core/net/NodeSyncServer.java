@@ -19,6 +19,8 @@ package dev.zhihexireng.core.net;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import dev.zhihexireng.proto.BlockChainGrpc;
+import dev.zhihexireng.proto.BlockChainOuterClass;
 import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
@@ -40,6 +42,7 @@ public class NodeSyncServer {
     public void start() throws IOException {
         server = ServerBuilder.forPort(port)
                 .addService(new PingPongImpl())
+                .addService(new BlockChainImpl())
                 .build()
                 .start();
         log.info("GRPC Server started, listening on " + port);
@@ -73,6 +76,29 @@ public class NodeSyncServer {
             Pong pong = Pong.newBuilder().setPong("Pong").build();
             responseObserver.onNext(pong);
             responseObserver.onCompleted();
+        }
+    }
+
+    static class BlockChainImpl extends BlockChainGrpc.BlockChainImplBase {
+        @Override
+        public StreamObserver<BlockChainOuterClass.Transaction> broadcast(
+                StreamObserver<BlockChainOuterClass.Transaction> responseObserver) {
+            return new StreamObserver<BlockChainOuterClass.Transaction>() {
+                @Override
+                public void onNext(BlockChainOuterClass.Transaction tx) {
+                    System.out.println(tx);
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    log.warn("broadcast cancelled");
+                }
+
+                @Override
+                public void onCompleted() {
+                    responseObserver.onCompleted();
+                }
+            };
         }
     }
 }
