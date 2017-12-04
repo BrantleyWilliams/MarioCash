@@ -15,7 +15,7 @@ public class BlockChainTests {
     private static final Logger log = LoggerFactory.getLogger(BlockChainTests.class);
 
     @Test
-    public void getBlockByHex() throws IOException {
+    public void hash로_블록_가져오기() throws IOException {
         BlockChain blockChain = instantBlockchain();
         Block b0 = blockChain.getGenesisBlock();
         String blockHash = b0.getBlockHash();
@@ -26,7 +26,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void getBlockByIndex() throws IOException {
+    public void Index로_블록_가져오기() throws IOException {
         BlockChain blockChain = instantBlockchain();
         Block prevBlock = blockChain.getPrevBlock();
         String hash = prevBlock.getPrevBlockHash();
@@ -36,7 +36,7 @@ public class BlockChainTests {
     }
 
     @Test
-    public void validateBlockchain() throws IOException {
+    public void 블록체인_검증() throws IOException {
         BlockChain blockChain = instantBlockchain();
         assertThat(blockChain.isValidChain()).isEqualTo(true);
     }
