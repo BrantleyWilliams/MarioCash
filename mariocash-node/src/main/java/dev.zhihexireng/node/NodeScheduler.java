@@ -16,17 +16,28 @@
 
 package dev.zhihexireng.node;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import dev.zhihexireng.core.net.NodeSyncClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 @Component
 class NodeScheduler {
-    @Autowired
-    MessageSender messageSender;
+    @Value("${grpc.port}")
+    private int grpcPort;
 
-    @Scheduled(fixedRate = 1000 * 60 * 5)
+    private NodeSyncClient nodeSyncClient;
+
+    @PostConstruct
+    public void init() {
+        int port = grpcPort == 9090 ? 9091 : 9090;
+        nodeSyncClient = new NodeSyncClient("localhost", port);
+    }
+
+    @Scheduled(fixedRate = 3000)
     public void ping() {
-        messageSender.ping();
+        nodeSyncClient.ping("ping");
     }
 }

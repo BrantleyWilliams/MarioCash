@@ -17,7 +17,6 @@
 package dev.zhihexireng.node;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.zhihexireng.core.net.PeerGroup;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,19 +44,15 @@ public class PeerControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private PeerGroup peerGroup;
-
     private JacksonTester<PeerDto> json;
 
     @Before
     public void setUp() {
         JacksonTester.initFields(this, new ObjectMapper());
-        peerGroup.clear();
     }
 
     @Test
-    public void shouldBeAddPeer() throws Exception {
+    public void 피어가_추가되어야_한다() throws Exception {
         requestPeerPost(new PeerDto("127.0.0.1", 8080))
                 .andDo(print())
                 .andExpect(jsonPath("$.host", equalTo("127.0.0.1")))
@@ -65,7 +60,7 @@ public class PeerControllerTest {
     }
 
     @Test
-    public void shouldBeGetPeers() throws Exception {
+    public void 피어목록이_조회되어야_한다() throws Exception {
         requestPeerPost(new PeerDto("127.0.0.1", 8080));
         requestPeerPost(new PeerDto("30.30.30.30", 8080));
 

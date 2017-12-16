@@ -22,8 +22,6 @@ class PeerDto {
     private String host;
     private int port;
 
-    PeerDto() {}
-
     PeerDto(String host, int port) {
         this.host = host;
         this.port = port;

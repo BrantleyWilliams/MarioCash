@@ -19,8 +19,6 @@ package dev.zhihexireng.core.net;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
-import dev.zhihexireng.proto.BlockChainGrpc;
-import dev.zhihexireng.proto.BlockChainOuterClass;
 import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
@@ -28,8 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class NodeSyncServer {
     private static final Logger log = LoggerFactory.getLogger(NodeSyncServer.class);
@@ -44,7 +40,6 @@ public class NodeSyncServer {
     public void start() throws IOException {
         server = ServerBuilder.forPort(port)
                 .addService(new PingPongImpl())
-                .addService(new BlockChainImpl())
                 .build()
                 .start();
         log.info("GRPC Server started, listening on " + port);
@@ -74,46 +69,10 @@ public class NodeSyncServer {
     static class PingPongImpl extends PingPongGrpc.PingPongImplBase {
         @Override
         public void play(Ping request, StreamObserver<Pong> responseObserver) {
-            log.debug(request.getPing());
+            System.out.println(request.getPing());
             Pong pong = Pong.newBuilder().setPong("Pong").build();
             responseObserver.onNext(pong);
             responseObserver.onCompleted();
-        }
-    }
-
-    static class BlockChainImpl extends BlockChainGrpc.BlockChainImplBase {
-        private static Set<StreamObserver<BlockChainOuterClass.Transaction>> observers =
-                ConcurrentHashMap.newKeySet();
-
-        @Override
-        public StreamObserver<BlockChainOuterClass.Transaction> broadcast(
-                StreamObserver<BlockChainOuterClass.Transaction> responseObserver) {
-
-            observers.add(responseObserver);
-
-            return new StreamObserver<BlockChainOuterClass.Transaction>() {
-                @Override
-                public void onNext(BlockChainOuterClass.Transaction tx) {
-                    log.debug("Received Tx: {}", tx);
-
-                    for (StreamObserver<BlockChainOuterClass.Transaction> observer : observers) {
-                        observer.onNext(tx);
-                    }
-                }
-
-                @Override
-                public void onError(Throwable t) {
-                    log.warn("Broadcasting Failed: {}", t);
-                    observers.remove(responseObserver);
-                    responseObserver.onError(t);
-                }
-
-                @Override
-                public void onCompleted() {
-                    observers.remove(responseObserver);
-                    responseObserver.onCompleted();
-                }
-            };
         }
     }
 }

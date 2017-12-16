@@ -29,8 +29,4 @@ public class PeerGroup {
     public List<Peer> getPeers() {
         return peers;
     }
-
-    public void clear() {
-        this.peers.clear();
-    }
 }
