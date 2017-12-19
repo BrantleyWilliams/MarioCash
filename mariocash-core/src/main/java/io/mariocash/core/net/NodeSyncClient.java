@@ -18,17 +18,24 @@ package dev.zhihexireng.core.net;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+import dev.zhihexireng.proto.BlockChainGrpc;
+import dev.zhihexireng.proto.BlockChainOuterClass;
 import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 public class NodeSyncClient {
     public static final Logger log = LoggerFactory.getLogger(NodeSyncClient.class);
 
     private final ManagedChannel channel;
     private final PingPongGrpc.PingPongBlockingStub blockingStub;
+    private final BlockChainGrpc.BlockChainStub asyncStub;
 
     public NodeSyncClient(String host, int port) {
         this(ManagedChannelBuilder.forAddress(host, port)
@@ -39,6 +46,11 @@ public class NodeSyncClient {
     NodeSyncClient(ManagedChannel channel) {
         this.channel = channel;
         blockingStub = PingPongGrpc.newBlockingStub(channel);
+        asyncStub = BlockChainGrpc.newStub(channel);
+    }
+
+    public void shutdown() throws InterruptedException {
+        this.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
     public void ping(String message) {
@@ -49,5 +61,33 @@ public class NodeSyncClient {
         } catch (Exception e) {
             System.out.println("retrying...");
         }
+    }
+
+    public void broadcast(BlockChainOuterClass.Transaction[] txs) {
+        log.info("*** Broadcasting...");
+        StreamObserver<BlockChainOuterClass.Transaction> requestObserver =
+                asyncStub.broadcast(new StreamObserver<BlockChainOuterClass.Transaction>() {
+                    @Override
+                    public void onNext(BlockChainOuterClass.Transaction tx) {
+                        log.info("Got transaction: {}", tx);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        log.warn("broadcast Failed: {}", Status.fromThrowable(t));
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        log.info("Finished Broadcasting");
+                    }
+                });
+
+        for (BlockChainOuterClass.Transaction tx : txs) {
+            System.out.println(tx);
+            requestObserver.onNext(tx);
+        }
+
+        requestObserver.onCompleted();
     }
 }
