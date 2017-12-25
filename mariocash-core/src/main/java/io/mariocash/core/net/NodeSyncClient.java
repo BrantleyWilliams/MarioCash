@@ -59,11 +59,11 @@ public class NodeSyncClient {
             Pong pong = blockingStub.play(request);
             log.debug(pong.getPong());
         } catch (Exception e) {
-            System.out.println("retrying...");
+            log.info("Ping retrying...");
         }
     }
 
-    public void broadcast(BlockChainOuterClass.Transaction[] txs) {
+    public void broadcast(BlockChainOuterClass.Transaction tx) {
         log.info("*** Broadcasting...");
         StreamObserver<BlockChainOuterClass.Transaction> requestObserver =
                 asyncStub.broadcast(new StreamObserver<BlockChainOuterClass.Transaction>() {
@@ -83,11 +83,8 @@ public class NodeSyncClient {
                     }
                 });
 
-        for (BlockChainOuterClass.Transaction tx : txs) {
-            System.out.println(tx);
-            requestObserver.onNext(tx);
-        }
-
+        log.trace("Sending Transaction: {}", tx);
+        requestObserver.onNext(tx);
         requestObserver.onCompleted();
     }
 }
