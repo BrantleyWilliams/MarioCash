@@ -28,17 +28,17 @@ public class NodeSyncDemoClient {
      * @param args the input arguments
      */
     public static void main(String[] args) throws InterruptedException {
-        NodeSyncClient client = new NodeSyncClient("127.0.0.1", 9090);
-        client.ping("Ping");
+        NodeSyncClient client = new NodeSyncClient("127.0.0.1", 8080);
+        client.ping("ping");
         client.broadcast(createTransactions());
-        client.blockUtilShutdown();
+        client.shutdown();
     }
 
     private static BlockChainOuterClass.Transaction[] createTransactions() {
         return new BlockChainOuterClass.Transaction[] {
-                BlockChainOuterClass.Transaction.newBuilder().setData("tx1").build(),
-                BlockChainOuterClass.Transaction.newBuilder().setData("tx2").build(),
-                BlockChainOuterClass.Transaction.newBuilder().setData("tx3").build()
-        };
+                    BlockChainOuterClass.Transaction.newBuilder().setData("tx1").build(),
+                    BlockChainOuterClass.Transaction.newBuilder().setData("tx2").build(),
+                    BlockChainOuterClass.Transaction.newBuilder().setData("tx3").build()
+            };
     }
 }

@@ -18,7 +18,6 @@ package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionPool;
-import dev.zhihexireng.node.MessageSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,9 +34,6 @@ import java.io.IOException;
 @RequestMapping("txs")
 public class TransactionController {
     private final TransactionPool txPool;
-
-    @Autowired
-    private MessageSender messageSender;
 
     @Autowired
     public TransactionController(TransactionPool txPool) {
@@ -66,11 +62,5 @@ public class TransactionController {
         }
 
         return ResponseEntity.ok(TransactionDto.createBy(tx));
-    }
-
-    @GetMapping("test")
-    public ResponseEntity test() {
-        messageSender.broadcast(null);
-        return ResponseEntity.ok("ok");
     }
 }
