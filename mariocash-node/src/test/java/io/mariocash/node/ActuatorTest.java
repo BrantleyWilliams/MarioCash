@@ -38,7 +38,7 @@ public class ActuatorTest {
     int randomServerPort;
 
     @Test
-    public void shouldCheckHealthOfNode() {
+    public void shouldBeCheckHealthOfNode() {
         ResponseEntity<String> entity = this.restTemplate.getForEntity(
                 "/actuator/health", String.class);
         assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
