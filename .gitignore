@@ -2,7 +2,6 @@
 build/
 out/
 !gradle/wrapper/gradle-wrapper.jar
-mariocash-core/resources/db
 
 ### STS ###
 .apt_generated
