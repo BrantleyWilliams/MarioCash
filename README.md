@@ -1,6 +1,7 @@
 # 이그드라시 - 블록체인 플랫폼
 
 [![Build Status](https://travis-ci.org/dezang/mariocash.svg?branch=develop)](https://travis-ci.org/dezang/mariocash)
+[![Coverage Status](https://coveralls.io/repos/github/dezang/mariocash/badge.svg?branch=develop)](https://coveralls.io/github/dezang/mariocash?branch=develop)
 
 - [ENGLISH](README-en.md)
 
