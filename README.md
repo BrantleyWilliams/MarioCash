@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dezang/mariocash.svg?branch=develop)](https://travis-ci.org/dezang/mariocash)
 [![Coverage Status](https://coveralls.io/repos/github/dezang/mariocash/badge.svg?branch=develop)](https://coveralls.io/github/dezang/mariocash?branch=develop)
+[![codecov](https://codecov.io/gh/dezang/mariocash/branch/develop/graph/badge.svg)](https://codecov.io/gh/dezang/mariocash)
 
 - [ENGLISH](README-en.md)
 
