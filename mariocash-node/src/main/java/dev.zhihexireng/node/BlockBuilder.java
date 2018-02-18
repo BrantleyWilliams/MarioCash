@@ -17,7 +17,8 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.Block;
+import java.io.IOException;
 
 public interface BlockBuilder {
-    Block build(String data);
+    Block build(String data) throws IOException;
 }

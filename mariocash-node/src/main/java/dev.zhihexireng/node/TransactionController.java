@@ -18,6 +18,7 @@ package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionPool;
+import java.security.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity add(@RequestBody TransactionDto request) {
+    public ResponseEntity add(@RequestBody TransactionDto request) throws SignatureException {
         try {
             Transaction tx = TransactionDto.of(request);
             Transaction addedTx = txPool.addTx(tx);
@@ -54,7 +55,7 @@ public class TransactionController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity get(@PathVariable String id) {
+    public ResponseEntity get(@PathVariable String id) throws IOException, SignatureException {
         Transaction tx = txPool.getTxByHash(id);
 
         if (tx == null) {

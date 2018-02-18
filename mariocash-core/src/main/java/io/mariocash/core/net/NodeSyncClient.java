@@ -49,16 +49,8 @@ public class NodeSyncClient {
         asyncStub = BlockChainGrpc.newStub(channel);
     }
 
-    public void stop() {
-        if (channel != null) {
-            channel.shutdown();
-        }
-    }
-
-    public void blockUtilShutdown() throws InterruptedException {
-        if (channel != null) {
-            channel.awaitTermination(5, TimeUnit.MINUTES);
-        }
+    public void shutdown() throws InterruptedException {
+        this.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
     public void ping(String message) {
@@ -67,7 +59,7 @@ public class NodeSyncClient {
             Pong pong = blockingStub.play(request);
             log.debug(pong.getPong());
         } catch (Exception e) {
-            log.info("Ping retrying...");
+            System.out.println("retrying...");
         }
     }
 
@@ -92,7 +84,7 @@ public class NodeSyncClient {
                 });
 
         for (BlockChainOuterClass.Transaction tx : txs) {
-            log.trace("Sending Transaction: {}", tx);
+            System.out.println(tx);
             requestObserver.onNext(tx);
         }
 

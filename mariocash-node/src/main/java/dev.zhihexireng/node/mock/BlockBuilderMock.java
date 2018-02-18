@@ -22,11 +22,12 @@ import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.node.BlockBuilder;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 public class BlockBuilderMock implements BlockBuilder {
     @Override
-    public Block build(String data) {
+    public Block build(String data) throws IOException {
         Account account = new Account();
         BlockBody blockBody = new BlockBody(Arrays.asList());
         BlockHeader blockHeader = new BlockHeader.Builder()

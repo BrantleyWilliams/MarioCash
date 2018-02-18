@@ -3,6 +3,7 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.util.SerializeUtils;
 import dev.zhihexireng.util.TimeUtils;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +140,7 @@ public class BlockHeader implements Serializable {
          * @param blockBody the block body
          * @return the builder
          */
-        public Builder blockBody(BlockBody blockBody) {
+        public Builder blockBody(BlockBody blockBody) throws IOException {
             this.merkleRoot = blockBody.getMerkleRoot();
             this.dataSize = blockBody.getSize();
             return this;
