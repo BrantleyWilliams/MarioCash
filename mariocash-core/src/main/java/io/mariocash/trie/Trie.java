@@ -4,7 +4,6 @@ package dev.zhihexireng.trie;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.crypto.HashUtil;
 
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ public class Trie {
    * @return byte[32] - merkle root value <br>
    * null - if txs is null or txs.size is smaller than 1
    */
-  public static byte[] getMerkleRoot(List<Transaction> txs) throws IOException {
+  public static byte[] getMerkleRoot(List<Transaction> txs) {
 
     if (txs == null || txs.size() < 1) {
       return null;

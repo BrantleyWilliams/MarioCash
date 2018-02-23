@@ -1,7 +1,5 @@
 package dev.zhihexireng.core.cache;
 
-import dev.zhihexireng.core.TransactionHeader;
-import dev.zhihexireng.util.ByteUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,15 +11,11 @@ import java.io.ObjectOutputStream;
 import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 import dev.zhihexireng.core.Transaction;
-import java.util.Arrays;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.stereotype.Repository;
 
@@ -30,8 +24,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository("mariocash.transaction")
 public class TransactionRepository {
-
-    private static final Logger log = LoggerFactory.getLogger(TransactionRepository.class);
 
     @Value("#{cacheManager.getCache('transactionPool')}")
     private ConcurrentMapCache transactionPool;
@@ -55,16 +47,13 @@ public class TransactionRepository {
      * @param hash the hash
      * @return the transaction
      */
-    public Transaction getTransaction(String hashString) throws DecoderException {
-
+    public Transaction getTransaction(byte[] hash) {
         // check Cache
-        Transaction tx = transactionPool.get(hashString, Transaction.class);
-        log.debug("get transaction hash : "+ hashString);
-
+        Transaction tx = transactionPool.get(hash, Transaction.class);
         if (tx == null) {
-            tx = loadTransactionIfExist(hashString);
+            tx = loadTransactionIfExist(hash);
             if (tx != null) {
-                transactionPool.putIfAbsent(hashString, tx);
+                transactionPool.putIfAbsent(hash, tx);
             }
         }
         return tx;
@@ -75,15 +64,24 @@ public class TransactionRepository {
     }
 
     /**
+     * Gets transaction.
+     *
+     * @param hashString the hash string
+     * @return the transaction
+     * @throws DecoderException the decoder exception
+     */
+    public Transaction getTransaction(String hashString) throws DecoderException {
+        byte[] hash = Hex.decodeHex(hashString.toCharArray());
+        return getTransaction(hash);
+    }
+
+    /**
      * Add transaction int.
      *
      * @param transaction the transaction
      */
-    public void addTransaction(Transaction transaction, boolean store) throws IOException {
-        this.transactionPool.putIfAbsent(transaction.getHashString(), transaction);
-        //todo: check from byte[] to object
-        log.debug("add transaction hash : " + transaction.getHashString());
-
+    public void addTransaction(Transaction transaction, boolean store) {
+        this.transactionPool.putIfAbsent(transaction.getHash(), transaction);
         if (store) {
             saveTransaction(transaction);
         }
@@ -117,16 +115,16 @@ public class TransactionRepository {
 
     /**
      * Load Transaction levelDb
-     * @param hashString transaction Hash
+     * @param hash transaction Hash
      * @return Transaction or null
      */
-    private Transaction loadTransactionIfExist(String hashString) throws DecoderException {
+    private Transaction loadTransactionIfExist(byte[] hash){
         Transaction transaction = null;
-        if (hashString == null) {
+        if (hash == null) {
             return null;
         }
         try {
-            byte[] transactionBytes = this.db.get(Hex.decodeHex(hashString.toCharArray()));
+            byte[] transactionBytes = this.db.get(hash);
             ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(transactionBytes));
             transaction = (Transaction)ois.readObject();
         } catch (IOException e) {

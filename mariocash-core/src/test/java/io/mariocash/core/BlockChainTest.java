@@ -51,11 +51,12 @@ public class BlockChainTest {
         Transaction tx = new Transaction(author, new JsonObject());
         BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
         BlockHeader.Builder builder = new BlockHeader.Builder()
+                .account(author)
                 .blockBody(sampleBody);
         BlockHeader blockHeader;
         for (int i = 0; i < testBlock; i++) {
             // create next block
-            blockHeader = builder.prevBlock(blockchain.getPrevBlock()).build(author);
+            blockHeader = builder.prevBlock(blockchain.getPrevBlock()).build();
             Block block = new Block(blockHeader, sampleBody);
             log.debug("" + block.getIndex());
 
@@ -78,9 +79,10 @@ public class BlockChainTest {
         BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader blockHeader = new BlockHeader.Builder()
+                .account(author)
                 .blockBody(sampleBody)
                 .prevBlock(null)
-                .build(author);
+                .build();
 
         Block b0 = new Block(blockHeader, sampleBody);
 
@@ -88,12 +90,14 @@ public class BlockChainTest {
             blockChain.addBlock(b0);
             blockChain.addBlock(
                     new Block(new BlockHeader.Builder()
+                            .account(author)
                             .prevBlock(blockChain.getPrevBlock())
-                            .blockBody(sampleBody).build(author), sampleBody));
+                            .blockBody(sampleBody).build(), sampleBody));
             blockChain.addBlock(
                     new Block(new BlockHeader.Builder()
+                            .account(author)
                             .prevBlock(blockChain.getPrevBlock())
-                            .blockBody(sampleBody).build(author), sampleBody));
+                            .blockBody(sampleBody).build(), sampleBody));
         } catch (NotValidteException e) {
             e.printStackTrace();
             log.warn("invalid block....");
