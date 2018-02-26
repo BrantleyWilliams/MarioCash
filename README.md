@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/zhihexireng/mariocash.svg?branch=develop)](https://travis-ci.org/zhihexireng/mariocash)
 [![Coverage Status](https://coveralls.io/repos/github/zhihexireng/mariocash/badge.svg?branch=develop)](https://coveralls.io/github/zhihexireng/mariocash?branch=develop)
-[![codecov](https://codecov.io/gh/zhihexireng/mariocash/branch/develop/graph/badge.svg)](https://codecov.io/gh/zhihexireng/mariocash)(https://codecov.io/gh/dezang/mariocash)
+[![codecov](https://codecov.io/gh/zhihexireng/mariocash/branch/develop/graph/badge.svg)](https://codecov.io/gh/zhihexireng/mariocash)
 
 - [ENGLISH](README-en.md)
 
