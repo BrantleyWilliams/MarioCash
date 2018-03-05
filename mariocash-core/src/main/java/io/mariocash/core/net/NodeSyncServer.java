@@ -20,7 +20,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import dev.zhihexireng.proto.BlockChainGrpc;
-import dev.zhihexireng.proto.BlockChainOuterClass;
+import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
@@ -82,21 +82,21 @@ public class NodeSyncServer {
     }
 
     static class BlockChainImpl extends BlockChainGrpc.BlockChainImplBase {
-        private static Set<StreamObserver<BlockChainOuterClass.Transaction>> observers =
+        private static Set<StreamObserver<BlockChainProto.Transaction>> observers =
                 ConcurrentHashMap.newKeySet();
 
         @Override
-        public StreamObserver<BlockChainOuterClass.Transaction> broadcast(
-                StreamObserver<BlockChainOuterClass.Transaction> responseObserver) {
+        public StreamObserver<BlockChainProto.Transaction> broadcast(
+                StreamObserver<BlockChainProto.Transaction> responseObserver) {
 
             observers.add(responseObserver);
 
-            return new StreamObserver<BlockChainOuterClass.Transaction>() {
+            return new StreamObserver<BlockChainProto.Transaction>() {
                 @Override
-                public void onNext(BlockChainOuterClass.Transaction tx) {
+                public void onNext(BlockChainProto.Transaction tx) {
                     log.debug("Received Tx: {}", tx);
 
-                    for (StreamObserver<BlockChainOuterClass.Transaction> observer : observers) {
+                    for (StreamObserver<BlockChainProto.Transaction> observer : observers) {
                         observer.onNext(tx);
                     }
                 }
