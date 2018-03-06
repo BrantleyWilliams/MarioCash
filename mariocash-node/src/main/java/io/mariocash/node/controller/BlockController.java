@@ -19,6 +19,7 @@ package dev.zhihexireng.node.controller;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.node.BlockBuilder;
 import dev.zhihexireng.node.BlockChain;
+import dev.zhihexireng.node.MessageSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,9 @@ import java.util.LinkedHashMap;
 class BlockController {
     private final BlockBuilder blockBuilder;
     private final BlockChain blockChain;
+
+    @Autowired
+    private MessageSender messageSender;
 
     @Autowired
     public BlockController(BlockBuilder blockBuilder, BlockChain blockChain) {
@@ -63,6 +67,12 @@ class BlockController {
         }
 
         return ResponseEntity.ok(BlockDto.createBy(foundBlock));
+    }
+
+    @GetMapping("test")
+    public ResponseEntity test() {
+        messageSender.broadcastBlock();
+        return ResponseEntity.ok("ok");
     }
 
     @GetMapping
