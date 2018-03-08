@@ -3,7 +3,6 @@ build/
 out/
 !gradle/wrapper/gradle-wrapper.jar
 mariocash-core/resources/db
-.coveralls.yml
 
 ### STS ###
 .apt_generated
