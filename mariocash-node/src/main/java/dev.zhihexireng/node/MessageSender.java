@@ -16,9 +16,10 @@
 
 package dev.zhihexireng.node;
 
+import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.net.NodeSyncClient;
-import dev.zhihexireng.proto.BlockChainOuterClass;
+import dev.zhihexireng.proto.BlockChainProto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -48,9 +49,13 @@ public class MessageSender implements DisposableBean {
         nodeSyncClient.ping("Ping");
     }
 
-    public void broadcast(Transaction tx) {
+    public void broadcastBlock() {
+        nodeSyncClient.broadcastBlock(createBlocks());
+    }
+
+    public void broadcastTransaction(Transaction tx) {
         log.trace("{}", tx);
-        nodeSyncClient.broadcast(createTransactions());
+        nodeSyncClient.broadcastTransaction(createTransactions());
     }
 
     @Override
@@ -58,11 +63,31 @@ public class MessageSender implements DisposableBean {
         nodeSyncClient.stop();
     }
 
-    private static BlockChainOuterClass.Transaction[] createTransactions() {
-        return new BlockChainOuterClass.Transaction[] {
-                BlockChainOuterClass.Transaction.newBuilder().setData("tx1").build(),
-                BlockChainOuterClass.Transaction.newBuilder().setData("tx2").build(),
-                BlockChainOuterClass.Transaction.newBuilder().setData("tx3").build()
+    private static BlockChainProto.Transaction[] createTransactions() {
+        return new BlockChainProto.Transaction[] {
+                BlockChainProto.Transaction.newBuilder().setData("tx1").build(),
+                BlockChainProto.Transaction.newBuilder().setData("tx2").build(),
+                BlockChainProto.Transaction.newBuilder().setData("tx3").build()
+        };
+    }
+
+    private static BlockChainProto.Block[] createBlocks() {
+        BlockChainProto.Transaction tx
+                = BlockChainProto.Transaction.newBuilder().setData("tx").build();
+        return new BlockChainProto.Block[] {
+                BlockChainProto.Block.newBuilder()
+                        .setHeader(BlockChainProto.BlockHeader.newBuilder().setAuthor(
+                                ByteString.copyFromUtf8("author1")))
+                        .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build(),
+                BlockChainProto.Block.newBuilder()
+                        .setHeader(BlockChainProto.BlockHeader.newBuilder().setAuthor(
+                                ByteString.copyFromUtf8("author2")))
+                        .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build(),
+                BlockChainProto.Block.newBuilder()
+                        .setHeader(BlockChainProto.BlockHeader.newBuilder().setAuthor(
+                                ByteString.copyFromUtf8("author3")))
+                        .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build()
+
         };
     }
 }
