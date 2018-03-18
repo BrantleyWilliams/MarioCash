@@ -19,6 +19,7 @@ package dev.zhihexireng.node.mock;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionPool;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class TransactionPoolMock implements TransactionPool {
     }
 
     @Override
-    public Transaction addTx(Transaction tx) {
+    public Transaction addTx(Transaction tx) throws IOException {
         txs.put(tx.getHashString(), tx);
         return tx;
     }
