@@ -18,6 +18,7 @@ package dev.zhihexireng.node;
 
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.TransactionPoolListener;
 import dev.zhihexireng.core.net.NodeSyncClient;
 import dev.zhihexireng.proto.BlockChainProto;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 
 @Service
-public class MessageSender implements DisposableBean {
+public class MessageSender implements DisposableBean, TransactionPoolListener {
     private static final Logger log = LoggerFactory.getLogger(MessageSender.class);
 
     @Value("${grpc.port}")
@@ -89,5 +90,10 @@ public class MessageSender implements DisposableBean {
                         .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build()
 
         };
+    }
+
+    @Override
+    public void newTransaction(Transaction tx) {
+        log.debug("New transaction={}", tx.getData());
     }
 }

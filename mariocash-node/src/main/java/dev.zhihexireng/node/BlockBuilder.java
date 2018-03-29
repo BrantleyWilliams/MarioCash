@@ -21,5 +21,4 @@ import java.io.IOException;
 
 public interface BlockBuilder {
     Block build(String data) throws IOException;
-    Block build() throws IOException;
 }

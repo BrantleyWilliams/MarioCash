@@ -18,6 +18,7 @@ package dev.zhihexireng.node.mock;
 
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionPool;
+import dev.zhihexireng.core.TransactionPoolListener;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 public class TransactionPoolMock implements TransactionPool {
     private Map<String, Transaction> txs = new HashMap<>();
+    private TransactionPoolListener listener;
 
     @Override
     public Transaction getTxByHash(String id) {
@@ -34,6 +36,15 @@ public class TransactionPoolMock implements TransactionPool {
     @Override
     public Transaction addTx(Transaction tx) throws IOException {
         txs.put(tx.getHashString(), tx);
+        if (listener != null) {
+            listener.newTransaction(tx);
+        }
         return tx;
     }
+
+    @Override
+    public void setListener(TransactionPoolListener listener) {
+        this.listener = listener;
+    }
+
 }
