@@ -37,12 +37,12 @@ import java.io.IOException;
 public class TransactionController {
     private final TransactionPool txPool;
 
+    @Autowired
     private MessageSender messageSender;
 
-    public TransactionController(TransactionPool txPool, MessageSender messageSender) {
+    @Autowired
+    public TransactionController(TransactionPool txPool) {
         this.txPool = txPool;
-        this.messageSender = messageSender;
-        this.txPool.setListener(messageSender);
     }
 
     @PostMapping
