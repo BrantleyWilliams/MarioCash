@@ -19,10 +19,14 @@ package dev.zhihexireng.node.mock;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.node.BlockChain;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class BlockChainMock implements BlockChain {
-    private LinkedHashMap<String, Block> blocks = new LinkedHashMap<>();
+    private Map<String, Block> blocks = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Override
     public Block addBlock(Block nextBlock) {
@@ -42,7 +46,11 @@ public class BlockChainMock implements BlockChain {
     }
 
     @Override
-    public LinkedHashMap<byte[], Block> getBlocks() {
-        return null;
+    public Set<Block> getBlocks() {
+        Set<Block> blockSet = new HashSet<>();
+        for (Block block : blocks.values()) {
+            blockSet.add(block);
+        }
+        return blockSet;
     }
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package dev.zhihexireng.node.controller;
+package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.Account;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.io.IOException;
+import java.util.Set;
 
-@RestController
-public class AccountController {
-    @PostMapping
-    public ResponseEntity create() {
-        Account account = new Account();
-        AccountDto response = AccountDto.createBy(account);
-        return ResponseEntity.ok(response);
-    }
+public interface NodeManager {
+
+    Transaction getTxByHash(String id);
+
+    Transaction addTransaction(Transaction tx) throws IOException;
+
+    Set<Block> getBlocks();
+
+    Block generateBlock() throws IOException;
+
+    Block getBlockByIndexOrHash(String indexOrHash);
 }

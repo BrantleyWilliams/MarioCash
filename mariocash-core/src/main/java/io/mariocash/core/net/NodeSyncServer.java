@@ -19,6 +19,8 @@ package dev.zhihexireng.core.net;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import dev.zhihexireng.core.NodeManager;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.proto.BlockChainGrpc;
 import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Ping;
@@ -36,6 +38,14 @@ public class NodeSyncServer {
 
     private Server server;
     private int port;
+    private static NodeManager nodeManager;
+
+    public NodeSyncServer() {
+    }
+
+    public NodeSyncServer(NodeManager nodeManager) {
+        this.nodeManager = nodeManager;
+    }
 
     public void setPort(int port) {
         this.port = port;
@@ -98,6 +108,18 @@ public class NodeSyncServer {
                 @Override
                 public void onNext(BlockChainProto.Transaction tx) {
                     log.debug("Received transaction: {}", tx);
+                    Transaction newTransaction = null;
+                    if (nodeManager != null) {
+                        try {
+                            newTransaction = nodeManager.addTransaction(Transaction.valueOf(tx));
+                        } catch (IOException e) {
+                            log.error(e.getMessage());
+                        }
+                        // ignore broadcast by other node's broadcast
+                        if (newTransaction == null) {
+                            return;
+                        }
+                    }
 
                     for (StreamObserver<BlockChainProto.Transaction> observer : txObservers) {
                         observer.onNext(tx);

@@ -17,6 +17,7 @@
 package dev.zhihexireng.node.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.node.BlockBuilder;
 import dev.zhihexireng.node.BlockChain;
 import dev.zhihexireng.node.TestConfig;
@@ -34,6 +35,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import javax.xml.soap.Node;
+
+import java.io.IOException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -50,16 +55,17 @@ public class BlockControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private BlockBuilder blockBuilder;
-
-    @Autowired
-    private BlockChain blockChain;
+    private NodeManager nodeManager;
 
     private JacksonTester<BlockDto> json;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         JacksonTester.initFields(this, new ObjectMapper());
+
+        TransactionDto dto = new TransactionDto();
+        dto.setData("Dezang");
+        nodeManager.addTransaction(TransactionDto.of(dto));
     }
 
     @Test

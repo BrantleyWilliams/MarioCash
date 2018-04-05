@@ -18,18 +18,21 @@ package dev.zhihexireng.node;
 
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.TransactionEventListener;
 import dev.zhihexireng.core.net.NodeSyncClient;
 import dev.zhihexireng.proto.BlockChainProto;
+import dev.zhihexireng.util.SerializeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
 
 @Service
-public class MessageSender implements DisposableBean {
+public class MessageSender implements DisposableBean, TransactionEventListener {
     private static final Logger log = LoggerFactory.getLogger(MessageSender.class);
 
     @Value("${grpc.port}")
@@ -53,41 +56,28 @@ public class MessageSender implements DisposableBean {
         nodeSyncClient.broadcastBlock(createBlocks());
     }
 
-    public void broadcastTransaction(Transaction tx) {
-        log.trace("{}", tx);
-        nodeSyncClient.broadcastTransaction(createTransactions());
-    }
-
     @Override
     public void destroy() {
         nodeSyncClient.stop();
     }
 
-    private static BlockChainProto.Transaction[] createTransactions() {
-        return new BlockChainProto.Transaction[] {
-                BlockChainProto.Transaction.newBuilder().setData("tx1").build(),
-                BlockChainProto.Transaction.newBuilder().setData("tx2").build(),
-                BlockChainProto.Transaction.newBuilder().setData("tx3").build()
-        };
-    }
-
     private static BlockChainProto.Block[] createBlocks() {
-        BlockChainProto.Transaction tx
-                = BlockChainProto.Transaction.newBuilder().setData("tx").build();
         return new BlockChainProto.Block[] {
                 BlockChainProto.Block.newBuilder()
                         .setHeader(BlockChainProto.BlockHeader.newBuilder().setAuthor(
-                                ByteString.copyFromUtf8("author1")))
-                        .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build(),
+                                ByteString.copyFromUtf8("author1"))).build(),
                 BlockChainProto.Block.newBuilder()
                         .setHeader(BlockChainProto.BlockHeader.newBuilder().setAuthor(
-                                ByteString.copyFromUtf8("author2")))
-                        .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build(),
+                                ByteString.copyFromUtf8("author2"))).build(),
                 BlockChainProto.Block.newBuilder()
                         .setHeader(BlockChainProto.BlockHeader.newBuilder().setAuthor(
-                                ByteString.copyFromUtf8("author3")))
-                        .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build()
-
+                                ByteString.copyFromUtf8("author3"))).build()
         };
+    }
+
+    @Override
+    public void newTransaction(Transaction tx) {
+        log.debug("New transaction={}", tx.getData());
+        nodeSyncClient.broadcastTransaction(new BlockChainProto.Transaction[] {Transaction.of(tx)});
     }
 }
