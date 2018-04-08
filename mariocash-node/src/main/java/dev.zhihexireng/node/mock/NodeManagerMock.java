@@ -17,21 +17,23 @@
 package dev.zhihexireng.node.mock;
 
 import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionPool;
+import dev.zhihexireng.core.exception.NotValidteException;
 import dev.zhihexireng.node.BlockBuilder;
-import dev.zhihexireng.node.BlockChain;
 import dev.zhihexireng.node.MessageSender;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 public class NodeManagerMock implements NodeManager {
 
     private final BlockBuilder blockBuilder = new BlockBuilderMock();
 
-    private final BlockChain blockChain = new BlockChainMock();
+    private final BlockChain blockChain = new BlockChain();
 
     private final TransactionPool transactionPool = new TransactionPoolMock();
 
@@ -51,12 +53,17 @@ public class NodeManagerMock implements NodeManager {
 
     @Override
     public Set<Block> getBlocks() {
-        return blockChain.getBlocks();
+        Set<Block> blockSet = new HashSet<>();
+        for (Block block : blockChain.getBlocks().values()) {
+            blockSet.add(block);
+        }
+        return blockSet;
     }
 
     @Override
-    public Block generateBlock() throws IOException {
-        Block block = blockBuilder.build(transactionPool.getTransactionList());
+    public Block addBlock() throws IOException, NotValidteException {
+        Block block =
+                blockBuilder.build(transactionPool.getTransactionList(), blockChain.getPrevBlock());
         blockChain.addBlock(block);
         return block;
     }
