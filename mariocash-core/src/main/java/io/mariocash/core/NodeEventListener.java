@@ -16,20 +16,8 @@
 
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.exception.NotValidteException;
+public interface NodeEventListener {
+    void newTransaction(Transaction tx);
 
-import java.io.IOException;
-import java.util.Set;
-
-public interface NodeManager {
-
-    Transaction addTransaction(Transaction tx) throws IOException;
-
-    Transaction getTxByHash(String id);
-
-    Block addBlock() throws IOException, NotValidteException;
-
-    Set<Block> getBlocks();
-
-    Block getBlockByIndexOrHash(String indexOrHash);
+    void newBlock(Block block);
 }
