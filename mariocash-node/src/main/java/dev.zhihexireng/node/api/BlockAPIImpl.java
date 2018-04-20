@@ -1,7 +1,7 @@
 package dev.zhihexireng.node.api;
 
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
-import dev.zhihexireng.core.Block;
+import dev.zhihexireng.node.mock.BlockMock;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

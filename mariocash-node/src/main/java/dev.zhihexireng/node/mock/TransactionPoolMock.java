@@ -17,41 +17,25 @@
 package dev.zhihexireng.node.mock;
 
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.format.TransactionFormat;
 import dev.zhihexireng.core.TransactionPool;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionPoolMock implements TransactionPool {
-    private final Map<String, Transaction> txs = new ConcurrentHashMap<>();
+    private Map<String, TransactionFormat> txs = new HashMap<>();
 
     @Override
-    public Transaction getTxByHash(String id) {
+    public TransactionFormat getTxByHash(String id) {
         return txs.get(id);
     }
 
     @Override
-    public Transaction addTx(Transaction tx) throws IOException {
-        if (txs.containsKey(tx.getHashString())) {
-            return null;
-        }
+    public TransactionFormat addTx(TransactionFormat tx) throws IOException {
+        System.out.println("TransactionPoolMock :: addTx : " + tx);
         txs.put(tx.getHashString(), tx);
         return tx;
     }
-
-    @Override
-    public List<Transaction> getTxList() {
-        return new ArrayList(txs.values());
-    }
-
-    @Override
-    public void removeTx(List<String> hashList) {
-        for (String id : hashList) {
-            txs.remove(id);
-        }
-    }
-
 }

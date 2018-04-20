@@ -1,14 +1,14 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.format.TransactionFormat;
 import dev.zhihexireng.crypto.HashUtil;
-import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.util.SerializeUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
 
-public class Transaction implements Serializable {
+public class Transaction implements Serializable,TransactionFormat {
 
     // Header
     private TransactionHeader header;
@@ -17,9 +17,6 @@ public class Transaction implements Serializable {
     // TODO Data Object re modelling
     private String data;
 
-    private Transaction(String data) {
-        this.data = data;
-    }
 
     /**
      * Transaction Constructor
@@ -77,20 +74,9 @@ public class Transaction implements Serializable {
     public String toString() {
         StringBuffer buffer = new StringBuffer();
         buffer.append(this.header.toString());
-        buffer.append("transactionData=").append(this.data);
+        buffer.append("transactionData=").append(this.data.toString());
 
         return buffer.toString();
     }
 
-    public static Transaction valueOf(BlockChainProto.Transaction protoTx) {
-        Transaction transaction = new Transaction(protoTx.getData());
-        transaction.header = TransactionHeader.valueOf(protoTx.getHeader());
-        return transaction;
-    }
-
-    public static BlockChainProto.Transaction of(Transaction tx) {
-        TransactionHeader header = tx.getHeader();
-        return BlockChainProto.Transaction.newBuilder().setData(tx.getData())
-                .setHeader(TransactionHeader.of(header)).build();
-    }
 }

@@ -17,11 +17,9 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.Transaction;
-
 import java.io.IOException;
-import java.util.List;
 
 public interface BlockBuilder {
-    Block build(List<Transaction> txList, Block prevBlock) throws IOException;
+    Block build(String data) throws IOException;
+    Block build() throws IOException;
 }
