@@ -16,9 +16,8 @@
 
 package dev.zhihexireng.node.mock;
 
-import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.format.TransactionFormat;
 import dev.zhihexireng.core.TransactionPool;
+import dev.zhihexireng.core.format.TransactionFormat;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -34,7 +33,6 @@ public class TransactionPoolMock implements TransactionPool {
 
     @Override
     public TransactionFormat addTx(TransactionFormat tx) throws IOException {
-        System.out.println("TransactionPoolMock :: addTx : " + tx);
         txs.put(tx.getHashString(), tx);
         return tx;
     }
