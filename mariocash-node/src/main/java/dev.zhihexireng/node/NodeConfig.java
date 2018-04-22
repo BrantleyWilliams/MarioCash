@@ -16,38 +16,16 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.core.TransactionPool;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.net.NodeSyncServer;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.node.mock.BlockBuilderMock;
-import dev.zhihexireng.node.mock.BlockChainMock;
-import dev.zhihexireng.node.mock.TransactionPoolMock;
+import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping;
 
 @Configuration
 class NodeConfig {
-
-    @Bean
-    BlockBuilder blockBuilder() {
-        return new BlockBuilderMock();
-    }
-
-    @Bean
-    BlockChain blockChain() {
-        return new BlockChainMock();
-    }
-
-    @Bean
-    TransactionPool transactionPool() {
-        return new TransactionPoolMock();
-    }
-
-    @Bean
-    NodeSyncServer nodeSyncServer() {
-        return new NodeSyncServer();
-    }
 
     @Bean
     PeerGroup peerGroup() {
@@ -57,6 +35,18 @@ class NodeConfig {
     @Bean
     MessageSender messageSender() {
         return new MessageSender();
+    }
+
+    @Bean
+    NodeManager nodeManager(MessageSender messageSender) {
+        NodeManager manager = new NodeManagerMock();
+        manager.setListener(messageSender);
+        return manager;
+    }
+
+    @Bean
+    NodeSyncServer nodeSyncServer(NodeManager nodeManager) {
+        return new NodeSyncServer(nodeManager);
     }
 
     @Bean

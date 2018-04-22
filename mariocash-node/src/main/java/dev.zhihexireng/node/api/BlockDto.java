@@ -3,6 +3,8 @@ package dev.zhihexireng.node.api;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 
+import java.io.IOException;
+
 public class BlockDto {
     private long index;
     private String hash;
@@ -10,7 +12,7 @@ public class BlockDto {
     private long timestamp;
     private BlockBody body;
 
-    public static BlockDto createBy(Block block) {
+    public static BlockDto createBy(Block block) throws IOException {
         BlockDto blockDto = new BlockDto();
         blockDto.setIndex(block.getIndex());
         blockDto.setHash(block.getBlockHash());
