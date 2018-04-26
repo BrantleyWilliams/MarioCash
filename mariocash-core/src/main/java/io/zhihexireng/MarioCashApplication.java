@@ -19,5 +19,4 @@ public class MarioCashApplication implements CommandLineRunner {
     }
 
 
-
 }
