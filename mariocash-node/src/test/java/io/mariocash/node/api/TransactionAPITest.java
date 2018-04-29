@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.node.mock.TransactionHeaderMock;
 import dev.zhihexireng.node.mock.TransactionMock;
 import dev.zhihexireng.node.mock.BlockMock;
@@ -25,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @Import(ApplicationConfig.class)
 public class TransactionAPITest {
-    private static final Logger log = LoggerFactory.getLogger(TransactionAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(TransactionApi.class);
 
     @Test
     public void createTransactionReceiptMock() throws IOException {
@@ -81,7 +80,7 @@ public class TransactionAPITest {
 
     @Test
     public void transactionAPIImplTest() throws Exception {
-        TransactionAPIImpl txapi = new TransactionAPIImpl();
+        TransactionApiImpl txapi = new TransactionApiImpl();
 
         String address = "0x407d73d8a49eeb85d32cf465507dd71d507100c1";
         String tag = "latest";
@@ -112,7 +111,7 @@ public class TransactionAPITest {
 
     @Test
     public void accountAPIImplTest() throws Exception {
-        AccountAPIImpl accapi = new AccountAPIImpl();
+        AccountApiImpl accapi = new AccountApiImpl();
         String account = accapi.createAccount();
         assertThat(account).isNotEmpty();
     }
