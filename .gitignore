@@ -2,7 +2,8 @@
 build/
 out/
 !gradle/wrapper/gradle-wrapper.jar
-mariocash-core/resources/db
+**/resources/db
+
 .coveralls.yml
 
 ### STS ###
