@@ -44,7 +44,7 @@ public class DefaultConfigTest {
     }
 
     /**
-     * This is the config test as java version.
+     * This is the config test as mariocash.conf.
      */
     @Test
     public void mariocashConfConfigTest() {
@@ -57,7 +57,7 @@ public class DefaultConfigTest {
     }
 
     /**
-     * This is the new config file test code.
+     * This is the new config file mariocash_sample.conf.
      * get system config, spring config, mariocash.conf & mariocash_sample.conf config.
      */
     @Test
