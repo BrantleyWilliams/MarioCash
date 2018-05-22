@@ -22,6 +22,8 @@ import io.grpc.stub.StreamObserver;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.mapper.BlockMapper;
+import dev.zhihexireng.core.mapper.TransactionMapper;
 import dev.zhihexireng.proto.BlockChainGrpc;
 import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Ping;
@@ -111,7 +113,9 @@ public class NodeSyncServer {
                     Transaction newTransaction = null;
                     if (nodeManager != null) {
                         try {
-                            newTransaction = nodeManager.addTransaction(Transaction.valueOf(tx));
+                            Transaction transaction
+                                    = TransactionMapper.protoTransactionToTransaction(tx);
+                            newTransaction = nodeManager.addTransaction(transaction);
                         } catch (IOException e) {
                             log.error(e.getMessage());
                         }
@@ -154,7 +158,7 @@ public class NodeSyncServer {
                     Block newBlock = null;
                     if (nodeManager != null) {
                         try {
-                            newBlock = nodeManager.addBlock(Block.valueOf(block));
+                            newBlock = nodeManager.addBlock(BlockMapper.protoBlockToBlock(block));
                         } catch (Exception e) {
                             log.error(e.getMessage());
                         }
