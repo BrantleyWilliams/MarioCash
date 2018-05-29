@@ -16,80 +16,29 @@
 
 package dev.zhihexireng.core.net;
 
-import com.google.gson.JsonObject;
+import com.google.protobuf.ByteString;
 import io.grpc.internal.testing.StreamRecorder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcServerRule;
-import dev.zhihexireng.core.Account;
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockBody;
-import dev.zhihexireng.core.BlockHeader;
-import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.mapper.BlockMapper;
-import dev.zhihexireng.core.mapper.TransactionMapper;
-import dev.zhihexireng.core.net.NodeSyncServer.BlockChainImpl;
-import dev.zhihexireng.core.net.NodeSyncServer.PingPongImpl;
 import dev.zhihexireng.proto.BlockChainGrpc;
 import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
 public class NodeSyncServerTest {
-
-    @Mock
-    private NodeManager nodeManagerMock;
 
     @Rule
     public final GrpcServerRule grpcServerRule = new GrpcServerRule().directExecutor();
 
-    private Transaction tx;
-    private Block block;
-
-    @Before
-    public void setUp() throws Exception {
-        grpcServerRule.getServiceRegistry().addService(new PingPongImpl());
-        grpcServerRule.getServiceRegistry().addService(new BlockChainImpl(nodeManagerMock));
-
-        Account account = new Account();
-        JsonObject json = new JsonObject();
-        json.addProperty("data", "TEST");
-        this.tx = new Transaction(account, json);
-        when(nodeManagerMock.addTransaction(any())).thenReturn(tx);
-
-        BlockBody body = new BlockBody(Arrays.asList(new Transaction[] {tx}));
-
-        BlockHeader header = new BlockHeader.Builder()
-                .blockBody(body)
-                .prevBlock(null)
-                .build(account);
-        this.block = new Block(header, body);
-        when(nodeManagerMock.addBlock(any())).thenReturn(block);
-
-        Set<Block> blocks = new HashSet<>();
-        blocks.add(block);
-        when(nodeManagerMock.getBlocks()).thenReturn(blocks);
-    }
-
     @Test
     public void play() {
+        grpcServerRule.getServiceRegistry().addService(new NodeSyncServer.PingPongImpl());
+
         PingPongGrpc.PingPongBlockingStub blockingStub = PingPongGrpc.newBlockingStub
                 (grpcServerRule.getChannel());
 
@@ -98,42 +47,47 @@ public class NodeSyncServerTest {
     }
 
     @Test
-    public void syncBlock() {
-        BlockChainGrpc.BlockChainBlockingStub blockingStub
-                = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
-        BlockChainProto.SyncLimit syncLimit
-                = BlockChainProto.SyncLimit.newBuilder().setOffset(0).build();
-        BlockChainProto.BlockList list = blockingStub.syncBlock(syncLimit);
-        assertTrue(list.getBlocksList().size() == 1);
-    }
-
-    @Test
     public void broadcastTransaction() throws Exception {
+        grpcServerRule.getServiceRegistry().addService(new NodeSyncServer.BlockChainImpl());
         BlockChainGrpc.BlockChainStub stub = BlockChainGrpc.newStub(grpcServerRule.getChannel());
         StreamRecorder<BlockChainProto.Transaction> responseObserver = StreamRecorder.create();
         StreamObserver<BlockChainProto.Transaction> requestObserver
                 = stub.broadcastTransaction(responseObserver);
 
-        BlockChainProto.Transaction request = TransactionMapper.transactionToProtoTransaction(tx);
-        requestObserver.onNext(request);
+        for (int i = 1; i <= 3; i++) {
+            BlockChainProto.Transaction request
+                    = BlockChainProto.Transaction.newBuilder()
+                    .setData("tx" + i).build();
+            requestObserver.onNext(request);
+        }
         requestObserver.onCompleted();
 
         BlockChainProto.Transaction firstTxResponse = responseObserver.firstValue().get();
-        assertEquals("{\"data\":\"TEST\"}", firstTxResponse.getData());
+        assertEquals("tx1", firstTxResponse.getData());
     }
 
     @Test
     public void broadcastBlock() throws Exception {
+        grpcServerRule.getServiceRegistry().addService(new NodeSyncServer.BlockChainImpl());
         BlockChainGrpc.BlockChainStub stub = BlockChainGrpc.newStub(grpcServerRule.getChannel());
         StreamRecorder<BlockChainProto.Block> responseObserver = StreamRecorder.create();
         StreamObserver<BlockChainProto.Block> requestObserver
                 = stub.broadcastBlock(responseObserver);
 
-        requestObserver.onNext(BlockMapper.blockToProtoBlock(block));
+        for (int i = 1; i <= 3; i++) {
+            BlockChainProto.Transaction tx
+                    = BlockChainProto.Transaction.newBuilder()
+                    .setData("tx").build();
+            BlockChainProto.Block block = BlockChainProto.Block.newBuilder()
+                    .setHeader(BlockChainProto.BlockHeader.newBuilder().setAuthor(
+                            ByteString.copyFromUtf8("author" + i)))
+                    .setData(BlockChainProto.BlockBody.newBuilder().addTrasactions(tx)).build();
+            requestObserver.onNext(block);
+        }
         requestObserver.onCompleted();
 
-        BlockChainProto.Block firstResponse = responseObserver.firstValue().get();
-        assertEquals(block.getHeader().getTimestamp(), firstResponse.getHeader().getTimestamp());
-        assertEquals("{\"data\":\"TEST\"}", firstResponse.getData().getTrasactions(0).getData());
+        BlockChainProto.Block firstBlockResponse = responseObserver.firstValue().get();
+        assertEquals("author1", firstBlockResponse.getHeader().getAuthor().toStringUtf8());
+        assertEquals("tx", firstBlockResponse.getData().getTrasactions(0).getData());
     }
 }

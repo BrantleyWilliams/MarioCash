@@ -1,8 +1,10 @@
 package dev.zhihexireng.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.protobuf.ByteString;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
+import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.TimeUtils;
 import org.apache.commons.codec.binary.Hex;
@@ -26,22 +28,7 @@ public class TransactionHeader implements Serializable {
     private long dataSize;
     private byte[] signature;
 
-    /**
-     * TransactionHeader Constructor.
-     *
-     * @param dataHash data hash
-     * @param dataSize data size
-     * @throws IOException IOException
-     */
-    public TransactionHeader(byte[] dataHash, long dataSize) throws IOException {
-        if (dataHash == null) {
-            throw new IOException("dataHash is not valid");
-        }
-
-        if (dataSize <= 0) {
-            throw new IOException("dataSize is not valid");
-        }
-
+    private TransactionHeader(byte[] dataHash, long dataSize) {
         this.type = new byte[4];
         this.version = new byte[4];
         this.dataHash = dataHash;
@@ -57,38 +44,44 @@ public class TransactionHeader implements Serializable {
      * @throws IOException IOException
      */
     public TransactionHeader(Account from, byte[] dataHash, long dataSize) throws IOException {
-        this(dataHash, dataSize);
-
         if (from == null || from.getKey().getPrivKeyBytes() == null) {
             throw new IOException("Account from is not valid");
         }
 
+        if (dataHash == null) {
+            throw new IOException("dataHash is not valid");
+        }
+
+        if (dataSize <= 0) {
+            throw new IOException("dataSize is not valid");
+        }
+
+        this.type = new byte[4];
+        this.version = new byte[4];
+        this.dataHash = dataHash;
         this.timestamp = TimeUtils.time();
+        this.dataSize = dataSize;
         this.signature = from.getKey().sign(getSignDataHash()).toBinary();
     }
 
-    public byte[] getType() {
-        return type;
+    public static TransactionHeader valueOf(BlockChainProto.TransactionHeader txHeader) {
+
+        TransactionHeader header = new TransactionHeader(txHeader.getDataHash().toByteArray(),
+                txHeader.getDataSize());
+        header.timestamp = txHeader.getTimestamp();
+        header.signature = txHeader.getSignature().toByteArray();
+        return header;
     }
 
-    public byte[] getVersion() {
-        return version;
+    public static BlockChainProto.TransactionHeader of(TransactionHeader header) {
+        return BlockChainProto.TransactionHeader.newBuilder()
+                .setType(toByteString(header.type)).setVersion(toByteString(header.version))
+                .setDataHash(toByteString(header.dataHash)).setTimestamp(header.timestamp)
+                .setDataSize(header.dataSize).setSignature(toByteString(header.signature)).build();
     }
 
-    public byte[] getDataHash() {
-        return dataHash;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public long getDataSize() {
-        return dataSize;
+    private static ByteString toByteString(byte[] bytes) {
+        return ByteString.copyFrom(bytes);
     }
 
     /**
@@ -117,10 +110,6 @@ public class TransactionHeader implements Serializable {
      */
     public String getHashString() throws IOException {
         return Hex.encodeHexString(this.getHash());
-    }
-
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
     }
 
     /**

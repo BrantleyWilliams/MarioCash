@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BlockBuilderMock implements BlockBuilder {
-
     @Override
     public Block build(List<Transaction> txList, Block prevBlock) throws IOException {
         Account account = new Account();
