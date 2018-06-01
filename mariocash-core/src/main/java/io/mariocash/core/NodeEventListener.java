@@ -16,8 +16,15 @@
 
 package dev.zhihexireng.core;
 
+import java.io.IOException;
+import java.util.List;
+
 public interface NodeEventListener {
     void newTransaction(Transaction tx);
 
     void newBlock(Block block);
+
+    List<Block> syncBlock(long offset) throws IOException;
+
+    List<Transaction> syncTransaction() throws IOException;
 }

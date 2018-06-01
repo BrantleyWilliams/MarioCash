@@ -1,46 +1,53 @@
 package dev.zhihexireng.core.cache;
 
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.datasource.LevelDbDataSource;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.stereotype.Repository;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.util.Objects;
+
+import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 /**
  * The type Transaction repository.
  */
 @Repository("mariocash.transaction")
 public class TransactionRepository {
-    private final LevelDbDataSource db;
 
     private static final Logger log = LoggerFactory.getLogger(TransactionRepository.class);
-
+    DB db = null;
     @Value("#{cacheManager.getCache('transactionPool')}")
     private ConcurrentMapCache transactionPool;
 
-    @Autowired
-    public TransactionRepository(LevelDbDataSource db) {
-        this.db = db;
-        this.db.init();
+    public TransactionRepository() {
+        // make database
+        Options options = new Options();
+        options.createIfMissing(true);
+        try {
+            // TODO resource path set by profile or setting file
+            this.db = factory.open(new File("resources/db/transaction"), options);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * Gets transaction.
      *
-     * @param hashString the hash
+     * @param hash the hash
      * @return the transaction
      */
     public Transaction getTransaction(String hashString) throws DecoderException {
@@ -96,8 +103,8 @@ public class TransactionRepository {
             e.printStackTrace();
         } finally {
             try {
-                Objects.requireNonNull(bos).close();
-                Objects.requireNonNull(out).close();
+                bos.close();
+                out.close();
             } catch (IOException ex) {
                 // ignore close exception
             }
@@ -120,7 +127,9 @@ public class TransactionRepository {
             ObjectInputStream ois = new ObjectInputStream(
                     new ByteArrayInputStream(transactionBytes));
             transaction = (Transaction) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (NullPointerException e) {
             // pass
