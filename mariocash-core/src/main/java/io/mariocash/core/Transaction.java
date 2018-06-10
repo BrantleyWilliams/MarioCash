@@ -1,9 +1,9 @@
 package dev.zhihexireng.core;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.format.TransactionFormat;
 import dev.zhihexireng.crypto.HashUtil;
+import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.util.SerializeUtils;
 
 import java.io.IOException;
@@ -18,15 +18,8 @@ public class Transaction implements Serializable, TransactionFormat {
     // TODO Data Object re modelling
     private String data;
 
-    /**
-     * Transaction Constructor
-     *
-     * @param header transaction header
-     * @param data transaction data
-     */
-    public Transaction(TransactionHeader header, String data) {
+    private Transaction(String data) {
         this.data = data;
-        this.header = header;
     }
 
     /**
@@ -44,12 +37,23 @@ public class Transaction implements Serializable, TransactionFormat {
         this.header = new TransactionHeader(from, HashUtil.sha256(bin), bin.length);
     }
 
+    public static Transaction valueOf(BlockChainProto.Transaction protoTx) {
+        Transaction transaction = new Transaction(protoTx.getData());
+        transaction.header = TransactionHeader.valueOf(protoTx.getHeader());
+        return transaction;
+    }
+
+    public static BlockChainProto.Transaction of(Transaction tx) {
+        TransactionHeader header = tx.getHeader();
+        return BlockChainProto.Transaction.newBuilder().setData(tx.getData())
+                .setHeader(TransactionHeader.of(header)).build();
+    }
+
     /**
      * get transaction hash
      *
      * @return transaction hash
      */
-    @JsonIgnore
     public String getHashString() throws IOException {
         return this.header.getHashString();
     }
@@ -59,7 +63,6 @@ public class Transaction implements Serializable, TransactionFormat {
      *
      * @return transaction hash
      */
-    @JsonIgnore
     public byte[] getHash() throws IOException {
         return this.header.getHash();
     }

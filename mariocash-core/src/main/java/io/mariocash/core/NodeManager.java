@@ -19,7 +19,6 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.core.exception.NotValidteException;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 public interface NodeManager {
@@ -27,8 +26,6 @@ public interface NodeManager {
     void setListener(NodeEventListener listener);
 
     Transaction addTransaction(Transaction tx) throws IOException;
-
-    List<Transaction> getTransactionList();
 
     Transaction getTxByHash(String id);
 

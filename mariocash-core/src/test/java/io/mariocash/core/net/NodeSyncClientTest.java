@@ -16,103 +16,62 @@
 
 package dev.zhihexireng.core.net;
 
-import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcServerRule;
 import dev.zhihexireng.proto.BlockChainGrpc;
-import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(JUnit4.class)
 public class NodeSyncClientTest {
 
     @Rule
     public final GrpcServerRule grpcServerRule = new GrpcServerRule().directExecutor();
 
-    @Spy
-    private PingPongGrpc.PingPongImplBase pingPongService;
+    private final PingPongGrpc.PingPongImplBase pingPongService =
+            mock(PingPongGrpc.PingPongImplBase.class, delegatesTo(
+                    new NodeSyncServer.PingPongImpl() {
+                    }));
 
-    @Spy
-    private BlockChainGrpc.BlockChainImplBase blockChainService;
-
-    @Captor
-    private ArgumentCaptor<Ping> pingRequestCaptor;
-
-    @Captor
-    private ArgumentCaptor<BlockChainProto.SyncLimit> syncLimitRequestCaptor;
-
-    @Captor
-    private ArgumentCaptor<BlockChainProto.Empty> emptyCaptor;
+    private final BlockChainGrpc.BlockChainImplBase blockChainService =
+            mock(BlockChainGrpc.BlockChainImplBase.class, delegatesTo(
+                    new NodeSyncServer.BlockChainImpl() {
+                    }));
 
     private NodeSyncClient client;
 
     @Before
     public void setUp() {
         client = new NodeSyncClient(grpcServerRule.getChannel());
-        grpcServerRule.getServiceRegistry().addService(pingPongService);
-        grpcServerRule.getServiceRegistry().addService(blockChainService);
     }
 
     @Test
     public void play() {
+        grpcServerRule.getServiceRegistry().addService(pingPongService);
+        ArgumentCaptor<Ping> requestCaptor = ArgumentCaptor.forClass(Ping.class);
         String ping = "Ping";
 
         client.ping(ping);
 
-        verify(pingPongService).play(pingRequestCaptor.capture(), any());
+        verify(pingPongService).play(requestCaptor.capture(), any());
 
-        assertEquals(ping, pingRequestCaptor.getValue().getPing());
-    }
-
-    @Test
-    public void syncBlock() {
-        doAnswer((invocationOnMock) -> {
-            StreamObserver<BlockChainProto.BlockList> argument = invocationOnMock.getArgument(1);
-            argument.onNext(null);
-            argument.onCompleted();
-            return null;
-        }).when(blockChainService).syncBlock(syncLimitRequestCaptor.capture(), any());
-
-        long offset = 0;
-
-        client.syncBlock(offset);
-
-        verify(blockChainService).syncBlock(syncLimitRequestCaptor.capture(), any());
-
-        assertEquals(offset, syncLimitRequestCaptor.getValue().getOffset());
-    }
-
-    @Test
-    public void syncTransaction() {
-        doAnswer((invocationOnMock) -> {
-            StreamObserver<BlockChainProto.Transaction> argument = invocationOnMock.getArgument(1);
-            argument.onNext(null);
-            argument.onCompleted();
-            return null;
-        }).when(blockChainService).syncTransaction(emptyCaptor.capture(), any());
-
-        client.syncTransaction();
-
-        verify(blockChainService).syncTransaction(emptyCaptor.capture(), any());
-
-        assertEquals("", emptyCaptor.getValue().toString());
+        assertEquals(ping, requestCaptor.getValue().getPing());
     }
 
     @Test
     public void broadcastTransaction() {
+        grpcServerRule.getServiceRegistry().addService(blockChainService);
 
         client.broadcastTransaction(NodeTestData.transactions());
 
@@ -121,6 +80,7 @@ public class NodeSyncClientTest {
 
     @Test
     public void broadcastBlock() {
+        grpcServerRule.getServiceRegistry().addService(blockChainService);
 
         client.broadcastBlock(NodeTestData.blocks());
 
