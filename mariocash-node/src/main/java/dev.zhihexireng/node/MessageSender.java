@@ -17,8 +17,11 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeEventListener;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.mapper.BlockMapper;
+import dev.zhihexireng.core.mapper.TransactionMapper;
 import dev.zhihexireng.core.net.NodeSyncClient;
 import dev.zhihexireng.proto.BlockChainProto;
 import org.slf4j.Logger;
@@ -57,12 +60,17 @@ public class MessageSender implements DisposableBean, NodeEventListener {
     @Override
     public void newTransaction(Transaction tx) {
         log.debug("New transaction={}", tx);
-        nodeSyncClient.broadcastTransaction(new BlockChainProto.Transaction[] {Transaction.of(tx)});
+        BlockChainProto.Transaction protoTx
+                = TransactionMapper.transactionToProtoTransaction(tx);
+        BlockChainProto.Transaction[] txns = new BlockChainProto.Transaction[] {protoTx};
+        nodeSyncClient.broadcastTransaction(txns);
     }
 
     @Override
     public void newBlock(Block block) {
         log.debug("New block={}", block);
-        nodeSyncClient.broadcastBlock(new BlockChainProto.Block[] {Block.of(block)});
+        BlockChainProto.Block[] blocks
+                = new BlockChainProto.Block[] {BlockMapper.blockToProtoBlock(block)};
+        nodeSyncClient.broadcastBlock(blocks);
     }
 }

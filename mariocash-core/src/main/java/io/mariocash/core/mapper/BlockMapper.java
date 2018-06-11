@@ -64,8 +64,7 @@ public class BlockMapper {
 
     }
 
-    private static BlockHeader protoHeaderToHeader(BlockChainProto.BlockHeader protoHeader,
-                                                   BlockBody body) throws IOException {
+    private static BlockHeader protoHeaderToHeader(BlockChainProto.BlockHeader protoHeader, BlockBody body) throws IOException {
         BlockHeader.Builder builder = new BlockHeader.Builder();
         builder.blockBody(body);
         return builder.build(protoHeader.getIndex(), protoHeader.getPrevBlockHash().toByteArray(),
