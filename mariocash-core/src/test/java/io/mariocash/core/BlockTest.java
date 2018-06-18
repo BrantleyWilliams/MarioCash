@@ -18,6 +18,7 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
+import dev.zhihexireng.core.mapper.BlockMapper;
 import dev.zhihexireng.proto.BlockChainProto;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,8 +72,8 @@ public class BlockTest {
 
     @Test
     public void deserializeTransactionFromProtoTest() throws IOException {
-        BlockChainProto.Block protoBlock = Block.of(block);
-        Block deserializeBlock = Block.valueOf(protoBlock);
+        BlockChainProto.Block protoBlock = BlockMapper.blockToProtoBlock(block);
+        Block deserializeBlock = BlockMapper.protoBlockToBlock(protoBlock);
         assert block.getBlockHash().equals(deserializeBlock.getBlockHash());
     }
 
