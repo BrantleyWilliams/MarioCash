@@ -3,10 +3,8 @@ package dev.zhihexireng.node.api;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.format.TransactionFormat;
 
 import java.io.IOException;
-import java.security.SignatureException;
 
 public class TransactionDto {
     private String from;
@@ -21,12 +19,11 @@ public class TransactionDto {
         return new Transaction(account, jsonData);
     }
 
-    public static TransactionDto createBy(TransactionFormat tx)
-            throws IOException, SignatureException {
+    public static TransactionDto createBy(Transaction tx) {
         TransactionDto transactionDto = new TransactionDto();
-        transactionDto.setFrom(tx.getHeader().getAddressToString());
+        //transactionDto.setFrom(tx.getFrom());
         transactionDto.setData(tx.getData());
-        transactionDto.setTxHash(tx.getHashString());
+        //transactionDto.setTxHash(tx.getHashString());
         return transactionDto;
     }
 
