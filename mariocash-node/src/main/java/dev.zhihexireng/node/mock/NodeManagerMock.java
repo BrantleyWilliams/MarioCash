@@ -16,7 +16,6 @@
 
 package dev.zhihexireng.node.mock;
 
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeEventListener;
@@ -24,6 +23,8 @@ import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionPool;
 import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.core.net.Peer;
+import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.node.BlockBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NodeManagerMock implements NodeManager {
     private static final Logger log = LoggerFactory.getLogger(NodeManager.class);
@@ -44,9 +46,11 @@ public class NodeManagerMock implements NodeManager {
 
     private final TransactionPool transactionPool = new TransactionPoolMock();
 
-    private NodeEventListener listener;
+    private final PeerGroup peerGroup = new PeerGroup();
 
-    private final DefaultConfig defaultConfig = new DefaultConfig();
+    private String nodeId;
+
+    private NodeEventListener listener;
 
     @PostConstruct
     private void init() {
@@ -139,6 +143,24 @@ public class NodeManagerMock implements NodeManager {
         }
     }
 
+    @Override
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    @Override
+    public void addPeer(Peer peer) {
+        if (nodeId == null) {
+            this.nodeId = peer.getId();
+        }
+        peerGroup.addPeer(peer);
+    }
+
+    @Override
+    public List<String> getPeerIdList() {
+        return peerGroup.getPeers().stream().map(Peer::getId).collect(Collectors.toList());
+    }
+
     private void removeTxByBlock(Block block) throws IOException {
         if (block == null || block.getData().getTransactionList() == null) {
             return;
@@ -159,9 +181,5 @@ public class NodeManagerMock implements NodeManager {
         }
 
         return true;
-    }
-
-    public DefaultConfig getDefaultConfig() {
-        return defaultConfig;
     }
 }
