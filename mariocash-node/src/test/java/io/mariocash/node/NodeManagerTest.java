@@ -17,6 +17,7 @@
 package dev.zhihexireng.node;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
@@ -24,7 +25,6 @@ import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.exception.NotValidteException;
-import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +32,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
 
 public class NodeManagerTest {
 
@@ -93,17 +94,18 @@ public class NodeManagerTest {
     }
 
     @Test
-    public void peerTest() {
-        assert nodeManager.getNodeId() == null;
-        Peer peer = new Peer("ynode://0462b608@localhost:9090");
-        nodeManager.addPeer(peer);
-        assertThat(nodeManager.getNodeId()).isEqualTo("0462b608");
-        assertThat(nodeManager.getPeerIdList()).contains("0462b608");
+    public void defaultConfigTest() {
+        DefaultConfig defaultConfig = nodeManager.getDefaultConfig();
 
-        Peer newPeer = new Peer("ynode://04cdade0@localhost:9091");
-        nodeManager.addPeer(newPeer);
-        assertThat(nodeManager.getPeerIdList().size()).isEqualTo(2);
-        assertThat(nodeManager.getPeerIdList()).containsExactlyInAnyOrder("0462b608", "04cdade0");
+        assertThat(defaultConfig.getConfig().getString("java.version"), containsString("1.8"));
+        System.out.println("DefaultConfig java.version: " + defaultConfig.getConfig().getString("java.version"));
+
+        assertThat(defaultConfig.getConfig().getString("node.name"), containsString("mariocash"));
+        System.out.println("DefaultConfig node.name: " + defaultConfig.getConfig().getString("node.name"));
+
+        assertThat(defaultConfig.getConfig().getString("network.port"), containsString("31212"));
+        System.out.println("DefaultConfig network.port: " + defaultConfig.getConfig().getString("network.port"));
+
     }
 
 }

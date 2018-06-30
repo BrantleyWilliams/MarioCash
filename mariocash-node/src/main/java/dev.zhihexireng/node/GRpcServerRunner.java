@@ -23,14 +23,13 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 @Component
+@EnableScheduling
 public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(GRpcServerRunner.class);
-
-    @Value("${grpc.host:localhost}")
-    private String grpcHost;
 
     @Value("${grpc.port}")
     private int grpcPort;
@@ -44,9 +43,7 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
     @Override
     public void run(String... args) throws Exception {
-        nodeSyncServer.setHost(grpcHost);
-        nodeSyncServer.setPort(grpcPort);
-        nodeSyncServer.initPeer();
+        nodeSyncServer.setPort(this.grpcPort);
         nodeSyncServer.start();
         startDaemonAwaitThread();
     }

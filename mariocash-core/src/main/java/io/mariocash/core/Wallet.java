@@ -2,6 +2,7 @@ package dev.zhihexireng.core;
 
 import dev.zhihexireng.crypto.AESEncrypt;
 import dev.zhihexireng.crypto.ECKey;
+import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.crypto.Password;
 import dev.zhihexireng.util.FileUtil;
 import org.slf4j.Logger;
@@ -16,36 +17,27 @@ import java.io.IOException;
  */
 public class Wallet {
 
-    // todo: check method, security
+    // todo: check security
 
     private static final Logger logger = LoggerFactory.getLogger(Wallet.class);
 
     private ECKey key;
-    private String path;
+    private String keyPath;
     private String keyName;
+    private byte[] address;
+    private byte[] publicKey;
 
     /**
-     * Wallet Constuctor.
-     *
-     * @param path     file path(directory)
-     * @param password password
-     * @throws InvalidCipherTextException InvalidCipherTextException
-     * @throws IOException                IOException
-     */
-    public Wallet(String path, String password) throws InvalidCipherTextException, IOException {
-        this(new ECKey(), path, password);
-    }
-
-    /**
-     * Wallet Consturctor as generating a new key.
+     * Wallet Consturctor(generate key file).
      *
      * @param key      ECKey
-     * @param path     file path(directory)
+     * @param keyPath  keyPath(directory)
+     * @param keyName  keyName
      * @param password password
      * @throws IOException                IOException
      * @throws InvalidCipherTextException InvalidCipherTextException
      */
-    public Wallet(ECKey key, String path, String password)
+    public Wallet(ECKey key, String keyPath, String keyName, String password)
             throws IOException, InvalidCipherTextException {
 
         if (!Password.passwordValid(password)) {
@@ -53,50 +45,58 @@ public class Wallet {
             throw new IOException("Invalid Password");
         }
 
+        if (key == null) {
+            key = new ECKey();
+        }
+
         this.key = key;
-        this.path = path;
-        this.keyName = Hex.toHexString(key.getAddress());
+        this.keyPath = keyPath;
+        this.keyName = keyName;
+        this.address = key.getAddress();
+        this.publicKey = key.getPubKey();
 
         byte[] kdfPass = Password.generateKeyDerivation(password.getBytes(), 32);
         byte[] encData = AESEncrypt.encrypt(key.getPrivKeyBytes(), kdfPass);
 
-        FileUtil.writeFile(this.path, this.keyName, encData);
+        FileUtil.writeFile(this.keyPath, this.keyName, encData);
 
     }
 
     /**
      * Wallet Constructor as loading the keyfile.
      *
-     * @param path     file path
-     * @param fileName file name
+     * @param keyPath  keyPath(directory)
+     * @param keyName  keyName
      * @param password password
      * @throws IOException                IOException
      * @throws InvalidCipherTextException InvalidCipherTextException
      */
-    public Wallet(String path, String fileName, String password)
+    public Wallet(String keyPath, String keyName, String password)
             throws IOException, InvalidCipherTextException {
 
-        byte[] encData = FileUtil.readFile(path, fileName);
+        byte[] encData = FileUtil.readFile(keyPath, keyName);
         byte[] kdfPass = Password.generateKeyDerivation(password.getBytes(), 32);
 
         byte[] priKey = AESEncrypt.decrypt(encData, kdfPass);
         this.key = ECKey.fromPrivate(priKey);
-        this.path = path;
-        this.keyName = fileName;
+        this.keyPath = keyPath;
+        this.keyName = keyName;
+        this.address = key.getAddress();
+        this.publicKey = key.getPubKey();
 
     }
 
     /**
-     * get wallet file path.
+     * Get wallet file keyPath.
      *
-     * @return path
+     * @return keyPath
      */
-    public String getPath() {
-        return path;
+    public String getKeyPath() {
+        return keyPath;
     }
 
     /**
-     * get keyName(filename, address).
+     * Get keyName(filename, address).
      *
      * @return key name(filename)
      */
@@ -105,12 +105,53 @@ public class Wallet {
     }
 
     /**
-     * get ECKey object.
-     *
-     * @return ECKey
+     * Get public key
+     * @return public key
      */
-    public ECKey getKey() {
-        return key;
+    public byte[] getPubicKey() {
+        return key.getPubKey();
+    }
+
+    /**
+     * Get address as byte[20]
+     * @return address as byte[20]
+     */
+    public byte[] getAddress() {
+        return this.address;
+    }
+
+    /**
+     * Sign the data.
+     *
+     * @param data data for signning
+     * @return signature as byte[65]
+     */
+    public byte[] sign(byte[] data) {
+        return key.sign(HashUtil.sha3(data)).toBinary();
+    }
+
+    /**
+     * Verify the sign data with data & signature.
+     *
+     * @param data data for signed
+     * @param signature signature
+     * @return verification result
+     */
+    public boolean verify(byte[] data, byte[] signature) {
+
+        ECKey.ECDSASignature sig = new ECKey.ECDSASignature(signature);
+
+        return key.verify(HashUtil.sha3(data), sig);
+    }
+
+    @Override
+    public String toString() {
+        return "Wallet{"
+                + "keyPath=" + keyPath
+                + ", keyName=" + keyName
+                + ", address=" + Hex.toHexString(address)
+                + ", publidKey=" + Hex.toHexString(publicKey)
+                + '}';
     }
 
 }

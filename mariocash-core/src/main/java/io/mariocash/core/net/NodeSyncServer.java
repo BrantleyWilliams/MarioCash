@@ -19,7 +19,6 @@ package dev.zhihexireng.core.net;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
-import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
@@ -32,7 +31,6 @@ import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.util.Set;
@@ -40,10 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class NodeSyncServer {
     private static final Logger log = LoggerFactory.getLogger(NodeSyncServer.class);
-    private static final String PEER_FORMAT = "%s://%s@%s:%d";
     private NodeManager nodeManager;
     private Server server;
-    private String host;
     private int port;
 
     public NodeSyncServer() {
@@ -51,10 +47,6 @@ public class NodeSyncServer {
 
     public NodeSyncServer(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
     }
 
     public void setPort(int port) {
@@ -74,21 +66,6 @@ public class NodeSyncServer {
             NodeSyncServer.this.stop();
             System.err.println("*** server shut down");
         }));
-    }
-
-    /**
-     * Init peer.
-     */
-    public void initPeer() {
-        // my peer
-        String pubKey = Hex.toHexString(new Account().getKey().getPubKey());
-        Peer peer = new Peer(String.format(PEER_FORMAT, Peer.YEED_PEER_SCHEMA, pubKey, host, port));
-        nodeManager.addPeer(peer);
-        // TODO add a static temporary peer
-        String otherKey = Hex.toHexString(new Account().getKey().getPubKey());
-        Peer otherPeer = new Peer(String.format(PEER_FORMAT, Peer.YEED_PEER_SCHEMA, otherKey, host,
-                port));
-        nodeManager.addPeer(otherPeer);
     }
 
     /**
@@ -209,7 +186,7 @@ public class NodeSyncServer {
 
                 @Override
                 public void onError(Throwable t) {
-                    log.warn("Broadcasting transaction failed: {}", t.getMessage());
+                    log.warn("Broadcasting transaction failed: {}", t);
                     txObservers.remove(responseObserver);
                     responseObserver.onError(t);
                 }
@@ -230,14 +207,12 @@ public class NodeSyncServer {
 
             return new StreamObserver<BlockChainProto.Block>() {
                 @Override
-                public void onNext(BlockChainProto.Block protoBlock) {
-                    log.debug("Received block id=[{}]", protoBlock.getHeader().getIndex());
+                public void onNext(BlockChainProto.Block block) {
+                    log.debug("Received block: {}", block);
                     Block newBlock = null;
                     if (nodeManager != null) {
                         try {
-                            Block block = BlockMapper.protoBlockToBlock(protoBlock);
-                            log.debug("Received block hash=" + block.getBlockHash());
-                            newBlock = nodeManager.addBlock(block);
+                            newBlock = nodeManager.addBlock(BlockMapper.protoBlockToBlock(block));
                         } catch (Exception e) {
                             log.error(e.getMessage());
                         }
@@ -248,13 +223,13 @@ public class NodeSyncServer {
                     }
 
                     for (StreamObserver<BlockChainProto.Block> observer : blockObservers) {
-                        observer.onNext(protoBlock);
+                        observer.onNext(block);
                     }
                 }
 
                 @Override
                 public void onError(Throwable t) {
-                    log.warn("Broadcasting block failed: {}", t.getMessage());
+                    log.warn("Broadcasting block failed: {}", t);
                     blockObservers.remove(responseObserver);
                     responseObserver.onError(t);
                 }

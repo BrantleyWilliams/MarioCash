@@ -59,7 +59,7 @@ public class NodeSyncClient {
         }
     }
 
-    void blockUtilShutdown() throws InterruptedException {
+    public void blockUtilShutdown() throws InterruptedException {
         if (channel != null) {
             channel.awaitTermination(5, TimeUnit.MINUTES);
         }
@@ -107,8 +107,7 @@ public class NodeSyncClient {
 
                     @Override
                     public void onError(Throwable t) {
-                        log.warn("Broadcast transaction failed: {}",
-                                Status.fromThrowable(t).getCode());
+                        log.warn("Broadcast transaction failed: {}", Status.fromThrowable(t));
                     }
 
                     @Override
@@ -136,7 +135,7 @@ public class NodeSyncClient {
 
                     @Override
                     public void onError(Throwable t) {
-                        log.warn("Broadcast block failed: {}", Status.fromThrowable(t).getCode());
+                        log.warn("Broadcast block failed: {}", Status.fromThrowable(t));
                     }
 
                     @Override

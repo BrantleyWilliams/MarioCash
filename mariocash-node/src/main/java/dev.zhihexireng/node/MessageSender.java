@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,18 +51,18 @@ public class MessageSender implements DisposableBean, NodeEventListener {
         nodeSyncClient = new NodeSyncClient("localhost", port);
     }
 
-    void ping() {
+    public void ping() {
         nodeSyncClient.ping("Ping");
     }
 
     @Override
-    @PreDestroy
     public void destroy() {
         nodeSyncClient.stop();
     }
 
     @Override
     public void newTransaction(Transaction tx) {
+        log.debug("New transaction={}", tx);
         BlockChainProto.Transaction protoTx
                 = TransactionMapper.transactionToProtoTransaction(tx);
         BlockChainProto.Transaction[] txns = new BlockChainProto.Transaction[] {protoTx};
@@ -72,6 +71,7 @@ public class MessageSender implements DisposableBean, NodeEventListener {
 
     @Override
     public void newBlock(Block block) {
+        log.debug("New block={}", block);
         BlockChainProto.Block[] blocks
                 = new BlockChainProto.Block[] {BlockMapper.blockToProtoBlock(block)};
         nodeSyncClient.broadcastBlock(blocks);

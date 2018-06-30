@@ -16,8 +16,8 @@
 
 package dev.zhihexireng.core;
 
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.exception.NotValidteException;
-import dev.zhihexireng.core.net.Peer;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,9 +41,6 @@ public interface NodeManager {
 
     Block getBlockByIndexOrHash(String indexOrHash);
 
-    String getNodeId();
+    DefaultConfig getDefaultConfig();
 
-    void addPeer(Peer peer);
-
-    List<String> getPeerIdList();
 }
