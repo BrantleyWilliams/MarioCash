@@ -16,7 +16,6 @@
 
 package dev.zhihexireng.node.mock;
 
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeEventListener;
@@ -45,8 +44,6 @@ public class NodeManagerMock implements NodeManager {
     private final TransactionPool transactionPool = new TransactionPoolMock();
 
     private NodeEventListener listener;
-
-    private final DefaultConfig defaultConfig = new DefaultConfig();
 
     @PostConstruct
     private void init() {
@@ -159,9 +156,5 @@ public class NodeManagerMock implements NodeManager {
         }
 
         return true;
-    }
-
-    public DefaultConfig getDefaultConfig() {
-        return defaultConfig;
     }
 }

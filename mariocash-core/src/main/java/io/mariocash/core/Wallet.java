@@ -2,7 +2,6 @@ package dev.zhihexireng.core;
 
 import dev.zhihexireng.crypto.AESEncrypt;
 import dev.zhihexireng.crypto.ECKey;
-import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.crypto.Password;
 import dev.zhihexireng.util.FileUtil;
 import org.slf4j.Logger;
@@ -10,39 +9,43 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Wallet Class.
  */
 public class Wallet {
 
-    // todo: check security
+    // todo: check method, security
 
     private static final Logger logger = LoggerFactory.getLogger(Wallet.class);
 
     private ECKey key;
-    private String keyPath;
+    private String path;
     private String keyName;
-    private byte[] address;
-    private byte[] publicKey;
 
     /**
-     * Wallet Consturctor(generate key file).
+     * Wallet Constuctor.
+     *
+     * @param path     file path(directory)
+     * @param password password
+     * @throws InvalidCipherTextException InvalidCipherTextException
+     * @throws IOException                IOException
+     */
+    public Wallet(String path, String password) throws InvalidCipherTextException, IOException {
+        this(new ECKey(), path, password);
+    }
+
+    /**
+     * Wallet Consturctor as generating a new key.
      *
      * @param key      ECKey
-     * @param keyPath  keyPath(directory)
-     * @param keyName  keyName
+     * @param path     file path(directory)
      * @param password password
      * @throws IOException                IOException
      * @throws InvalidCipherTextException InvalidCipherTextException
      */
-    public Wallet(ECKey key, String keyPath, String keyName, String password)
+    public Wallet(ECKey key, String path, String password)
             throws IOException, InvalidCipherTextException {
 
         if (!Password.passwordValid(password)) {
@@ -50,69 +53,50 @@ public class Wallet {
             throw new IOException("Invalid Password");
         }
 
-        if (key == null) {
-            key = new ECKey();
-        }
-
         this.key = key;
-        this.keyPath = keyPath;
-        this.keyName = keyName;
-        this.address = key.getAddress();
-        this.publicKey = key.getPubKey();
+        this.path = path;
+        this.keyName = Hex.toHexString(key.getAddress());
 
         byte[] kdfPass = Password.generateKeyDerivation(password.getBytes(), 32);
         byte[] encData = AESEncrypt.encrypt(key.getPrivKeyBytes(), kdfPass);
 
-        File file = new File(this.keyPath, this.keyName);
-        Set<PosixFilePermission> perms = new HashSet<>();
+        FileUtil.writeFile(this.path, this.keyName, encData);
 
-        if (file.exists()) {
-            perms.add(PosixFilePermission.OWNER_WRITE);
-            Files.setPosixFilePermissions(file.toPath(), perms);
-        }
-
-        FileUtil.writeFile(file, encData);
-
-        perms = new HashSet<>();
-        perms.add(PosixFilePermission.OWNER_READ);
-        Files.setPosixFilePermissions(file.toPath(), perms);
     }
 
     /**
      * Wallet Constructor as loading the keyfile.
      *
-     * @param keyPath  keyPath(directory)
-     * @param keyName  keyName
+     * @param path     file path
+     * @param fileName file name
      * @param password password
      * @throws IOException                IOException
      * @throws InvalidCipherTextException InvalidCipherTextException
      */
-    public Wallet(String keyPath, String keyName, String password)
+    public Wallet(String path, String fileName, String password)
             throws IOException, InvalidCipherTextException {
 
-        byte[] encData = FileUtil.readFile(keyPath, keyName);
+        byte[] encData = FileUtil.readFile(path, fileName);
         byte[] kdfPass = Password.generateKeyDerivation(password.getBytes(), 32);
 
         byte[] priKey = AESEncrypt.decrypt(encData, kdfPass);
         this.key = ECKey.fromPrivate(priKey);
-        this.keyPath = keyPath;
-        this.keyName = keyName;
-        this.address = key.getAddress();
-        this.publicKey = key.getPubKey();
+        this.path = path;
+        this.keyName = fileName;
 
     }
 
     /**
-     * Get wallet file keyPath.
+     * get wallet file path.
      *
-     * @return keyPath
+     * @return path
      */
-    public String getKeyPath() {
-        return keyPath;
+    public String getPath() {
+        return path;
     }
 
     /**
-     * Get keyName(filename, address).
+     * get keyName(filename, address).
      *
      * @return key name(filename)
      */
@@ -121,53 +105,12 @@ public class Wallet {
     }
 
     /**
-     * Get public key
-     * @return public key
-     */
-    public byte[] getPubicKey() {
-        return key.getPubKey();
-    }
-
-    /**
-     * Get address as byte[20]
-     * @return address as byte[20]
-     */
-    public byte[] getAddress() {
-        return this.address;
-    }
-
-    /**
-     * Sign the data.
+     * get ECKey object.
      *
-     * @param data data for signning
-     * @return signature as byte[65]
+     * @return ECKey
      */
-    public byte[] sign(byte[] data) {
-        return key.sign(HashUtil.sha3(data)).toBinary();
-    }
-
-    /**
-     * Verify the sign data with data & signature.
-     *
-     * @param data data for signed
-     * @param signature signature
-     * @return verification result
-     */
-    public boolean verify(byte[] data, byte[] signature) {
-
-        ECKey.ECDSASignature sig = new ECKey.ECDSASignature(signature);
-
-        return key.verify(HashUtil.sha3(data), sig);
-    }
-
-    @Override
-    public String toString() {
-        return "Wallet{"
-                + "keyPath=" + keyPath
-                + ", keyName=" + keyName
-                + ", address=" + Hex.toHexString(address)
-                + ", publidKey=" + Hex.toHexString(publicKey)
-                + '}';
+    public ECKey getKey() {
+        return key;
     }
 
 }
