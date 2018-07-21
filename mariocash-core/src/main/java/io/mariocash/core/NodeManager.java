@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core;
 
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.exception.NotValidteException;
 
 import java.io.IOException;
@@ -39,4 +40,9 @@ public interface NodeManager {
     Set<Block> getBlocks();
 
     Block getBlockByIndexOrHash(String indexOrHash);
+
+    DefaultConfig getDefaultConfig();
+
+    Wallet getWallet();
+
 }

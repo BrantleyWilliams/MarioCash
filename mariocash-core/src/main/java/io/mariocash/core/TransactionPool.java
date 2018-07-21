@@ -1,12 +1,14 @@
 package dev.zhihexireng.core;
 
+import dev.zhihexireng.core.format.TransactionFormat;
+
 import java.io.IOException;
 import java.util.List;
 
 public interface TransactionPool {
-    Transaction getTxByHash(String id);
+    TransactionFormat getTxByHash(String id);
 
-    Transaction addTx(Transaction tx) throws IOException;
+    TransactionFormat addTx(Transaction tx) throws IOException;
 
     List getTxList();
 
