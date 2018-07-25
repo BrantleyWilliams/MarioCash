@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package dev.zhihexireng.node;
+package dev.zhihexireng.core.cache;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import dev.zhihexireng.core.Transaction;
 
-@SpringBootApplication
-@EnableScheduling
-public class MarioCashNode {
-    public static void main(String[] args) {
-        SpringApplication.run(MarioCashNode.class, args);
-    }
+import java.io.IOException;
+import java.util.List;
+
+public interface TransactionPool {
+    Transaction getTxByHash(String id);
+
+    Transaction addTx(Transaction tx) throws IOException;
+
+    List getTxList();
+
+    void removeTx(List<String> hashList);
 }

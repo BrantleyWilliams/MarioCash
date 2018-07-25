@@ -57,7 +57,7 @@ public class DefaultConfigTest {
     }
 
     /**
-     * This is the test for new config file mariocash_sample.conf.
+     * This is the new config file mariocash_sample.conf.
      * get system config, spring config, mariocash.conf & mariocash_sample.conf config.
      */
     @Test
@@ -70,15 +70,5 @@ public class DefaultConfigTest {
 
         System.out.println("newConfigFile key.path: " + defaultConfig.getConfig().getString("key.path"));
 
-    }
-
-    /**
-     * This is the test for printing Class.
-     */
-    @Test
-    public void testToString() {
-        DefaultConfig defaultConfig = new DefaultConfig();
-
-        System.out.println(defaultConfig.toString());
     }
 }

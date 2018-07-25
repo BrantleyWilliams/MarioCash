@@ -16,13 +16,16 @@
 
 package dev.zhihexireng.node.mock;
 
-import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.*;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockChain;
+import dev.zhihexireng.core.NodeEventListener;
+import dev.zhihexireng.core.NodeManager;
+import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.cache.TransactionPool;
 import dev.zhihexireng.core.exception.NotValidteException;
 import dev.zhihexireng.node.BlockBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -41,25 +44,6 @@ public class NodeManagerMock implements NodeManager {
     private final TransactionPool transactionPool = new TransactionPoolMock();
 
     private NodeEventListener listener;
-
-    private final DefaultConfig defaultConfig = new DefaultConfig();
-
-    private final Wallet wallet = readWallet();
-
-    private Wallet readWallet() {
-        Wallet wallet = null;
-
-        try {
-            wallet = new Wallet(this.defaultConfig);
-            log.debug("NodeManagerMock wallet = " + wallet.toString());
-        } catch (IOException e) {
-            log.error("Error IOException");
-        } catch (InvalidCipherTextException ice) {
-            log.error("Error InvalidCipherTextException");
-        }
-
-        return wallet;
-    }
 
     @PostConstruct
     private void init() {
@@ -172,13 +156,5 @@ public class NodeManagerMock implements NodeManager {
         }
 
         return true;
-    }
-
-    public DefaultConfig getDefaultConfig() {
-        return defaultConfig;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
     }
 }

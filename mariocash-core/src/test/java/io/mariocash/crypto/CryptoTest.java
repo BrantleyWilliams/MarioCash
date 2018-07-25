@@ -328,7 +328,7 @@ public class CryptoTest {
         log.info("orig: " + Hex.toHexString(orig));
     }
 
-    /**
+
     @Test  // ECIES_AES128_SHA256 + Ephemeral Key + IV(all zeroes)
     public void test15() throws Throwable {
 
@@ -400,5 +400,4 @@ public class CryptoTest {
         log.info("orig: " + Hex.toHexString(orig));
     }
 
-    */
 }

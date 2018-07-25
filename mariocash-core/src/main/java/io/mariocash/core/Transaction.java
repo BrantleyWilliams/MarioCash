@@ -8,7 +8,7 @@ import dev.zhihexireng.util.SerializeUtils;
 import java.io.IOException;
 import java.io.Serializable;
 
-public class Transaction implements Serializable {
+public class Transaction implements Serializable, dev.zhihexireng.core.format.Transaction {
 
     // Header
     private TransactionHeader header;

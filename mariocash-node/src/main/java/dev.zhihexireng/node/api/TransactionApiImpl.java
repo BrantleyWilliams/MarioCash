@@ -1,12 +1,12 @@
 package dev.zhihexireng.node.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.node.mock.TransactionMock;
+import dev.zhihexireng.node.mock.TransactionPoolMock;
 import dev.zhihexireng.node.mock.TransactionReceiptMock;
-import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,6 +14,9 @@ import java.io.IOException;
 @Service
 @AutoJsonRpcServiceImpl
 public class TransactionApiImpl implements TransactionApi {
+
+    private String txHash = "0x76a9fa4681a8abf94618543872444ba079d5302203ac6a5b5b2087a9f56ea8bf";
+    private String zeroHash = "0x0000000000000000000000000000000000000000";
 
     /* get */
     @Override
@@ -80,28 +83,15 @@ public class TransactionApiImpl implements TransactionApi {
 
     /* send */
     @Override
-    public String sendTransaction(String jsonStr) throws ParseException,JsonProcessingException {
-        TransactionDto transactionDto = new TransactionDto();
-        Transaction tx = transactionDto.jsonStringToTx(jsonStr);
-        ObjectMapper objectMapper = new ObjectMapper();
-        return "sendTransaction [success] " + objectMapper.writeValueAsString(tx);
+    public String sendTransaction(String tx) {
+        String ret = "{[get : " + tx + "][result : {txhash : " + txHash + "}]}";
+        return ret;
     }
 
     @Override
-    public String sendRawTransaction(String jsonByteArr)
-            throws ParseException,JsonProcessingException {
-        TransactionDto transactionDto = new TransactionDto();
-        Transaction tx = transactionDto.jsonByteArrToTx(jsonByteArr);
-        ObjectMapper objectMapper = new ObjectMapper();
-        return "sendRawTransaction [success] " + objectMapper.writeValueAsString(tx);
-    }
-
-    @Override
-    public String sendRawTransaction(byte[] bytes) throws JsonProcessingException {
-        TransactionDto transactionDto = new TransactionDto();
-        Transaction tx = transactionDto.byteArrToTx(bytes);
-        ObjectMapper objectMapper = new ObjectMapper();
-        return "sendRawTransaction [success] " + objectMapper.writeValueAsString(tx);
+    public String sendRawTransaction(String rawTx) {
+        String ret = "{[get : " + rawTx + "][result : {txhash : " + zeroHash + "}]}";
+        return ret;
     }
 
     /* filter */
@@ -109,4 +99,23 @@ public class TransactionApiImpl implements TransactionApi {
     public int newPendingTransactionFilter() {
         return 6;
     }
+
+    /* test */
+    @Override
+    public String getJsonObj(String tx) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        mapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
+
+        Transaction transaction = mapper.reader()
+                .forType(TransactionMock.class).readValue(tx);
+
+        System.out.println(transaction);
+
+        TransactionPoolMock transactionPoolMock = new TransactionPoolMock();
+        transactionPoolMock.addTx(transaction);
+
+        return transaction.toString();
+    }
+
 }

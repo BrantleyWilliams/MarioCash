@@ -18,7 +18,7 @@ package dev.zhihexireng.node.controller;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Account;
-import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.format.Transaction;
 
 import java.io.IOException;
 import java.security.SignatureException;
@@ -28,12 +28,12 @@ public class TransactionDto {
     private String txHash;
     private String data;
 
-    public static Transaction of(TransactionDto transactionDto) throws IOException {
+    public static dev.zhihexireng.core.Transaction of(TransactionDto transactionDto) throws IOException {
         // TODO Account from 에서 가져와서 실제 Account로 변환합니다.
         Account account = new Account();
         JsonObject jsonData = new JsonObject();
         jsonData.addProperty("data", transactionDto.getData());
-        return new Transaction(account, jsonData);
+        return new dev.zhihexireng.core.Transaction(account, jsonData);
     }
 
     public static TransactionDto createBy(Transaction tx)
