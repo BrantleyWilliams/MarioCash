@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.node.mock;
 
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.cache.TransactionPool;
 
 import java.io.IOException;
@@ -25,15 +26,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionPoolMock implements TransactionPool {
-    private final Map<String, dev.zhihexireng.core.Transaction> txs = new ConcurrentHashMap<>();
+    private final Map<String, Transaction> txs = new ConcurrentHashMap<>();
 
     @Override
-    public dev.zhihexireng.core.Transaction getTxByHash(String id) {
+    public Transaction getTxByHash(String id) {
         return txs.get(id);
     }
 
     @Override
-    public dev.zhihexireng.core.Transaction addTx(dev.zhihexireng.core.Transaction tx) throws IOException {
+    public Transaction addTx(Transaction tx) throws IOException {
         if (txs.containsKey(tx.getHashString())) {
             return null;
         }
@@ -42,7 +43,7 @@ public class TransactionPoolMock implements TransactionPool {
     }
 
     @Override
-    public List<dev.zhihexireng.core.Transaction> getTxList() {
+    public List<Transaction> getTxList() {
         return new ArrayList(txs.values());
     }
 
