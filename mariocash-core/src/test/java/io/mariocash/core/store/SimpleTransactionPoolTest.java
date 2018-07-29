@@ -14,72 +14,48 @@
  * limitations under the License.
  */
 
-package dev.zhihexireng.core;
+package dev.zhihexireng.core.store;
 
-import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.core.store.StoreConfiguration;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Ignore
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {StoreConfiguration.class})
-public class TransactionManagerTest {
+@SpringBootTest(classes = StoreConfiguration.class)
+public class SimpleTransactionPoolTest {
     @Autowired
-    TransactionManager tm;
+    SimpleTransactionPool stp;
 
     @Test
-    public void shouldGetFromDb() {
-        byte[] key = putDummyTx();
-        tm.batch();
-        assertThat(tm.count()).isZero();
-        byte[] foundValue = tm.get(key);
-        assertThat(foundValue).isNotNull();
-    }
-
-    @Test
-    public void shouldBatch() {
-        putDummyTx();
-        tm.batch();
-        assertThat(tm.count()).isZero();
-    }
-
-    private byte[] putDummyTx() {
+    public void shouldClearPool() {
         byte[] key = TestUtils.randomBytes(32);
         byte[] value = TestUtils.randomBytes(32);
-        tm.put(key, value);
-        return key;
+        stp.put(key, value);
+        stp.clear();
+        byte[] foundValue = stp.get(key);
+        assertThat(foundValue).isNull();
     }
 
     @Test
-    public void shouldGetFromPool() {
-        byte[] key = putDummyTx();
-        byte[] foundValue = tm.get(key);
-        assertThat(foundValue).isNotNull();
-    }
-
-    @Test
-    public void shouldPutByBytes() {
+    public void shouldGetObject() {
         byte[] key = TestUtils.randomBytes(32);
         byte[] value = TestUtils.randomBytes(32);
-        tm.put(key, value);
-        assertThat(tm.count()).isEqualTo(1);
+        stp.put(key, value);
+        byte[] foundValue = stp.get(key);
+        assertThat(foundValue).isEqualTo(value);
     }
 
     @Test
-    public void shouldPutByTxObject() throws IOException {
-        tm.put(new Transaction(new Account(), new JsonObject()));
-    }
-
-    @Test
-    public void shouldLoadTestObject() {
-        assertThat(tm).isNotNull();
+    public void shouldPutObject() {
+        byte[] key = TestUtils.randomBytes(32);
+        byte[] value = TestUtils.randomBytes(32);
+        stp.put(key, value);
     }
 }

@@ -16,8 +16,8 @@
 
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.cache.SimpleTransactionPool;
-import dev.zhihexireng.core.datasource.LevelDbDataSource;
+import dev.zhihexireng.core.store.SimpleTransactionPool;
+import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
