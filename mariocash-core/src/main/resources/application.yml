@@ -1,7 +1,7 @@
 logging:
   level:
    dev.zhihexireng: debug
-#spring:
-#  cache:
-#    ehcache:
-#      config: classpath:ehcache.xml
+spring:
+  cache:
+    ehcache:
+      config: classpath:ehcache.xml

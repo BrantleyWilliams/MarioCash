@@ -19,6 +19,7 @@ package dev.zhihexireng.node.controller;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.format.TransactionFormat;
 
 import java.io.IOException;
 import java.security.SignatureException;
@@ -36,7 +37,7 @@ public class TransactionDto {
         return new Transaction(account, jsonData);
     }
 
-    public static TransactionDto createBy(Transaction tx)
+    public static TransactionDto createBy(TransactionFormat tx)
             throws IOException, SignatureException {
         TransactionDto transactionDto = new TransactionDto();
         transactionDto.setFrom(tx.getHeader().getAddressToString());

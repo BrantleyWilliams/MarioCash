@@ -1,48 +1,17 @@
 package dev.zhihexireng.core.cache;
 
-import dev.zhihexireng.core.TransactionManager;
-import dev.zhihexireng.core.datasource.LevelDbDataSource;
-import org.ehcache.Cache;
-import org.ehcache.CacheManager;
-import org.ehcache.config.builders.CacheConfigurationBuilder;
-import org.ehcache.config.builders.CacheManagerBuilder;
-import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableCaching
 public class CacheConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(CacheConfiguration.class);
 
-    @Bean
-    LevelDbDataSource levelDbDataSource() {
-        return new LevelDbDataSource("tx");
-    }
+    // TODO 캐쉬 설정을 아래 부분에 적용 합니다.
 
-    @Bean
-    SimpleTransactionPool simpleTransactionPool() {
-        return new SimpleTransactionPool(txCache());
-    }
 
-    @Bean
-    Cache txCache() {
-        log.debug("=== Create cache for transaction");
-        return cacheManager().createCache("txCache",
-                CacheConfigurationBuilder
-                        .newCacheConfigurationBuilder(byte[].class, byte[].class,
-                                ResourcePoolsBuilder.heap(10)));
-    }
-
-    @Bean
-    CacheManager cacheManager() {
-        return CacheManagerBuilder.newCacheManagerBuilder().build(true);
-    }
-
-    @Bean
-    TransactionManager transactionManager() {
-        return new TransactionManager(levelDbDataSource(), simpleTransactionPool());
-    }
 }
