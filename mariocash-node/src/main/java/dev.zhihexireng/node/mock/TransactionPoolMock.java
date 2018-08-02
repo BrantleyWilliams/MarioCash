@@ -17,8 +17,7 @@
 package dev.zhihexireng.node.mock;
 
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionPool;
-import dev.zhihexireng.core.format.TransactionFormat;
+import dev.zhihexireng.core.store.TransactionPool;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ public class TransactionPoolMock implements TransactionPool {
     private final Map<String, Transaction> txs = new ConcurrentHashMap<>();
 
     @Override
-    public TransactionFormat getTxByHash(String id) {
+    public Transaction getTxByHash(String id) {
         return txs.get(id);
     }
 
