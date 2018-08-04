@@ -17,19 +17,23 @@
 package dev.zhihexireng.node;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.core.Account;
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockBody;
-import dev.zhihexireng.core.BlockHeader;
-import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.core.*;
 import dev.zhihexireng.core.exception.NotValidteException;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+
+import static dev.zhihexireng.config.Constants.PROPERTY_KEYPATH;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 public class NodeManagerTest {
 
@@ -88,4 +92,40 @@ public class NodeManagerTest {
         assert chainedBlock.getData().getSize() == 1;
         assert nodeManager.getTxByHash(tx.getHashString()) == null;
     }
+
+    @Test
+    public void defaultConfigTest() {
+        DefaultConfig defaultConfig = nodeManager.getDefaultConfig();
+
+        assertThat(defaultConfig.getConfig().getString("java.version"), containsString("1.8"));
+        System.out.println("DefaultConfig java.version: " + defaultConfig.getConfig().getString("java.version"));
+
+        assertThat(defaultConfig.getConfig().getString("node.name"), containsString("mariocash"));
+        System.out.println("DefaultConfig node.name: " + defaultConfig.getConfig().getString("node.name"));
+
+        assertThat(defaultConfig.getConfig().getString("network.port"), containsString("31212"));
+        System.out.println("DefaultConfig network.port: " + defaultConfig.getConfig().getString("network.port"));
+    }
+
+    @Test
+    public void defaultWalletTest() {
+        Wallet wallet = nodeManager.getWallet();
+
+        assertNotNull(wallet);
+
+        DefaultConfig config = nodeManager.getDefaultConfig();
+        Path path = Paths.get(config.getConfig().getString(PROPERTY_KEYPATH));
+        String keyPath = path.getParent().toString();
+        String keyName = path.getFileName().toString();
+
+        System.out.println("walletKeyPath: " + wallet.getKeyPath());
+        System.out.println("walletKeyName: " + wallet.getKeyName());
+
+        System.out.println("configKeyPath: " + keyPath);
+        System.out.println("configKeyName: " + keyName);
+
+        assertEquals(wallet.getKeyPath(), keyPath);
+        assertEquals(wallet.getKeyName(), keyName);
+    }
+
 }
