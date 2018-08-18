@@ -23,9 +23,11 @@ import dev.zhihexireng.core.NodeEventListener;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.exception.NotValidteException;
 import dev.zhihexireng.core.store.TransactionPool;
+import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.node.BlockBuilder;
+import dev.zhihexireng.node.config.NodeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -46,11 +48,22 @@ public class NodeManagerMock implements NodeManager {
 
     private final TransactionPool transactionPool = new TransactionPoolMock();
 
-    private NodeEventListener listener;
-
     private final DefaultConfig defaultConfig = new DefaultConfig();
 
     private final Wallet wallet = readWallet();
+
+    private final Peer peer;
+
+    private NodeEventListener listener;
+
+    public NodeProperties properties;
+
+    public NodeManagerMock(NodeProperties nodeProperties) {
+        this.properties = nodeProperties;
+        String host = properties.getGrpc().getHost();
+        int port = properties.getGrpc().getPort();
+        this.peer = Peer.valueOf(host, port);
+    }
 
     private Wallet readWallet() {
         Wallet wallet = null;
@@ -72,7 +85,6 @@ public class NodeManagerMock implements NodeManager {
         if (listener == null) {
             return;
         }
-
         try {
             List<Block> blockList = listener.syncBlock(blockChain.getLastIndex());
             for (Block block : blockList) {
@@ -156,6 +168,14 @@ public class NodeManagerMock implements NodeManager {
         } else {
             return blockChain.getBlockByHash(indexOrHash);
         }
+    }
+
+    @Override
+    public String getNodeId() {
+        if (peer == null) {
+            return null;
+        }
+        return peer.getIdShort();
     }
 
     private void removeTxByBlock(Block block) throws IOException {
