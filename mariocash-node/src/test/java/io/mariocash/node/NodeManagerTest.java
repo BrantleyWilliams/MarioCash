@@ -20,8 +20,6 @@ import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.*;
 import dev.zhihexireng.core.exception.NotValidteException;
-import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,8 +28,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import static dev.zhihexireng.config.Constants.PROPERTY_KEYPATH;
 import static org.hamcrest.Matchers.containsString;
@@ -48,12 +44,7 @@ public class NodeManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        NodeProperties properties = new NodeProperties();
-        properties.getGrpc().setHost("localhost");
-        properties.getGrpc().setPort(9090);
-        nodeManager = new NodeManagerMock(properties);
-        assert nodeManager.getNodeId() != null;
-
+        nodeManager = new NodeManagerMock();
         Account author = new Account();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");

@@ -17,16 +17,13 @@
 package dev.zhihexireng.core.net;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class PeerGroup {
-    private List<Peer> peers = Collections.synchronizedList(new ArrayList<>());
+    List<Peer> peers = new ArrayList<>();
 
     public void addPeer(Peer peer) {
-        if (!peers.contains(peer)) {
-            peers.add(peer);
-        }
+        peers.add(peer);
     }
 
     public List<Peer> getPeers() {
