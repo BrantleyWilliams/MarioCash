@@ -18,13 +18,7 @@ package dev.zhihexireng.node;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.Account;
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockBody;
-import dev.zhihexireng.core.BlockHeader;
-import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.*;
 import dev.zhihexireng.core.exception.NotValidteException;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Before;
@@ -51,8 +45,6 @@ public class NodeManagerTest {
     @Before
     public void setUp() throws Exception {
         nodeManager = new NodeManagerMock();
-        assert nodeManager.getNodeId() != null;
-
         Account author = new Account();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
