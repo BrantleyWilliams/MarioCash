@@ -1,6 +1,6 @@
 package dev.zhihexireng.node.api;
 
-import dev.zhihexireng.core.store.TransactionPool;
+import dev.zhihexireng.core.TransactionPool;
 
 public class TransactionReceiptDto {
 
