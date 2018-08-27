@@ -3,7 +3,6 @@ package dev.zhihexireng.node.mock;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionHeader;
 import dev.zhihexireng.crypto.ECKey;
 import org.spongycastle.util.encoders.Hex;
 
