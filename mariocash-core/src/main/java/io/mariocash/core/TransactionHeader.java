@@ -26,9 +26,6 @@ public class TransactionHeader implements Serializable {
     private long dataSize;
     private byte[] signature;
 
-    public TransactionHeader() {
-    }
-
     public TransactionHeader(byte[] type,
                              byte[] version,
                              byte[] dataHash,

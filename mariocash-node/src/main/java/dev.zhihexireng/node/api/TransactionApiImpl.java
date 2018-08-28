@@ -2,16 +2,10 @@ package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.node.mock.TransactionMock;
 import dev.zhihexireng.node.mock.TransactionReceiptMock;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
@@ -86,17 +80,28 @@ public class TransactionApiImpl implements TransactionApi {
 
     /* send */
     @Override
-    public Transaction sendTransaction(String jsonStr) throws IOException {
+    public String sendTransaction(String jsonStr) throws ParseException,JsonProcessingException {
         TransactionDto transactionDto = new TransactionDto();
         Transaction tx = transactionDto.jsonStringToTx(jsonStr);
-        return tx;
+        ObjectMapper objectMapper = new ObjectMapper();
+        return "sendTransaction [success] " + objectMapper.writeValueAsString(tx);
     }
 
     @Override
-    public Transaction sendRawTransaction(byte[] bytes) throws JsonProcessingException {
+    public String sendRawTransaction(String jsonByteArr)
+            throws ParseException,JsonProcessingException {
+        TransactionDto transactionDto = new TransactionDto();
+        Transaction tx = transactionDto.jsonByteArrToTx(jsonByteArr);
+        ObjectMapper objectMapper = new ObjectMapper();
+        return "sendRawTransaction [success] " + objectMapper.writeValueAsString(tx);
+    }
+
+    @Override
+    public String sendRawTransaction(byte[] bytes) throws JsonProcessingException {
         TransactionDto transactionDto = new TransactionDto();
         Transaction tx = transactionDto.byteArrToTx(bytes);
-        return tx;
+        ObjectMapper objectMapper = new ObjectMapper();
+        return "sendRawTransaction [success] " + objectMapper.writeValueAsString(tx);
     }
 
     /* filter */
