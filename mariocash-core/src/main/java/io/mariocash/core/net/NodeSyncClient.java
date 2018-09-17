@@ -30,7 +30,6 @@ import dev.zhihexireng.proto.Pong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -56,12 +55,11 @@ public class NodeSyncClient {
 
     public void stop() {
         if (channel != null) {
-            // TODO send peer disconnected message
             channel.shutdown();
         }
     }
 
-    void blockUtilShutdown() throws InterruptedException {
+    public void blockUtilShutdown() throws InterruptedException {
         if (channel != null) {
             channel.awaitTermination(5, TimeUnit.MINUTES);
         }
@@ -88,9 +86,14 @@ public class NodeSyncClient {
         return BlockChainGrpc.newBlockingStub(channel).syncTransaction(empty).getTransactionsList();
     }
 
-    public Pong ping(String message) {
+    public void ping(String message) {
         Ping request = Ping.newBuilder().setPing(message).build();
-        return blockingStub.play(request);
+        try {
+            Pong pong = blockingStub.play(request);
+            log.debug(pong.getPong());
+        } catch (Exception e) {
+            log.info("Ping retrying...");
+        }
     }
 
     public void broadcastTransaction(BlockChainProto.Transaction[] txs) {
@@ -104,8 +107,7 @@ public class NodeSyncClient {
 
                     @Override
                     public void onError(Throwable t) {
-                        log.warn("Broadcast transaction failed: {}",
-                                Status.fromThrowable(t).getCode());
+                        log.warn("Broadcast transaction failed: {}", Status.fromThrowable(t));
                     }
 
                     @Override
@@ -133,7 +135,7 @@ public class NodeSyncClient {
 
                     @Override
                     public void onError(Throwable t) {
-                        log.warn("Broadcast block failed: {}", Status.fromThrowable(t).getCode());
+                        log.warn("Broadcast block failed: {}", Status.fromThrowable(t));
                     }
 
                     @Override
@@ -148,9 +150,5 @@ public class NodeSyncClient {
         }
 
         requestObserver.onCompleted();
-    }
-
-    public List<String> getPeerList() {
-        return Arrays.asList("ynode://dfdkjfdkjfs@localhost:9090");
     }
 }
