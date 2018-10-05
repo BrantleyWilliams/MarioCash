@@ -3,9 +3,10 @@ package dev.zhihexireng.config;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
-import org.junit.Test;
 
 import java.util.Map;
+
+import org.junit.Test;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
@@ -25,8 +26,7 @@ public class DefaultConfigTest {
         }
 
         assertThat(defaultConfig.getConfig().getString("java.version"), containsString("1.8"));
-        System.out.println("DefaultConfig java.version: "
-                + defaultConfig.getConfig().getString("java.version"));
+        System.out.println("DefaultConfig java.version: " + defaultConfig.getConfig().getString("java.version"));
 
     }
 
@@ -39,8 +39,7 @@ public class DefaultConfigTest {
 
         assertThat(defaultConfig.getConfig().getString("java.version"), containsString("1.8"));
 
-        System.out.println("DefaultConfig java.version: "
-                + defaultConfig.getConfig().getString("java.version"));
+        System.out.println("DefaultConfig java.version: " + defaultConfig.getConfig().getString("java.version"));
 
     }
 
@@ -53,8 +52,7 @@ public class DefaultConfigTest {
 
         assertThat(defaultConfig.getConfig().getString("node.name"), containsString("mariocash"));
 
-        System.out.println("mariocash.conf node.name: "
-                + defaultConfig.getConfig().getString("node.name"));
+        System.out.println("mariocash.conf node.name: " + defaultConfig.getConfig().getString("node.name"));
 
     }
 
@@ -70,8 +68,7 @@ public class DefaultConfigTest {
 
         assertThat(defaultConfig.getConfig().getString("key.path"), containsString("nodePri2.key"));
 
-        System.out.println("newConfigFile key.path: "
-                + defaultConfig.getConfig().getString("key.path"));
+        System.out.println("newConfigFile key.path: " + defaultConfig.getConfig().getString("key.path"));
 
     }
 
