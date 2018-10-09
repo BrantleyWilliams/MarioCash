@@ -26,10 +26,9 @@ import dev.zhihexireng.proto.BlockChainProto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,42 +38,44 @@ import java.util.List;
 public class MessageSender implements DisposableBean, NodeEventListener {
     private static final Logger log = LoggerFactory.getLogger(MessageSender.class);
 
-    @Value("${grpc.port}")
-    private int grpcPort;
+    private List<NodeSyncClient> activePeerList = Collections.synchronizedList(new ArrayList<>());
 
-    private NodeSyncClient nodeSyncClient;
-
-    @PostConstruct
-    public void init() {
-        int port = grpcPort == 9090 ? 9091 : 9090;
-        log.info("Connecting gRPC Server at [{}]", port);
-        nodeSyncClient = new NodeSyncClient("localhost", port);
+    @PreDestroy
+    public void destroy() {
+        for (NodeSyncClient client : activePeerList) {
+            client.stop();
+        }
     }
 
     public void ping() {
-        nodeSyncClient.ping("Ping");
-    }
-
-    @Override
-    public void destroy() {
-        nodeSyncClient.stop();
+        for (NodeSyncClient client : activePeerList) {
+            client.ping("Ping");
+        }
     }
 
     @Override
     public void newTransaction(Transaction tx) {
-        log.debug("New transaction={}", tx);
         BlockChainProto.Transaction protoTx
                 = TransactionMapper.transactionToProtoTransaction(tx);
         BlockChainProto.Transaction[] txns = new BlockChainProto.Transaction[] {protoTx};
-        nodeSyncClient.broadcastTransaction(txns);
+
+        for (NodeSyncClient client : activePeerList) {
+            client.broadcastTransaction(txns);
+        }
     }
 
     @Override
     public void newBlock(Block block) {
-        log.debug("New block={}", block);
         BlockChainProto.Block[] blocks
                 = new BlockChainProto.Block[] {BlockMapper.blockToProtoBlock(block)};
-        nodeSyncClient.broadcastBlock(blocks);
+        for (NodeSyncClient client : activePeerList) {
+            client.broadcastBlock(blocks);
+        }
+    }
+
+    @Override
+    public void newActivePeer(NodeSyncClient client) {
+        activePeerList.add(client);
     }
 
     /**
@@ -85,11 +86,12 @@ public class MessageSender implements DisposableBean, NodeEventListener {
      */
     @Override
     public List<Block> syncBlock(long offset) throws IOException {
-        List<BlockChainProto.Block> blockList = nodeSyncClient.syncBlock(offset);
-        log.debug("Synchronize block offset=" + offset);
-        if (blockList == null || blockList.isEmpty()) {
+        if (activePeerList.isEmpty()) {
+            log.warn("Active peer is empty.");
             return Collections.emptyList();
         }
+        // TODO sync peer selection policy
+        List<BlockChainProto.Block> blockList = activePeerList.get(0).syncBlock(offset);
         log.debug("Synchronize block received=" + blockList.size());
         List<Block> syncList = new ArrayList<>(blockList.size());
         for (BlockChainProto.Block block : blockList) {
@@ -98,9 +100,19 @@ public class MessageSender implements DisposableBean, NodeEventListener {
         return syncList;
     }
 
+    /**
+     * Sync transaction list.
+     *
+     * @return the transaction list
+     */
     @Override
     public List<Transaction> syncTransaction() throws IOException {
-        List<BlockChainProto.Transaction> txList = nodeSyncClient.syncTransaction();
+        if (activePeerList.isEmpty()) {
+            log.warn("Active peer is empty.");
+            return Collections.emptyList();
+        }
+        // TODO sync peer selection policy
+        List<BlockChainProto.Transaction> txList = activePeerList.get(0).syncTransaction();
         log.debug("Synchronize transaction received=" + txList.size());
         List<Transaction> syncList = new ArrayList<>(txList.size());
         for (BlockChainProto.Transaction tx : txList) {

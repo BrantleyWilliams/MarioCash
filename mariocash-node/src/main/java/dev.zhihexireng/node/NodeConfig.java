@@ -19,17 +19,25 @@ package dev.zhihexireng.node;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.net.NodeSyncServer;
 import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping;
 
 @Configuration
-class NodeConfig {
+public class NodeConfig {
 
     @Bean
-    PeerGroup peerGroup() {
-        return new PeerGroup();
+    NodeProperties nodeProperties() {
+        return new NodeProperties();
+    }
+
+    @Bean
+    PeerGroup peerGroup(NodeProperties nodeProperties) {
+        PeerGroup peerGroup = new PeerGroup();
+        peerGroup.setSeedPeerList(nodeProperties.getSeedPeerList());
+        return peerGroup;
     }
 
     @Bean
@@ -38,8 +46,9 @@ class NodeConfig {
     }
 
     @Bean
-    NodeManager nodeManager(MessageSender messageSender) {
-        NodeManager manager = new NodeManagerMock();
+    NodeManager nodeManager(MessageSender messageSender, PeerGroup peerGroup,
+                            NodeProperties nodeProperties) {
+        NodeManager manager = new NodeManagerMock(peerGroup, nodeProperties.getGrpc());
         manager.setListener(messageSender);
         return manager;
     }

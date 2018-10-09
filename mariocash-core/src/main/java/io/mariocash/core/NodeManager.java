@@ -41,8 +41,11 @@ public interface NodeManager {
 
     Block getBlockByIndexOrHash(String indexOrHash);
 
+    String getNodeUri();
+
+    List<String> getPeerUriList();
+
     DefaultConfig getDefaultConfig();
 
     Wallet getWallet();
-
 }

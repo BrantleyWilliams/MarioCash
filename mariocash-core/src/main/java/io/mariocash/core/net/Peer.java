@@ -16,28 +16,73 @@
 
 package dev.zhihexireng.core.net;
 
-public class Peer {
-    String host;
-    int port;
+import com.google.common.annotations.VisibleForTesting;
+import dev.zhihexireng.core.Account;
+import org.spongycastle.util.encoders.Hex;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
+public class Peer {
+    private static final String PEER_URI_FORMAT = "%s://%s@%s";
+
+    public static final String MARIOCASH_NODE_SCHEMA = "ynode";
+
+    private byte[] id;
+    private String host;
+    private int port;
+    private String ynodeUri;
+
+    @VisibleForTesting
     public Peer(String host, int port) {
+        this.id = "node".getBytes();
         this.host = host;
         this.port = port;
+    }
+
+    private Peer(String ynodeUri) {
+        try {
+            URI uri = new URI(ynodeUri);
+            if (!uri.getScheme().equals(MARIOCASH_NODE_SCHEMA)) {
+                throw new RuntimeException("expecting URL in the format ynode://PUBKEY@HOST:PORT");
+            }
+            this.id = Hex.decode(uri.getUserInfo());
+            this.host = uri.getHost();
+            this.port = uri.getPort();
+            this.ynodeUri = ynodeUri;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("expecting URL in the format ynode://PUBKEY@HOST:PORT", e);
+        }
+    }
+
+    public String getYnodeUri() {
+        return ynodeUri;
     }
 
     public String getHost() {
         return host;
     }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
-
     public int getPort() {
         return port;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public static Peer valueOf(String nodeId, String host, int port) {
+        return new Peer(String.format(PEER_URI_FORMAT, MARIOCASH_NODE_SCHEMA,
+                nodeId, host + ":" + port));
+    }
+
+    public static Peer valueOf(String addressOrYnode) {
+        try {
+            URI uri = new URI(addressOrYnode);
+            if (uri.getScheme().equals(MARIOCASH_NODE_SCHEMA)) {
+                return new Peer(addressOrYnode);
+            }
+        } catch (URISyntaxException e) {
+            // continue
+        }
+        final String generatedNodeId = Hex.toHexString(new Account().getKey().getNodeId());
+        return new Peer(String.format(PEER_URI_FORMAT, MARIOCASH_NODE_SCHEMA,
+                generatedNodeId, addressOrYnode));
     }
 }

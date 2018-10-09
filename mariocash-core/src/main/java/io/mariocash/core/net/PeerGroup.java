@@ -17,13 +17,19 @@
 package dev.zhihexireng.core.net;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PeerGroup {
-    List<Peer> peers = new ArrayList<>();
+
+    private List<Peer> peers = Collections.synchronizedList(new ArrayList<>());
+
+    private List<String> seedPeerList;
 
     public void addPeer(Peer peer) {
-        peers.add(peer);
+        if (!peers.contains(peer)) {
+            peers.add(peer);
+        }
     }
 
     public List<Peer> getPeers() {
@@ -32,5 +38,13 @@ public class PeerGroup {
 
     public void clear() {
         this.peers.clear();
+    }
+
+    public List<String> getSeedPeerList() {
+        return seedPeerList;
+    }
+
+    public void setSeedPeerList(List<String> seedPeerList) {
+        this.seedPeerList = seedPeerList;
     }
 }

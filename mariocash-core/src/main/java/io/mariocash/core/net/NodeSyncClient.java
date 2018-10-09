@@ -55,11 +55,12 @@ public class NodeSyncClient {
 
     public void stop() {
         if (channel != null) {
+            // TODO send peer disconnected message
             channel.shutdown();
         }
     }
 
-    public void blockUtilShutdown() throws InterruptedException {
+    void blockUtilShutdown() throws InterruptedException {
         if (channel != null) {
             channel.awaitTermination(5, TimeUnit.MINUTES);
         }
@@ -86,14 +87,15 @@ public class NodeSyncClient {
         return BlockChainGrpc.newBlockingStub(channel).syncTransaction(empty).getTransactionsList();
     }
 
-    public void ping(String message) {
+    public List<String> requestPeerList(String ynode, int limit) {
+        BlockChainProto.PeerRequest request = BlockChainProto.PeerRequest.newBuilder()
+                .setFrom(ynode).setLimit(limit).build();
+        return BlockChainGrpc.newBlockingStub(channel).requestPeerList(request).getPeersList();
+    }
+
+    public Pong ping(String message) {
         Ping request = Ping.newBuilder().setPing(message).build();
-        try {
-            Pong pong = blockingStub.play(request);
-            log.debug(pong.getPong());
-        } catch (Exception e) {
-            log.info("Ping retrying...");
-        }
+        return blockingStub.play(request);
     }
 
     public void broadcastTransaction(BlockChainProto.Transaction[] txs) {
@@ -107,7 +109,8 @@ public class NodeSyncClient {
 
                     @Override
                     public void onError(Throwable t) {
-                        log.warn("Broadcast transaction failed: {}", Status.fromThrowable(t));
+                        log.warn("Broadcast transaction failed: {}",
+                                Status.fromThrowable(t).getCode());
                     }
 
                     @Override
@@ -135,7 +138,7 @@ public class NodeSyncClient {
 
                     @Override
                     public void onError(Throwable t) {
-                        log.warn("Broadcast block failed: {}", Status.fromThrowable(t));
+                        log.warn("Broadcast block failed: {}", Status.fromThrowable(t).getCode());
                     }
 
                     @Override

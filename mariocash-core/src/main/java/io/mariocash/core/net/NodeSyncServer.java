@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core.net;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -33,15 +34,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class NodeSyncServer {
     private static final Logger log = LoggerFactory.getLogger(NodeSyncServer.class);
     private NodeManager nodeManager;
     private Server server;
-    private int port;
 
+    @VisibleForTesting
     public NodeSyncServer() {
     }
 
@@ -49,11 +52,7 @@ public class NodeSyncServer {
         this.nodeManager = nodeManager;
     }
 
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public void start() throws IOException {
+    public void start(int port) throws IOException {
         server = ServerBuilder.forPort(port)
                 .addService(new PingPongImpl())
                 .addService(new BlockChainImpl(nodeManager))
@@ -154,6 +153,31 @@ public class NodeSyncServer {
             responseObserver.onCompleted();
         }
 
+        /**
+         * Request for peer list
+         *
+         * @param peerRequest the request with limit of peer and peer uri
+         * @param responseObserver the observer response to the peer list
+         */
+        @Override
+        public void requestPeerList(BlockChainProto.PeerRequest peerRequest,
+                                    StreamObserver<BlockChainProto.PeerResponse> responseObserver) {
+            log.debug("Synchronize peer request");
+            BlockChainProto.PeerResponse.Builder builder =
+                    BlockChainProto.PeerResponse.newBuilder();
+
+            List<String> peerUriList = nodeManager.getPeerUriList();
+
+            if (peerRequest.getLimit() > 0) {
+                int limit = peerRequest.getLimit();
+                builder.addAllPeers(peerUriList.stream().limit(limit).collect(Collectors.toList()));
+            } else {
+                builder.addAllPeers(peerUriList);
+            }
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+        }
+
         @Override
         public StreamObserver<BlockChainProto.Transaction> broadcastTransaction(
                 StreamObserver<BlockChainProto.Transaction> responseObserver) {
@@ -186,7 +210,7 @@ public class NodeSyncServer {
 
                 @Override
                 public void onError(Throwable t) {
-                    log.warn("Broadcasting transaction failed: {}", t);
+                    log.warn("Broadcasting transaction failed: {}", t.getMessage());
                     txObservers.remove(responseObserver);
                     responseObserver.onError(t);
                 }
@@ -207,12 +231,14 @@ public class NodeSyncServer {
 
             return new StreamObserver<BlockChainProto.Block>() {
                 @Override
-                public void onNext(BlockChainProto.Block block) {
-                    log.debug("Received block: {}", block);
+                public void onNext(BlockChainProto.Block protoBlock) {
+                    log.debug("Received block id=[{}]", protoBlock.getHeader().getIndex());
                     Block newBlock = null;
                     if (nodeManager != null) {
                         try {
-                            newBlock = nodeManager.addBlock(BlockMapper.protoBlockToBlock(block));
+                            Block block = BlockMapper.protoBlockToBlock(protoBlock);
+                            log.debug("Received block hash=" + block.getBlockHash());
+                            newBlock = nodeManager.addBlock(block);
                         } catch (Exception e) {
                             log.error(e.getMessage());
                         }
@@ -223,13 +249,13 @@ public class NodeSyncServer {
                     }
 
                     for (StreamObserver<BlockChainProto.Block> observer : blockObservers) {
-                        observer.onNext(block);
+                        observer.onNext(protoBlock);
                     }
                 }
 
                 @Override
                 public void onError(Throwable t) {
-                    log.warn("Broadcasting block failed: {}", t);
+                    log.warn("Broadcasting block failed: {}", t.getMessage());
                     blockObservers.remove(responseObserver);
                     responseObserver.onError(t);
                 }

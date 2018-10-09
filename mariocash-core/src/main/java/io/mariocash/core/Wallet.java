@@ -237,9 +237,9 @@ public class Wallet {
     }
 
     /**
-     * Sign the plain data.
+     * Sign the data.
      *
-     * @param data plain data
+     * @param data data for signning
      * @return signature as byte[65]
      */
     public byte[] sign(byte[] data) {
@@ -247,19 +247,9 @@ public class Wallet {
     }
 
     /**
-     * Sign the hashed data by sha3().
+     * Verify the sign data with data & signature.
      *
-     * @param hashedData hashed data
-     * @return signature as byte[65]
-     */
-    public byte[] signHashedData(byte[] hashedData) {
-        return key.sign(hashedData).toBinary();
-    }
-
-    /**
-     * Verify the signature with plain data.
-     *
-     * @param data      plain data for signed
+     * @param data      data for signed
      * @param signature signature
      * @return verification result
      */
@@ -271,17 +261,12 @@ public class Wallet {
     }
 
     /**
-     * Verify the signature with hashed data.
+     * Gets node id.
      *
-     * @param hashedData      hashed Data
-     * @param signature signature
-     * @return verification result
+     * @return the node id string
      */
-    public boolean verifyHashedData(byte[] hashedData, byte[] signature) {
-
-        ECKey.ECDSASignature sig = new ECKey.ECDSASignature(signature);
-
-        return key.verify(hashedData, sig);
+    public String getNodeId() {
+        return Hex.toHexString(key.getNodeId());
     }
 
     @Override

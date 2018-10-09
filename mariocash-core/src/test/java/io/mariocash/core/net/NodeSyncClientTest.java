@@ -57,6 +57,9 @@ public class NodeSyncClientTest {
     @Captor
     private ArgumentCaptor<BlockChainProto.Empty> emptyCaptor;
 
+    @Captor
+    private ArgumentCaptor<BlockChainProto.PeerRequest> peerRequestCaptor;
+
     private NodeSyncClient client;
 
     @Before
@@ -68,6 +71,13 @@ public class NodeSyncClientTest {
 
     @Test
     public void play() {
+        doAnswer((invocationOnMock) -> {
+            StreamObserver<BlockChainProto.BlockList> argument = invocationOnMock.getArgument(1);
+            argument.onNext(null);
+            argument.onCompleted();
+            return null;
+        }).when(pingPongService).play(pingRequestCaptor.capture(), any());
+
         String ping = "Ping";
 
         client.ping(ping);
@@ -127,4 +137,20 @@ public class NodeSyncClientTest {
         verify(blockChainService).broadcastBlock(any());
     }
 
+    @Test
+    public void requestPeerList() {
+        doAnswer((invocationOnMock) -> {
+            StreamObserver<BlockChainProto.PeerRequest> argument = invocationOnMock.getArgument(1);
+            argument.onNext(null);
+            argument.onCompleted();
+            return null;
+        }).when(blockChainService).requestPeerList(peerRequestCaptor.capture(), any());
+
+        client.requestPeerList("ynode://75bff16c@localhost:9090", 10);
+
+        verify(blockChainService).requestPeerList(peerRequestCaptor.capture(), any());
+
+        assertEquals("ynode://75bff16c@localhost:9090", peerRequestCaptor.getValue().getFrom());
+        assertEquals(10, peerRequestCaptor.getValue().getLimit());
+    }
 }

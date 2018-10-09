@@ -18,8 +18,15 @@ package dev.zhihexireng.node;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.*;
+import dev.zhihexireng.core.Account;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockBody;
+import dev.zhihexireng.core.BlockHeader;
+import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,14 +44,21 @@ import static org.junit.Assert.assertThat;
 
 public class NodeManagerTest {
 
-    private NodeManager nodeManager;
+    private NodeManagerMock nodeManager;
     private Transaction tx;
     private Block genesisBlock;
     private Block block;
+    private PeerGroup peerGroup;
 
     @Before
     public void setUp() throws Exception {
-        nodeManager = new NodeManagerMock();
+        peerGroup = new PeerGroup();
+        NodeProperties.Grpc grpc = new NodeProperties.Grpc();
+        grpc.setHost("localhost");
+        grpc.setPort(9090);
+        nodeManager = new NodeManagerMock(peerGroup, grpc);
+        assert nodeManager.getNodeUri() != null;
+        nodeManager.init();
         Account author = new Account();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
