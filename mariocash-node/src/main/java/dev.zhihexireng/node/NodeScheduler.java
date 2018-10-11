@@ -47,13 +47,14 @@ class NodeScheduler {
         messageSender.ping();
     }
 
+    //@Scheduled(cron = "*/" + BLOCK_MINE_SEC + " * * * * *")
     @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * BLOCK_MINE_SEC)
     public void generateBlock() throws IOException, NotValidteException {
         if (nodeQueue.isEmpty()) {
-            nodeQueue.addAll(nodeManager.getPeerUriList());
+            nodeQueue.addAll(messageSender.getPeerIdList());
         }
         String peerId = nodeQueue.poll();
-        if (peerId != null && peerId.equals(nodeManager.getNodeUri())) {
+        if (peerId != null && peerId.equals(nodeManager.getNodeId())) {
             nodeManager.generateBlock();
         } else {
             log.debug("ignored peerId=" + peerId);

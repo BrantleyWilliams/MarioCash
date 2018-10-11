@@ -39,11 +39,9 @@ public interface NodeManager {
 
     Set<Block> getBlocks();
 
+    String getNodeId();
+
     Block getBlockByIndexOrHash(String indexOrHash);
-
-    String getNodeUri();
-
-    List<String> getPeerUriList();
 
     DefaultConfig getDefaultConfig();
 

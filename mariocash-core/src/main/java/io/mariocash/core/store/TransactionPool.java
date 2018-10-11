@@ -26,7 +26,7 @@ public interface TransactionPool {
 
     Transaction addTx(Transaction tx) throws IOException;
 
-    List<Transaction> getTxList();
+    List getTxList();
 
     void removeTx(List<String> hashList);
 }

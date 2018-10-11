@@ -86,27 +86,11 @@ public class NodeSyncServerTest {
 
     @Test
     public void play() {
-        PingPongGrpc.PingPongBlockingStub blockingStub = PingPongGrpc.newBlockingStub
-                (grpcServerRule.getChannel());
+        PingPongGrpc.PingPongBlockingStub blockingStub = PingPongGrpc.newBlockingStub(
+                grpcServerRule.getChannel());
 
         Pong pong = blockingStub.play(Ping.newBuilder().setPing("Ping").build());
         assertEquals("Pong", pong.getPong());
-    }
-
-    @Test
-    public void requestPeerList() {
-        when(nodeManagerMock.getPeerUriList()).thenReturn(Arrays.asList("a", "b", "c"));
-
-        BlockChainGrpc.BlockChainBlockingStub blockingStub
-                = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
-        String ynodeUri = "ynode://75bff16c@localhost:9090";
-        BlockChainProto.PeerRequest.Builder builder
-                = BlockChainProto.PeerRequest.newBuilder().setFrom(ynodeUri);
-        BlockChainProto.PeerResponse response = blockingStub.requestPeerList(builder.build());
-        assertTrue(response.getPeersCount() == 3);
-        // limit test
-        response = blockingStub.requestPeerList(builder.setLimit(2).build());
-        assertTrue(response.getPeersCount() == 2);
     }
 
     @Test
@@ -120,7 +104,7 @@ public class NodeSyncServerTest {
         BlockChainProto.SyncLimit syncLimit
                 = BlockChainProto.SyncLimit.newBuilder().setOffset(0).build();
         BlockChainProto.BlockList list = blockingStub.syncBlock(syncLimit);
-        assertTrue(list.getBlocksCount() == 1);
+        assertTrue(list.getBlocksList().size() == 1);
     }
 
     @Test
@@ -131,7 +115,7 @@ public class NodeSyncServerTest {
                 = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
         BlockChainProto.Empty empty = BlockChainProto.Empty.newBuilder().build();
         BlockChainProto.TransactionList list = blockingStub.syncTransaction(empty);
-        assertTrue(list.getTransactionsCount() == 1);
+        assertTrue(list.getTransactionsList().size() == 1);
     }
 
     @Test

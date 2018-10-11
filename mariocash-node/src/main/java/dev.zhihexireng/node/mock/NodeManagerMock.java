@@ -16,7 +16,6 @@
 
 package dev.zhihexireng.node.mock;
 
-import com.google.common.annotations.VisibleForTesting;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockChain;
@@ -25,13 +24,8 @@ import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
-import dev.zhihexireng.core.net.NodeSyncClient;
-import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.TransactionPool;
 import dev.zhihexireng.node.BlockBuilder;
-import dev.zhihexireng.node.config.NodeProperties;
-import dev.zhihexireng.proto.Pong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -39,11 +33,9 @@ import org.spongycastle.crypto.InvalidCipherTextException;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class NodeManagerMock implements NodeManager {
     private static final Logger log = LoggerFactory.getLogger(NodeManager.class);
@@ -58,17 +50,7 @@ public class NodeManagerMock implements NodeManager {
 
     private final Wallet wallet = readWallet();
 
-    private final PeerGroup peerGroup;
-
-    private final Peer peer;
-
     private NodeEventListener listener;
-
-    public NodeManagerMock(PeerGroup peerGroup, NodeProperties.Grpc grpc) {
-        this.peerGroup = peerGroup;
-        peer = Peer.valueOf(wallet.getNodeId(), grpc.getHost(), grpc.getPort());
-        log.info("ynode uri=" + peer.getYnodeUri());
-    }
 
     private Wallet readWallet() {
         Wallet wallet = null;
@@ -86,67 +68,7 @@ public class NodeManagerMock implements NodeManager {
     }
 
     @PostConstruct
-    @VisibleForTesting
-    public void init() {
-        requestPeerList();
-        addActivePeer();
-        peerGroup.addPeer(peer); // add me
-        syncBlockAndTransaction();
-    }
-
-    @Override
-    public void setListener(NodeEventListener listener) {
-        this.listener = listener;
-    }
-
-    private void requestPeerList() {
-        List<String> seedPeerList = peerGroup.getSeedPeerList();
-        if (seedPeerList == null || seedPeerList.isEmpty()) {
-            return;
-        }
-        for (String ynodeUri : seedPeerList) {
-            try {
-                Peer peer = Peer.valueOf(ynodeUri);
-                log.info("Trying to connecting SEED peer at {}", ynodeUri);
-                NodeSyncClient client = new NodeSyncClient(peer.getHost(), peer.getPort());
-                // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
-                List<String> peerList = client.requestPeerList(getNodeUri(), 0);
-                addPeer(peerList);
-            } catch (Exception e) {
-                log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
-            }
-        }
-    }
-
-    private void addPeer(List<String> peerList) {
-        for (String ynode : peerList) {
-            try {
-                Peer peer = Peer.valueOf(ynode);
-                peerGroup.addPeer(peer);
-            } catch (Exception e) {
-                log.warn("ynode={}, error={}", ynode, e.getMessage());
-            }
-        }
-    }
-
-    private void addActivePeer() {
-        if (listener == null) {
-            return;
-        }
-
-        for (Peer peer : peerGroup.getPeers()) {
-            log.info("Trying to connecting peer at {}:{}", peer.getHost(), peer.getPort());
-            NodeSyncClient client = new NodeSyncClient(peer.getHost(), peer.getPort());
-            Pong pong = client.ping("Ping");
-            // TODO validation peer
-            if (!pong.getPong().equals("Pong")) {
-                continue;
-            }
-            listener.newActivePeer(client);
-        }
-    }
-
-    private void syncBlockAndTransaction() {
+    private void init() {
         if (listener == null) {
             return;
         }
@@ -165,8 +87,8 @@ public class NodeManagerMock implements NodeManager {
     }
 
     @Override
-    public List<String> getPeerUriList() {
-        return peerGroup.getPeers().stream().map(Peer::getYnodeUri).collect(Collectors.toList());
+    public void setListener(NodeEventListener listener) {
+        this.listener = listener;
     }
 
     @Override
@@ -236,8 +158,8 @@ public class NodeManagerMock implements NodeManager {
     }
 
     @Override
-    public String getNodeUri() {
-        return peer.getYnodeUri();
+    public String getNodeId() {
+        return wallet.getNodeId();
     }
 
     private void removeTxByBlock(Block block) throws IOException {

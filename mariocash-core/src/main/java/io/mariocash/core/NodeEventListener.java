@@ -16,8 +16,6 @@
 
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.net.NodeSyncClient;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -25,8 +23,6 @@ public interface NodeEventListener {
     void newTransaction(Transaction tx);
 
     void newBlock(Block block);
-
-    void newActivePeer(NodeSyncClient client);
 
     List<Block> syncBlock(long offset) throws IOException;
 
