@@ -17,43 +17,30 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.node.config.NodeProperties;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Arrays;
+import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
 
-@RunWith(MockitoJUnitRunner.class)
 public class MessageSenderTest {
 
     MessageSender messageSender;
 
-    PeerGroup peerGroup;
-
-    @Mock
-    NodeProperties nodeProperties;
-
     @Before
     public void setUp() {
-        when(nodeProperties.getSeedPeerList())
-                .thenReturn(Arrays.asList("ynode://0462b608@localhost:9090"));
-        this.peerGroup = new PeerGroup();
-        this.messageSender = new MessageSender(peerGroup, nodeProperties);
-        messageSender.init();
+        this.messageSender = new MessageSender();
     }
 
     @Test
-    public void getPeerIdList() {
-        peerGroup.addPeer(Peer.valueOf("ynode://0462b608@localhost:9090"));
-        messageSender.getPeerIdList();
-        assertThat(messageSender.getPeerIdList()).contains("0462b608");
+    public void syncBlock() throws IOException {
+        assert messageSender.syncBlock(0).isEmpty();
     }
 
+    @Test
+    public void addActivePeerTest() {
+        messageSender.newPeer(Peer.valueOf("ynode://75bff16c@localhost:9999"));
+        assertEquals(0, messageSender.getActivePeerList().size());
+    }
 }

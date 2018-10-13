@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core.net;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
@@ -30,7 +31,6 @@ import dev.zhihexireng.proto.Pong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -41,17 +41,23 @@ public class NodeSyncClient {
     private final ManagedChannel channel;
     private final PingPongGrpc.PingPongBlockingStub blockingStub;
     private final BlockChainGrpc.BlockChainStub asyncStub;
+    private Peer peer;
 
-    public NodeSyncClient(String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host, port)
-                .usePlaintext()
+    public NodeSyncClient(Peer peer) {
+        this(ManagedChannelBuilder.forAddress(peer.getHost(), peer.getPort()).usePlaintext()
                 .build());
+        this.peer = peer;
     }
 
-    NodeSyncClient(ManagedChannel channel) {
+    @VisibleForTesting
+    public NodeSyncClient(ManagedChannel channel) {
         this.channel = channel;
         blockingStub = PingPongGrpc.newBlockingStub(channel);
         asyncStub = BlockChainGrpc.newStub(channel);
+    }
+
+    public String getPeerYnodeUri() {
+        return peer.getYnodeUri();
     }
 
     public void stop() {
@@ -65,6 +71,11 @@ public class NodeSyncClient {
         if (channel != null) {
             channel.awaitTermination(5, TimeUnit.MINUTES);
         }
+    }
+
+    public Pong ping(String message) {
+        Ping request = Ping.newBuilder().setPing(message).build();
+        return blockingStub.play(request);
     }
 
     /**
@@ -86,11 +97,6 @@ public class NodeSyncClient {
     public List<BlockChainProto.Transaction> syncTransaction() {
         Empty empty = Empty.newBuilder().build();
         return BlockChainGrpc.newBlockingStub(channel).syncTransaction(empty).getTransactionsList();
-    }
-
-    public Pong ping(String message) {
-        Ping request = Ping.newBuilder().setPing(message).build();
-        return blockingStub.play(request);
     }
 
     public void broadcastTransaction(BlockChainProto.Transaction[] txs) {
@@ -150,7 +156,15 @@ public class NodeSyncClient {
         requestObserver.onCompleted();
     }
 
-    public List<String> getPeerList() {
-        return Arrays.asList("ynode://dfdkjfdkjfs@localhost:9090");
+    public List<String> requestPeerList(String ynode, int limit) {
+        BlockChainProto.PeerRequest request = BlockChainProto.PeerRequest.newBuilder()
+                .setFrom(ynode).setLimit(limit).build();
+        return BlockChainGrpc.newBlockingStub(channel).requestPeerList(request).getPeersList();
+    }
+
+    public void broadcastPeer(String ynode) {
+        BlockChainProto.PeerList request = BlockChainProto.PeerList.newBuilder()
+                .addPeers(ynode).build();
+        BlockChainGrpc.newBlockingStub(channel).broadcastPeer(request);
     }
 }

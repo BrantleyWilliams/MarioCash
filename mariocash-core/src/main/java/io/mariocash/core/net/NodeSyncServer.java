@@ -34,8 +34,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class NodeSyncServer {
     private static final Logger log = LoggerFactory.getLogger(NodeSyncServer.class);
@@ -149,6 +151,31 @@ public class NodeSyncServer {
             }
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
+        }
+
+        /**
+         * Request for peer list
+         *
+         * @param peerRequest the request with limit of peer and peer uri
+         * @param responseObserver the observer response to the peer list
+         */
+        @Override
+        public void requestPeerList(BlockChainProto.PeerRequest peerRequest,
+                                    StreamObserver<BlockChainProto.PeerList> responseObserver) {
+            log.debug("Synchronize peer request");
+            BlockChainProto.PeerList.Builder builder = BlockChainProto.PeerList.newBuilder();
+
+            List<String> peerUriList = nodeManager.getPeerUriList();
+
+            if (peerRequest.getLimit() > 0) {
+                int limit = peerRequest.getLimit();
+                builder.addAllPeers(peerUriList.stream().limit(limit).collect(Collectors.toList()));
+            } else {
+                builder.addAllPeers(peerUriList);
+            }
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+            nodeManager.addPeer(peerRequest.getFrom());
         }
 
         @Override

@@ -16,6 +16,8 @@
 
 package dev.zhihexireng.core;
 
+import dev.zhihexireng.core.net.Peer;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -23,6 +25,10 @@ public interface NodeEventListener {
     void newTransaction(Transaction tx);
 
     void newBlock(Block block);
+
+    void newPeer(Peer peer);
+
+    List<String> broadcastPeer(String ynodeUri);
 
     List<Block> syncBlock(long offset) throws IOException;
 

@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.node.mock;
 
+import com.google.common.annotations.VisibleForTesting;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockChain;
@@ -24,8 +25,12 @@ import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.core.net.NodeSyncClient;
+import dev.zhihexireng.core.net.Peer;
+import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.TransactionPool;
 import dev.zhihexireng.node.BlockBuilder;
+import dev.zhihexireng.node.config.NodeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -36,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NodeManagerMock implements NodeManager {
     private static final Logger log = LoggerFactory.getLogger(NodeManager.class);
@@ -50,7 +56,17 @@ public class NodeManagerMock implements NodeManager {
 
     private final Wallet wallet = readWallet();
 
+    private final PeerGroup peerGroup;
+
+    private final Peer peer;
+
     private NodeEventListener listener;
+
+    public NodeManagerMock(PeerGroup peerGroup, NodeProperties.Grpc grpc) {
+        this.peerGroup = peerGroup;
+        peer = Peer.valueOf(wallet.getNodeId(), grpc.getHost(), grpc.getPort());
+        log.info("ynode uri=" + peer.getYnodeUri());
+    }
 
     private Wallet readWallet() {
         Wallet wallet = null;
@@ -68,22 +84,12 @@ public class NodeManagerMock implements NodeManager {
     }
 
     @PostConstruct
-    private void init() {
-        if (listener == null) {
-            return;
-        }
-        try {
-            List<Block> blockList = listener.syncBlock(blockChain.getLastIndex());
-            for (Block block : blockList) {
-                blockChain.addBlock(block);
-            }
-            List<Transaction> txList = listener.syncTransaction();
-            for (Transaction tx : txList) {
-                transactionPool.addTx(tx);
-            }
-        } catch (Exception e) {
-            log.warn(e.getMessage());
-        }
+    @VisibleForTesting
+    public void init() {
+        requestPeerList();
+        activatePeers();
+        peerGroup.addPeer(peer); // add me
+        syncBlockAndTransaction();
     }
 
     @Override
@@ -158,8 +164,94 @@ public class NodeManagerMock implements NodeManager {
     }
 
     @Override
-    public String getNodeId() {
-        return wallet.getNodeId();
+    public String getNodeUri() {
+        return peer.getYnodeUri();
+    }
+
+    @Override
+    public void addPeer(String ynodeUri) {
+        if (peerGroup.contains(ynodeUri)) {
+            log.debug("MarioCash node is exist. uri={}", ynodeUri);
+            return;
+        }
+        addPeerByYnodeUri(ynodeUri);
+        if (listener != null) {
+            List<String> peerList = listener.broadcastPeer(ynodeUri);
+            addPeerByYnodeUri(peerList);
+        }
+    }
+
+    @Override
+    public List<String> getPeerUriList() {
+        return peerGroup.getPeers().stream().map(Peer::getYnodeUri).collect(Collectors.toList());
+    }
+
+    private void addPeerByYnodeUri(List<String> peerList) {
+        for (String ynodeUri : peerList) {
+            addPeerByYnodeUri(ynodeUri);
+        }
+    }
+
+    private void addPeerByYnodeUri(String ynodeUri) {
+        try {
+            Peer peer = Peer.valueOf(ynodeUri);
+            peerGroup.addPeer(peer);
+        } catch (Exception e) {
+            log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
+        }
+    }
+
+    private void activatePeers() {
+        for (Peer peer : peerGroup.getPeers()) {
+            addActivePeer(peer);
+        }
+    }
+
+    private void addActivePeer(Peer peer) {
+        if (listener == null || peer == null) {
+            return;
+        }
+        if (this.peer.getYnodeUri().equals(peer.getYnodeUri())) {
+            return;
+        }
+        listener.newPeer(peer);
+    }
+
+    private void requestPeerList() {
+        List<String> seedPeerList = peerGroup.getSeedPeerList();
+        if (seedPeerList == null || seedPeerList.isEmpty()) {
+            return;
+        }
+        for (String ynodeUri : seedPeerList) {
+            try {
+                Peer peer = Peer.valueOf(ynodeUri);
+                log.info("Trying to connecting SEED peer at {}", ynodeUri);
+                NodeSyncClient client = new NodeSyncClient(peer);
+                // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
+                List<String> peerList = client.requestPeerList(getNodeUri(), 0);
+                addPeerByYnodeUri(peerList);
+            } catch (Exception e) {
+                log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
+            }
+        }
+    }
+
+    private void syncBlockAndTransaction() {
+        if (listener == null) {
+            return;
+        }
+        try {
+            List<Block> blockList = listener.syncBlock(blockChain.getLastIndex());
+            for (Block block : blockList) {
+                blockChain.addBlock(block);
+            }
+            List<Transaction> txList = listener.syncTransaction();
+            for (Transaction tx : txList) {
+                transactionPool.addTx(tx);
+            }
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+        }
     }
 
     private void removeTxByBlock(Block block) throws IOException {
