@@ -16,7 +16,6 @@
 
 package dev.zhihexireng.node.mock;
 
-import com.google.common.annotations.VisibleForTesting;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockChain;
@@ -35,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -83,8 +81,7 @@ public class NodeManagerMock implements NodeManager {
         return wallet;
     }
 
-    @PostConstruct
-    @VisibleForTesting
+    @Override
     public void init() {
         requestPeerList();
         activatePeers();
@@ -174,7 +171,8 @@ public class NodeManagerMock implements NodeManager {
             log.debug("MarioCash node is exist. uri={}", ynodeUri);
             return;
         }
-        addPeerByYnodeUri(ynodeUri);
+        Peer peer = addPeerByYnodeUri(ynodeUri);
+        addActivePeer(peer);
         if (listener != null) {
             List<String> peerList = listener.broadcastPeer(ynodeUri);
             addPeerByYnodeUri(peerList);
@@ -192,13 +190,14 @@ public class NodeManagerMock implements NodeManager {
         }
     }
 
-    private void addPeerByYnodeUri(String ynodeUri) {
+    private Peer addPeerByYnodeUri(String ynodeUri) {
         try {
             Peer peer = Peer.valueOf(ynodeUri);
-            peerGroup.addPeer(peer);
+            return peerGroup.addPeer(peer);
         } catch (Exception e) {
             log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
         }
+        return null;
     }
 
     private void activatePeers() {
