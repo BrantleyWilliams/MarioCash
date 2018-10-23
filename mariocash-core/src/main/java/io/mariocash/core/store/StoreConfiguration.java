@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core.store;
 
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 import org.ehcache.Cache;
@@ -39,7 +40,7 @@ public class StoreConfiguration {
     }
 
     @Bean
-    SimpleTransactionPool simpleTransactionPool() {
+    TransactionPool transactionPool() {
         return new SimpleTransactionPool(txCache());
     }
 
@@ -48,7 +49,7 @@ public class StoreConfiguration {
         log.debug("=== Create cache for transaction");
         return cacheManager().createCache("txCache",
                 CacheConfigurationBuilder
-                        .newCacheConfigurationBuilder(byte[].class, byte[].class,
+                        .newCacheConfigurationBuilder(byte[].class, Transaction.class,
                                 ResourcePoolsBuilder.heap(10)));
     }
 
@@ -59,6 +60,6 @@ public class StoreConfiguration {
 
     @Bean
     TransactionManager transactionManager() {
-        return new TransactionManager(levelDbDataSource(), simpleTransactionPool());
+        return new TransactionManager(levelDbDataSource(), transactionPool());
     }
 }

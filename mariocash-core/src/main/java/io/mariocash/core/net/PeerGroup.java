@@ -16,42 +16,24 @@
 
 package dev.zhihexireng.core.net;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class PeerGroup {
+    private List<Peer> peers = Collections.synchronizedList(new ArrayList<>());
 
-    private Map<String, Peer> peers = new ConcurrentHashMap<>();
-
-    private List<String> seedPeerList;
-
-    public Peer addPeer(Peer peer) {
-        if (peers.containsKey(peer.getYnodeUri())) {
-            return null;
+    public void addPeer(Peer peer) {
+        if (!peers.contains(peer)) {
+            peers.add(peer);
         }
-        peers.put(peer.getYnodeUri(), peer);
-        return peer;
     }
 
-    public Collection<Peer> getPeers() {
-        return peers.values();
-    }
-
-    public boolean contains(String ynodeUri) {
-        return peers.containsKey(ynodeUri);
+    public List<Peer> getPeers() {
+        return peers;
     }
 
     public void clear() {
         this.peers.clear();
-    }
-
-    public List<String> getSeedPeerList() {
-        return seedPeerList;
-    }
-
-    public void setSeedPeerList(List<String> seedPeerList) {
-        this.seedPeerList = seedPeerList;
     }
 }

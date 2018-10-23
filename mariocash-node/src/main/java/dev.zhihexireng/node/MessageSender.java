@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.node;
 
+import com.google.common.annotations.VisibleForTesting;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.NodeEventListener;
 import dev.zhihexireng.core.Transaction;
@@ -23,6 +24,8 @@ import dev.zhihexireng.core.mapper.BlockMapper;
 import dev.zhihexireng.core.mapper.TransactionMapper;
 import dev.zhihexireng.core.net.NodeSyncClient;
 import dev.zhihexireng.core.net.Peer;
+import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Pong;
 import org.slf4j.Logger;
@@ -30,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,13 +45,74 @@ import java.util.stream.Collectors;
 public class MessageSender implements DisposableBean, NodeEventListener {
     private static final Logger log = LoggerFactory.getLogger(MessageSender.class);
 
+    private final PeerGroup peerGroup;
+
+    private List<String> seedPeerList;
+
     private List<NodeSyncClient> activePeerList = Collections.synchronizedList(new ArrayList<>());
+
+    public MessageSender(PeerGroup peerGroup, NodeProperties nodeProperties) {
+        this.peerGroup = peerGroup;
+        this.seedPeerList = nodeProperties.getSeedPeerList();
+    }
+
+    @PostConstruct
+    @VisibleForTesting
+    public void init() {
+        if (seedPeerList == null || seedPeerList.isEmpty()) {
+            return;
+        }
+        for (String ynode : seedPeerList) {
+            try {
+                Peer peer = Peer.valueOf(ynode);
+                log.info("Trying to connecting SEED peer at {}", ynode);
+                NodeSyncClient client = new NodeSyncClient(peer.getHost(), peer.getPort());
+                Pong pong = client.ping("Ping");
+                // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
+                if (!pong.getPong().equals("Pong")) {
+                    continue;
+                }
+                addPeer(client.getPeerList());
+            } catch (Exception e) {
+                log.warn("ynode={}, error={}", ynode, e.getMessage());
+            }
+        }
+        addActivePeer();
+    }
 
     @PreDestroy
     public void destroy() {
         for (NodeSyncClient client : activePeerList) {
             client.stop();
         }
+    }
+
+    private void addPeer(List<String> peerList) {
+        for (String ynode : peerList) {
+            try {
+                Peer peer = Peer.valueOf(ynode);
+                peerGroup.addPeer(peer);
+            } catch (Exception e) {
+                log.warn("ynode={}, error={}", ynode, e.getMessage());
+            }
+        }
+    }
+
+    private void addActivePeer() {
+        for (Peer peer : peerGroup.getPeers()) {
+            log.info("Trying to connecting peer at {}:{}", peer.getHost(), peer.getPort());
+            NodeSyncClient client = new NodeSyncClient(peer.getHost(), peer.getPort());
+            Pong pong = client.ping("Ping");
+            // TODO validation peer
+            if (!pong.getPong().equals("Pong")) {
+                continue;
+            }
+            activePeerList.add(client);
+        }
+    }
+
+    public List<String> getPeerIdList() {
+        return peerGroup.getPeers().stream().map(Peer::getIdShort).collect(Collectors.toList());
     }
 
     public void ping() {
@@ -76,57 +141,6 @@ public class MessageSender implements DisposableBean, NodeEventListener {
         }
     }
 
-    @Override
-    public void newPeer(Peer peer) {
-        if (contains(peer)) {
-            return;
-        }
-        try {
-            NodeSyncClient client = new NodeSyncClient(peer);
-            log.info("Connecting... peer {}:{}", peer.getHost(), peer.getPort());
-            Pong pong = client.ping("Ping");
-            // TODO validation peer
-            if (pong.getPong().equals("Pong")) {
-                activePeerList.add(client);
-            }
-        } catch (Exception e) {
-            log.warn("Fail to add to the activePeerList err=" + e.getMessage());
-        }
-    }
-
-    public List<String> getActivePeerList() {
-        return activePeerList.stream().map(NodeSyncClient::getPeerYnodeUri)
-                .collect(Collectors.toList());
-    }
-
-    private boolean contains(Peer peer) {
-        for (NodeSyncClient client : activePeerList) {
-            if (client.getPeerYnodeUri().equals(peer.getYnodeUri())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Broadcast peer uri
-     *
-     * @param ynodeUri the peer uri to broadcast
-     * @return the block list
-     */
-    @Override
-    public List<String> broadcastPeer(String ynodeUri) {
-        if (activePeerList.isEmpty()) {
-            log.warn("Active peer is empty.");
-            return Collections.emptyList();
-        }
-        List<String> peerList = new ArrayList<>();
-        for (NodeSyncClient client : activePeerList) {
-            peerList.addAll(client.requestPeerList(ynodeUri, 0));
-        }
-        return peerList;
-    }
-
     /**
      * Sync block list.
      *
@@ -137,10 +151,13 @@ public class MessageSender implements DisposableBean, NodeEventListener {
     public List<Block> syncBlock(long offset) throws IOException {
         if (activePeerList.isEmpty()) {
             log.warn("Active peer is empty.");
-            return Collections.emptyList();
         }
         // TODO sync peer selection policy
         List<BlockChainProto.Block> blockList = activePeerList.get(0).syncBlock(offset);
+        log.debug("Synchronize block offset=" + offset);
+        if (blockList == null || blockList.isEmpty()) {
+            return Collections.emptyList();
+        }
         log.debug("Synchronize block received=" + blockList.size());
         List<Block> syncList = new ArrayList<>(blockList.size());
         for (BlockChainProto.Block block : blockList) {
@@ -149,17 +166,8 @@ public class MessageSender implements DisposableBean, NodeEventListener {
         return syncList;
     }
 
-    /**
-     * Sync transaction list.
-     *
-     * @return the transaction list
-     */
     @Override
     public List<Transaction> syncTransaction() throws IOException {
-        if (activePeerList.isEmpty()) {
-            log.warn("Active peer is empty.");
-            return Collections.emptyList();
-        }
         // TODO sync peer selection policy
         List<BlockChainProto.Transaction> txList = activePeerList.get(0).syncTransaction();
         log.debug("Synchronize transaction received=" + txList.size());
