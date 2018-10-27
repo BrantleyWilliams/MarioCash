@@ -25,7 +25,7 @@ import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
-import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
+import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.BlockBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +46,8 @@ public class NodeManagerMock implements NodeManager {
     private final BlockChain blockChain = new BlockChain();
 
 //    private final TransactionPool transactionPool = new TransactionPoolMock();
-    private final TransactionManager txManager = new TransactionManager(new LevelDbDataSource
-            ("nm-mock"), new TransactionPoolMock());
+    private final TransactionManager txManager = new TransactionManager(new HashMapDbSource(), new
+        TransactionPoolMock());
 
     private final DefaultConfig defaultConfig = new DefaultConfig();
 
