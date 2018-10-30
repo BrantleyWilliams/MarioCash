@@ -19,17 +19,14 @@ package dev.zhihexireng.core.store;
 import dev.zhihexireng.core.Transaction;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 public interface TransactionPool {
-    Transaction get(byte[] key);
+    Transaction getTxByHash(String id);
 
-    Transaction put(byte[] key, Transaction tx) throws IOException;
+    Transaction addTx(Transaction tx) throws IOException;
 
-    Map<byte[], Transaction> getAll(Set<byte[]> keys);
+    List getTxList();
 
-    void remove(Set<byte[]> keys);
-
-    void clear();
+    void removeTx(List<String> hashList);
 }

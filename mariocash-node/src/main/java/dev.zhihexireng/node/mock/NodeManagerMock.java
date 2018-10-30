@@ -22,10 +22,9 @@ import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeEventListener;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
-import dev.zhihexireng.core.store.datasource.HashMapDbSource;
+import dev.zhihexireng.core.store.TransactionPool;
 import dev.zhihexireng.node.BlockBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +44,7 @@ public class NodeManagerMock implements NodeManager {
 
     private final BlockChain blockChain = new BlockChain();
 
-//    private final TransactionPool transactionPool = new TransactionPoolMock();
-    private final TransactionManager txManager = new TransactionManager(new HashMapDbSource(), new
-        TransactionPoolMock());
+    private final TransactionPool transactionPool = new TransactionPoolMock();
 
     private final DefaultConfig defaultConfig = new DefaultConfig();
 
@@ -82,8 +79,7 @@ public class NodeManagerMock implements NodeManager {
             }
             List<Transaction> txList = listener.syncTransaction();
             for (Transaction tx : txList) {
-                byte[] key = tx.getHash();
-                txManager.put(key, tx);
+                transactionPool.addTx(tx);
             }
         } catch (Exception e) {
             log.warn(e.getMessage());
@@ -97,13 +93,12 @@ public class NodeManagerMock implements NodeManager {
 
     @Override
     public Transaction getTxByHash(String id) {
-        return txManager.get(id.getBytes());
+        return transactionPool.getTxByHash(id);
     }
 
     @Override
     public Transaction addTransaction(Transaction tx) throws IOException {
-        byte[] key = tx.getHash();
-        Transaction newTx = txManager.put(key, tx);
+        Transaction newTx = transactionPool.addTx(tx);
         if (listener != null) {
             listener.newTransaction(tx);
         }
@@ -112,7 +107,7 @@ public class NodeManagerMock implements NodeManager {
 
     @Override
     public List<Transaction> getTransactionList() {
-        return (List<Transaction>) txManager.getUnconfirmedTxs();
+        return transactionPool.getTxList();
     }
 
     @Override
@@ -123,10 +118,7 @@ public class NodeManagerMock implements NodeManager {
     @Override
     public Block generateBlock() throws IOException, NotValidteException {
         Block block =
-                blockBuilder.build(
-                        new ArrayList<>(txManager.getUnconfirmedTxs()),
-                        blockChain.getPrevBlock()
-                );
+                blockBuilder.build(transactionPool.getTxList(), blockChain.getPrevBlock());
 
         blockChain.addBlock(block);
 
@@ -174,12 +166,12 @@ public class NodeManagerMock implements NodeManager {
         if (block == null || block.getData().getTransactionList() == null) {
             return;
         }
-        Set<byte[]> keys = new HashSet<>();
+        List<String> idList = new ArrayList<>();
 
         for (Transaction tx : block.getData().getTransactionList()) {
-            keys.add(tx.getHash());
+            idList.add(tx.getHashString());
         }
-        this.txManager.batch(keys);
+        this.transactionPool.removeTx(idList);
     }
 
     private boolean isNumeric(String str) {
