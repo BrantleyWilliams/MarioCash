@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.zhihexireng.util;
 
 import org.junit.Assert;
@@ -107,6 +106,22 @@ public class ByteUtilTest {
     public void testByteArrayToInt() {
         assertEquals(0, ByteUtil.byteArrayToInt(null));
         assertEquals(0, ByteUtil.byteArrayToInt(new byte[0]));
+
+//      byte[] x = new byte[] { 5,1,7,0,8 };
+//      long start = System.currentTimeMillis();
+//      for (int i = 0; i < 100000000; i++) {
+//           ByteArray.read32bit(x, 0);
+//      }
+//      long end = System.currentTimeMillis();
+//      System.out.println(end - start + "ms");
+//
+//      long start1 = System.currentTimeMillis();
+//      for (int i = 0; i < 100000000; i++) {
+//          new BigInteger(1, x).intValue();
+//      }
+//      long end1 = System.currentTimeMillis();
+//      System.out.println(end1 - start1 + "ms");
+
     }
 
     @Test
@@ -219,8 +234,7 @@ public class ByteUtilTest {
     @Test
     public void firstNonZeroByte_1() {
 
-        byte[] data = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000000000");
+        byte[] data = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000");
         int result = ByteUtil.firstNonZeroByte(data);
 
         assertEquals(-1, result);
@@ -229,8 +243,7 @@ public class ByteUtilTest {
     @Test
     public void firstNonZeroByte_2() {
 
-        byte[] data = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000332211");
+        byte[] data = Hex.decode("0000000000000000000000000000000000000000000000000000000000332211");
         int result = ByteUtil.firstNonZeroByte(data);
 
         assertEquals(29, result);
@@ -239,8 +252,7 @@ public class ByteUtilTest {
     @Test
     public void firstNonZeroByte_3() {
 
-        byte[] data = Hex.decode(
-                "2211009988776655443322110099887766554433221100998877665544332211");
+        byte[] data = Hex.decode("2211009988776655443322110099887766554433221100998877665544332211");
         int result = ByteUtil.firstNonZeroByte(data);
 
         assertEquals(0, result);
@@ -303,22 +315,19 @@ public class ByteUtilTest {
         List<Integer> found = new ArrayList<>();
         for (int i = 0; i < (data.length * 8); i++) {
             int res = ByteUtil.getBit(data, i);
-            if (res == 1) {
-                if (i != 24 && i != 25 && i != 2) {
+            if (res == 1)
+                if (i != 24 && i != 25 && i != 2)
                     assertTrue(false);
-                } else {
+                else
                     found.add(i);
-                }
-            } else {
-                if (i == 24 || i == 25 || i == 2) {
+            else {
+                if (i == 24 || i == 25 || i == 2)
                     assertTrue(false);
-                }
             }
         }
 
-        if (found.size() != 3) {
+        if (found.size() != 3)
             assertTrue(false);
-        }
         assertTrue(found.get(0) == 2);
         assertTrue(found.get(1) == 24);
         assertTrue(found.get(2) == 25);

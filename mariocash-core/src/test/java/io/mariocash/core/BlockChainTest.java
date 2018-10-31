@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,7 +50,7 @@ public class BlockChainTest {
         Account author = new Account();
         // create blockchain with genesis block
         Transaction tx = new Transaction(author, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
+        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
         BlockHeader.Builder builder = new BlockHeader.Builder()
                 .blockBody(sampleBody);
         BlockHeader blockHeader;
@@ -60,8 +61,7 @@ public class BlockChainTest {
             log.debug("" + block.getIndex());
 
             if (blockchain.getPrevBlock() != null) {
-                log.debug("chain prev block hash : "
-                        + blockchain.getPrevBlock().getPrevBlockHash());
+                log.debug("chain prev block hash : " + blockchain.getPrevBlock().getPrevBlockHash());
             }
             assert block.getIndex() == i + 3;
             // add next block in blockchain
@@ -76,7 +76,7 @@ public class BlockChainTest {
         Account author = new Account();
         BlockChain blockChain = new BlockChain();
         Transaction tx = new Transaction(author, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
+        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)

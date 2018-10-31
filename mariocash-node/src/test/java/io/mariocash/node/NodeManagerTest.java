@@ -22,10 +22,11 @@ import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
-import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static dev.zhihexireng.config.Constants.PROPERTY_KEYPATH;
 import static org.hamcrest.Matchers.containsString;
@@ -43,21 +45,28 @@ import static org.junit.Assert.assertThat;
 
 public class NodeManagerTest {
 
-    private NodeManager nodeManager;
+    private NodeManagerMock nodeManager;
     private Transaction tx;
     private Block genesisBlock;
     private Block block;
+    private PeerGroup peerGroup;
+    private MessageSender sender;
 
     @Before
     public void setUp() throws Exception {
-        nodeManager = new NodeManagerMock();
-        assert nodeManager.getNodeId() != null;
-
+        peerGroup = new PeerGroup();
+        NodeProperties.Grpc grpc = new NodeProperties.Grpc();
+        grpc.setHost("localhost");
+        grpc.setPort(9090);
+        sender = new MessageSender();
+        nodeManager = new NodeManagerMock(sender, peerGroup, grpc);
+        assert nodeManager.getNodeUri() != null;
+        nodeManager.init();
         Account author = new Account();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
         this.tx = new Transaction(author, json);
-        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
+        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
@@ -106,16 +115,13 @@ public class NodeManagerTest {
         DefaultConfig defaultConfig = nodeManager.getDefaultConfig();
 
         assertThat(defaultConfig.getConfig().getString("java.version"), containsString("1.8"));
-        System.out.println("DefaultConfig java.version: "
-                + defaultConfig.getConfig().getString("java.version"));
+        System.out.println("DefaultConfig java.version: " + defaultConfig.getConfig().getString("java.version"));
 
         assertThat(defaultConfig.getConfig().getString("node.name"), containsString("mariocash"));
-        System.out.println("DefaultConfig node.name: "
-                + defaultConfig.getConfig().getString("node.name"));
+        System.out.println("DefaultConfig node.name: " + defaultConfig.getConfig().getString("node.name"));
 
         assertThat(defaultConfig.getConfig().getString("network.port"), containsString("31212"));
-        System.out.println("DefaultConfig network.port: "
-                + defaultConfig.getConfig().getString("network.port"));
+        System.out.println("DefaultConfig network.port: " + defaultConfig.getConfig().getString("network.port"));
     }
 
     @Test

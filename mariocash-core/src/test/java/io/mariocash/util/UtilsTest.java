@@ -53,8 +53,7 @@ public class UtilsTest {
 
     @Test
     public void getAddressShortString() {
-        assert Utils.getAddressShortString(Utils.addressStringToBytes(VALID_ADDR))
-                .equals("6c386a...");
+        assert Utils.getAddressShortString(Utils.addressStringToBytes(VALID_ADDR)).equals("6c386a...");
     }
 
     @Test

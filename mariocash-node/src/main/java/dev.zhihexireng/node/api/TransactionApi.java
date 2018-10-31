@@ -3,7 +3,6 @@ package dev.zhihexireng.node.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
-import dev.zhihexireng.core.Transaction;
 import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
@@ -112,20 +111,26 @@ public interface TransactionApi {
      * @param tx          The transaction object
      */
     String sendTransaction(
-            @JsonRpcParam(value = "tx") String tx) throws IOException;
+            @JsonRpcParam(value = "tx") String tx) throws ParseException,JsonProcessingException;
 
     /**
      *  Creates new message call transaction or a contract creation for signed transactions.
      *
      * @param rawTx     The signed transaction data.
      */
-    byte[] sendRawTransaction(
-            @JsonRpcParam(value = "rawTx") byte[] rawTx) throws IOException;
+    String sendRawTransaction(@JsonRpcParam(value = "rawTx") String rawTx)
+            throws ParseException,JsonProcessingException;
+
+    /**
+     *  Creates new message call transaction or a contract creation for signed transactions.
+     *
+     * @param rawTx     The signed transaction data.
+     */
+    String sendRawTransaction(
+            @JsonRpcParam(value = "rawTx") byte[] rawTx) throws JsonProcessingException;
 
     /**
      *  Creates a filter in the node, to notify when new pending transactions arrive.
      */
     int newPendingTransactionFilter();
 }
-
-

@@ -43,6 +43,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -74,7 +75,7 @@ public class NodeSyncServerTest {
         this.tx = new Transaction(account, json);
         when(nodeManagerMock.addTransaction(any())).thenReturn(tx);
 
-        BlockBody body = new BlockBody(Arrays.asList(new Transaction[] {tx}));
+        BlockBody body = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader header = new BlockHeader.Builder()
                 .blockBody(body)
@@ -86,11 +87,27 @@ public class NodeSyncServerTest {
 
     @Test
     public void play() {
-        PingPongGrpc.PingPongBlockingStub blockingStub = PingPongGrpc.newBlockingStub(
-                grpcServerRule.getChannel());
+        PingPongGrpc.PingPongBlockingStub blockingStub = PingPongGrpc.newBlockingStub
+                (grpcServerRule.getChannel());
 
         Pong pong = blockingStub.play(Ping.newBuilder().setPing("Ping").build());
         assertEquals("Pong", pong.getPong());
+    }
+
+    @Test
+    public void requestPeerList() {
+        when(nodeManagerMock.getPeerUriList()).thenReturn(Arrays.asList("a", "b", "c"));
+
+        BlockChainGrpc.BlockChainBlockingStub blockingStub
+                = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
+        String ynodeUri = "ynode://75bff16c@localhost:9090";
+        BlockChainProto.PeerRequest.Builder builder
+                = BlockChainProto.PeerRequest.newBuilder().setFrom(ynodeUri);
+        BlockChainProto.PeerList response = blockingStub.requestPeerList(builder.build());
+        assertEquals(3, response.getPeersCount());
+        // limit test
+        response = blockingStub.requestPeerList(builder.setLimit(2).build());
+        assertEquals(2, response.getPeersCount());
     }
 
     @Test
@@ -104,18 +121,18 @@ public class NodeSyncServerTest {
         BlockChainProto.SyncLimit syncLimit
                 = BlockChainProto.SyncLimit.newBuilder().setOffset(0).build();
         BlockChainProto.BlockList list = blockingStub.syncBlock(syncLimit);
-        assertTrue(list.getBlocksList().size() == 1);
+        assertEquals(1, list.getBlocksCount());
     }
 
     @Test
     public void syncTransaction() {
-        when(nodeManagerMock.getTransactionList()).thenReturn(Arrays.asList(tx));
+        when(nodeManagerMock.getTransactionList()).thenReturn(Collections.singletonList(tx));
 
         BlockChainGrpc.BlockChainBlockingStub blockingStub
                 = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
         BlockChainProto.Empty empty = BlockChainProto.Empty.newBuilder().build();
         BlockChainProto.TransactionList list = blockingStub.syncTransaction(empty);
-        assertTrue(list.getTransactionsList().size() == 1);
+        assertEquals(1, list.getTransactionsCount());
     }
 
     @Test
