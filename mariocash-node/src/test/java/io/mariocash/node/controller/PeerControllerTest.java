@@ -59,32 +59,22 @@ public class PeerControllerTest {
 
     @Test
     public void shouldAddPeer() throws Exception {
-        requestPeerPost(new PeerDto("ynode://75bff16c@127.0.0.1:9090"))
+        requestPeerPost(new PeerDto("127.0.0.1", 8080))
                 .andDo(print())
-                .andExpect(jsonPath("$.id",
-                        equalTo("ynode://75bff16c@127.0.0.1:9090")));
+                .andExpect(jsonPath("$.host", equalTo("127.0.0.1")))
+                .andExpect(jsonPath("$.port", equalTo(8080)));
     }
 
     @Test
     public void shouldGetPeers() throws Exception {
-        requestPeerPost(new PeerDto("ynode://75bff16c@127.0.0.1:9090"));
-        requestPeerPost(new PeerDto("ynode://75bff16c@30.30.30.30:9090"));
+        requestPeerPost(new PeerDto("127.0.0.1", 8080));
+        requestPeerPost(new PeerDto("30.30.30.30", 8080));
 
         mockMvc
                 .perform(
                         get("/peers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andDo(print());
-    }
-
-    @Test
-    public void shouldGetActivePeers() throws Exception {
-        mockMvc
-                .perform(
-                        get("/peers/active"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)))
                 .andDo(print());
     }
 
