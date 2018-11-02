@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.zhihexireng;
+package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHeader;
