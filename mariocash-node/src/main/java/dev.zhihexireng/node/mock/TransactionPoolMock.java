@@ -20,43 +20,38 @@ import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.store.TransactionPool;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionPoolMock implements TransactionPool {
     private final Map<String, Transaction> txs = new ConcurrentHashMap<>();
 
     @Override
-    public Transaction get(String key) {
-        return txs.get(key);
+    public Transaction getTxByHash(String id) {
+        return txs.get(id);
     }
 
     @Override
-    public Transaction put(Transaction tx) throws IOException {
+    public Transaction addTx(Transaction tx) throws IOException {
+        if (txs.containsKey(tx.getHashString())) {
+            return null;
+        }
         txs.put(tx.getHashString(), tx);
         return tx;
     }
 
     @Override
-    public Map<String, Transaction> getAll(Set<String> keys) {
-        Map<String, Transaction> result = new HashMap<>();
-        for (String key : keys) {
-            result.put(key, txs.get(key));
-        }
-        return result;
+    public List<Transaction> getTxList() {
+        return new ArrayList(txs.values());
     }
 
     @Override
-    public void remove(Set<String> keys) {
-        for (String key : keys) {
-            txs.remove(key);
+    public void removeTx(List<String> hashList) {
+        for (String id : hashList) {
+            txs.remove(id);
         }
     }
 
-    @Override
-    public void clear() {
-        txs.clear();
-    }
 }
