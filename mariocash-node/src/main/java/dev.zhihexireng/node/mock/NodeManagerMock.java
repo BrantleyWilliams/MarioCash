@@ -40,17 +40,17 @@ import java.util.Set;
 public class NodeManagerMock implements NodeManager {
     private static final Logger log = LoggerFactory.getLogger(NodeManager.class);
 
-    private final BlockBuilder blockBuilder = new BlockBuilderMock();
+    private final BlockBuilder blockBuilder = new BlockBuilderMock(this);
 
     private final BlockChain blockChain = new BlockChain();
 
     private final TransactionPool transactionPool = new TransactionPoolMock();
 
+    private NodeEventListener listener;
+
     private final DefaultConfig defaultConfig = new DefaultConfig();
 
     private final Wallet wallet = readWallet();
-
-    private NodeEventListener listener;
 
     private Wallet readWallet() {
         Wallet wallet = null;
@@ -72,6 +72,7 @@ public class NodeManagerMock implements NodeManager {
         if (listener == null) {
             return;
         }
+
         try {
             List<Block> blockList = listener.syncBlock(blockChain.getLastIndex());
             for (Block block : blockList) {
@@ -93,12 +94,12 @@ public class NodeManagerMock implements NodeManager {
 
     @Override
     public Transaction getTxByHash(String id) {
-        return transactionPool.getTxByHash(id);
+        return (Transaction) transactionPool.getTxByHash(id);
     }
 
     @Override
     public Transaction addTransaction(Transaction tx) throws IOException {
-        Transaction newTx = transactionPool.addTx(tx);
+        Transaction newTx = (Transaction) transactionPool.addTx(tx);
         if (listener != null) {
             listener.newTransaction(tx);
         }
@@ -118,7 +119,10 @@ public class NodeManagerMock implements NodeManager {
     @Override
     public Block generateBlock() throws IOException, NotValidteException {
         Block block =
-                blockBuilder.build(transactionPool.getTxList(), blockChain.getPrevBlock());
+                blockBuilder.build(
+                        this.wallet,
+                        transactionPool.getTxList(),
+                        blockChain.getPrevBlock());
 
         blockChain.addBlock(block);
 
@@ -155,11 +159,6 @@ public class NodeManagerMock implements NodeManager {
         } else {
             return blockChain.getBlockByHash(indexOrHash);
         }
-    }
-
-    @Override
-    public String getNodeId() {
-        return wallet.getNodeId();
     }
 
     private void removeTxByBlock(Block block) throws IOException {
