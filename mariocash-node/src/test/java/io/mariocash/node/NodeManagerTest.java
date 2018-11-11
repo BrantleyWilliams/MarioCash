@@ -37,6 +37,7 @@ import java.util.Arrays;
 
 import static dev.zhihexireng.config.Constants.PROPERTY_KEYPATH;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -51,22 +52,24 @@ public class NodeManagerTest {
     @Before
     public void setUp() throws Exception {
         nodeManager = new NodeManagerMock();
-        Wallet wallet = nodeManager.getWallet();
+        assert nodeManager.getNodeId() != null;
+
+        Account author = new Account();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        this.tx = new Transaction(wallet, json);
+        this.tx = new Transaction(author, json);
         BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
                 .prevBlock(null)
-                .build(wallet);
+                .build(author);
         this.genesisBlock = new Block(genesisBlockHeader, sampleBody);
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
                 .prevBlock(genesisBlock) // genesis block
-                .build(wallet);
+                .build(author);
 
         this.block = new Block(blockHeader, sampleBody);
     }
@@ -85,7 +88,8 @@ public class NodeManagerTest {
         nodeManager.addBlock(block);
         assert nodeManager.getBlocks().size() == 2;
         assert nodeManager.getBlockByIndexOrHash("1").getBlockHash().equals(block.getBlockHash());
-        assert nodeManager.getTxByHash(tx.getHashString()) == null;
+        Transaction foundTx = nodeManager.getTxByHash(tx.getHashString());
+        assert foundTx.getHashString().equals(tx.getHashString());
     }
 
     @Test
@@ -96,7 +100,8 @@ public class NodeManagerTest {
         Block chainedBlock =  nodeManager.getBlockByIndexOrHash(newBlock.getBlockHash());
         assert chainedBlock.getBlockHash().equals(newBlock.getBlockHash());
         assert chainedBlock.getData().getSize() == 1;
-        assert nodeManager.getTxByHash(tx.getHashString()) == null;
+        assertThat(nodeManager.getTxByHash(tx.getHashString()).getHashString(),
+                is(tx.getHashString()));
     }
 
     @Test
