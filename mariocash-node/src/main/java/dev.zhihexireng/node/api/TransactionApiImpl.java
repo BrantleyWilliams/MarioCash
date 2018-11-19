@@ -1,17 +1,22 @@
 package dev.zhihexireng.node.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Longs;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHeader;
-import dev.zhihexireng.node.exception.FailedOperationException;
-import dev.zhihexireng.node.exception.NonExistObjectException;
-import dev.zhihexireng.node.exception.RejectedAccessException;
-import dev.zhihexireng.node.exception.WrongStructuredException;
 import dev.zhihexireng.node.mock.TransactionMock;
 import dev.zhihexireng.node.mock.TransactionReceiptMock;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.spongycastle.util.Arrays;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +25,13 @@ import java.io.IOException;
 @Service
 @AutoJsonRpcServiceImpl
 public class TransactionApiImpl implements TransactionApi {
+
+    private final NodeManager nodeManager;
+
+    public TransactionApiImpl(NodeManager nodeManager) {
+        this.nodeManager = nodeManager;
+    }
+
 
     /* get */
     @Override
@@ -49,7 +61,7 @@ public class TransactionApiImpl implements TransactionApi {
 
     @Override
     public String getTransactionByHash(String hashOfTx) throws IOException {
-        TransactionMock txMock = new TransactionMock();
+        TransactionMock txMock = new TransactionMock(this.nodeManager);
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
@@ -57,7 +69,7 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public String getTransactionByBlockHashAndIndex(
             String hashOfBlock, int txIndexPosition) throws IOException {
-        TransactionMock txMock = new TransactionMock();
+        TransactionMock txMock = new TransactionMock(this.nodeManager);
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
@@ -65,7 +77,7 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public String getTransactionByBlockNumberAndIndex(
             int blockNumber, int txIndexPosition) throws IOException {
-        TransactionMock txMock = new TransactionMock();
+        TransactionMock txMock = new TransactionMock(this.nodeManager);
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
@@ -73,7 +85,7 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public String getTransactionByBlockNumberAndIndex(
             String tag, int txIndexPosition) throws IOException {
-        TransactionMock txMock = new TransactionMock();
+        TransactionMock txMock = new TransactionMock(this.nodeManager);
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
@@ -128,10 +140,6 @@ public class TransactionApiImpl implements TransactionApi {
         int txHeaderLength;
         txHeaderLength = typeLength + versionLength + dataHashLength + timestampLength
                 + dataHashLength + dataSizeLength + signatureLength;
-
-        if (bytes.length > txHeaderLength) {
-            throw new WrongStructuredException();
-        }
 
         int sum = 0;
         type = Arrays.copyOfRange(bytes, sum, sum += typeLength);
