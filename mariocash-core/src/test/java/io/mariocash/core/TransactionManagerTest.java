@@ -18,11 +18,9 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.store.StoreConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.spongycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -76,8 +74,8 @@ public class TransactionManagerTest {
     }
 
     @Test
-    public void shouldPutByTxObject() throws IOException, InvalidCipherTextException {
-        tm.put(new Transaction(new Wallet(new DefaultConfig()), new JsonObject()));
+    public void shouldPutByTxObject() throws IOException {
+        tm.put(new Transaction(new Account(), new JsonObject()));
     }
 
     @Test

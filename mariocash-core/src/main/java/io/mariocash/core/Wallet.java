@@ -124,16 +124,6 @@ public class Wallet {
     }
 
     /**
-     * Wallet constructor.
-     *
-     * @throws IOException IOException
-     * @throws InvalidCipherTextException InvalidCipherTextException
-     */
-    public Wallet() throws IOException, InvalidCipherTextException {
-        this(new DefaultConfig());
-    }
-
-    /**
      * Wallet constructor with DefaultConfig.
      *
      * @param config DefaultConfig
@@ -247,9 +237,9 @@ public class Wallet {
     }
 
     /**
-     * Sign the plain data.
+     * Sign the data.
      *
-     * @param data plain data
+     * @param data data for signning
      * @return signature as byte[65]
      */
     public byte[] sign(byte[] data) {
@@ -257,19 +247,9 @@ public class Wallet {
     }
 
     /**
-     * Sign the hashed data by sha3().
+     * Verify the sign data with data & signature.
      *
-     * @param hashedData hashed data
-     * @return signature as byte[65]
-     */
-    public byte[] signHashedData(byte[] hashedData) {
-        return key.sign(hashedData).toBinary();
-    }
-
-    /**
-     * Verify the signature with plain data.
-     *
-     * @param data      plain data for signed
+     * @param data      data for signed
      * @param signature signature
      * @return verification result
      */
@@ -278,20 +258,6 @@ public class Wallet {
         ECKey.ECDSASignature sig = new ECKey.ECDSASignature(signature);
 
         return key.verify(HashUtil.sha3(data), sig);
-    }
-
-    /**
-     * Verify the signature with hashed data.
-     *
-     * @param hashedData      hashed Data
-     * @param signature signature
-     * @return verification result
-     */
-    public boolean verifyHashedData(byte[] hashedData, byte[] signature) {
-
-        ECKey.ECDSASignature sig = new ECKey.ECDSASignature(signature);
-
-        return key.verify(hashedData, sig);
     }
 
     /**
