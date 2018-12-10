@@ -29,6 +29,7 @@ import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 @RunWith(SpringRunner.class)
 public class BlockTest {
@@ -42,7 +43,7 @@ public class BlockTest {
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
         Transaction tx = new Transaction(wallet, json);
-        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
+        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
@@ -65,10 +66,12 @@ public class BlockTest {
     @Test
     public void deserializeBlockFromSerializerTest() throws IOException {
         byte[] bytes = SerializationUtils.serialize(block);
+        assert bytes != null;
         ByteString byteString = ByteString.copyFrom(bytes);
         byte[] byteStringBytes = byteString.toByteArray();
         assert bytes.length == byteStringBytes.length;
         Block deserializeBlock = (Block) SerializationUtils.deserialize(byteStringBytes);
+        assert deserializeBlock != null;
         assert block.getBlockHash().equals(deserializeBlock.getBlockHash());
     }
 

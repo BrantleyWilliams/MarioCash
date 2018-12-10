@@ -34,30 +34,34 @@ class NodeScheduler {
 
     private static final int BLOCK_MINE_SEC = 10;
 
-    private Queue<String> nodeQueue = new LinkedBlockingQueue<>();
+    private final Queue<String> nodeQueue = new LinkedBlockingQueue<>();
+
+    private final MessageSender messageSender;
+
+    private final NodeManager nodeManager;
 
     @Autowired
-    MessageSender messageSender;
-
-    @Autowired
-    NodeManager nodeManager;
+    public NodeScheduler(MessageSender messageSender, NodeManager nodeManager) {
+        this.messageSender = messageSender;
+        this.nodeManager = nodeManager;
+    }
 
     @Scheduled(fixedRate = 1000 * 60 * 5)
     public void ping() {
         messageSender.ping();
     }
 
-    //@Scheduled(cron = "*/" + BLOCK_MINE_SEC + " * * * * *")
     @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * BLOCK_MINE_SEC)
     public void generateBlock() throws IOException, NotValidteException {
         if (nodeQueue.isEmpty()) {
-            nodeQueue.addAll(messageSender.getPeerIdList());
+            nodeQueue.addAll(nodeManager.getPeerUriList());
         }
         String peerId = nodeQueue.poll();
-        if (peerId != null && peerId.equals(nodeManager.getNodeId())) {
+        if (peerId != null && peerId.equals(nodeManager.getNodeUri())) {
             nodeManager.generateBlock();
         } else {
-            log.debug("ignored peerId=" + peerId);
+            assert peerId != null;
+            log.debug("ignored peer=" + peerId.substring(peerId.lastIndexOf(":")));
         }
     }
 
