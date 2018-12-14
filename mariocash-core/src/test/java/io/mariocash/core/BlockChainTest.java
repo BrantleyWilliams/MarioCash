@@ -10,7 +10,6 @@ import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,7 +53,7 @@ public class BlockChainTest {
 
         // create blockchain with genesis block
         Transaction tx = new Transaction(wallet, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
         BlockHeader.Builder builder = new BlockHeader.Builder()
                 .blockBody(sampleBody);
         BlockHeader blockHeader;
@@ -81,7 +80,7 @@ public class BlockChainTest {
         Wallet wallet = new Wallet(new DefaultConfig());
         BlockChain blockChain = new BlockChain();
         Transaction tx = new Transaction(wallet, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
