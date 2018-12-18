@@ -1,10 +1,8 @@
 package dev.zhihexireng;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
 import dev.zhihexireng.trie.Trie;
 import org.apache.commons.codec.binary.Hex;
@@ -23,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 public class TrieTests {
     private static final Logger log = LoggerFactory.getLogger(Trie.class);
 
-    public Wallet wallet;
+    public Account from;
     public Transaction tx1;
     public Transaction tx2;
 
@@ -43,16 +41,18 @@ public class TrieTests {
         data2.addProperty("value", 10);
 
         // create account
-        this.wallet = new Wallet(new DefaultConfig());
+        this.from = new Account();
 
         // create sample tx
-        this.tx1 = new Transaction(this.wallet, data1);
-        this.tx2 = new Transaction(this.wallet, data2);
+        this.tx1 = new Transaction(from, data1);
+        this.tx2 = new Transaction(from, data2);
 
     }
 
     @Test
-    public void MerkleRootTest() throws IOException {
+    public void MerkleRootTest() throws IOException, NotValidteException {
+
+        byte[] merkleRoot;
 
         // 1. test merkle root with tx 7
         // create transactions
@@ -66,7 +66,6 @@ public class TrieTests {
         txsList.add(this.tx2);
         txsList.add(this.tx2);
 
-        byte[] merkleRoot;
         merkleRoot = Trie.getMerkleRoot(txsList);
         assertNotNull(merkleRoot);
 

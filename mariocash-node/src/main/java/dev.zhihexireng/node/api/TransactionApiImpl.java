@@ -9,7 +9,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
-import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHeader;
 import dev.zhihexireng.node.mock.TransactionMock;
@@ -25,13 +24,6 @@ import java.io.IOException;
 @Service
 @AutoJsonRpcServiceImpl
 public class TransactionApiImpl implements TransactionApi {
-
-    private final NodeManager nodeManager;
-
-    public TransactionApiImpl(NodeManager nodeManager) {
-        this.nodeManager = nodeManager;
-    }
-
 
     /* get */
     @Override
@@ -61,7 +53,7 @@ public class TransactionApiImpl implements TransactionApi {
 
     @Override
     public String getTransactionByHash(String hashOfTx) throws IOException {
-        TransactionMock txMock = new TransactionMock(this.nodeManager);
+        TransactionMock txMock = new TransactionMock();
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
@@ -69,7 +61,7 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public String getTransactionByBlockHashAndIndex(
             String hashOfBlock, int txIndexPosition) throws IOException {
-        TransactionMock txMock = new TransactionMock(this.nodeManager);
+        TransactionMock txMock = new TransactionMock();
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
@@ -77,7 +69,7 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public String getTransactionByBlockNumberAndIndex(
             int blockNumber, int txIndexPosition) throws IOException {
-        TransactionMock txMock = new TransactionMock(this.nodeManager);
+        TransactionMock txMock = new TransactionMock();
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
@@ -85,7 +77,7 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public String getTransactionByBlockNumberAndIndex(
             String tag, int txIndexPosition) throws IOException {
-        TransactionMock txMock = new TransactionMock(this.nodeManager);
+        TransactionMock txMock = new TransactionMock();
         Transaction tx = txMock.retTxMock();
         return tx.toString();
     }
