@@ -25,7 +25,7 @@ import java.util.Set;
 
 public interface NodeManager {
 
-    void setListener(NodeEventListener listener);
+    void init();
 
     Transaction addTransaction(Transaction tx) throws IOException;
 
@@ -39,9 +39,15 @@ public interface NodeManager {
 
     Set<Block> getBlocks();
 
-    String getNodeId();
-
     Block getBlockByIndexOrHash(String indexOrHash);
+
+    String getNodeUri();
+
+    void addPeer(String peer);
+
+    void removePeer(String peer);
+
+    List<String> getPeerUriList();
 
     DefaultConfig getDefaultConfig();
 

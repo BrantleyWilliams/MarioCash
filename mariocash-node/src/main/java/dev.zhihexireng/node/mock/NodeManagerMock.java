@@ -19,29 +19,34 @@ package dev.zhihexireng.node.mock;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockChain;
-import dev.zhihexireng.core.NodeEventListener;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
+import dev.zhihexireng.core.net.NodeSyncClient;
+import dev.zhihexireng.core.net.Peer;
+import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.BlockBuilder;
+import dev.zhihexireng.node.MessageSender;
+import dev.zhihexireng.node.config.NodeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
-import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NodeManagerMock implements NodeManager {
     private static final Logger log = LoggerFactory.getLogger(NodeManager.class);
 
-    private final BlockBuilder blockBuilder = new BlockBuilderMock();
+    private final BlockBuilder blockBuilder = new BlockBuilderMock(this);
 
     private final BlockChain blockChain = new BlockChain();
 
@@ -52,7 +57,19 @@ public class NodeManagerMock implements NodeManager {
 
     private final Wallet wallet = readWallet();
 
-    private NodeEventListener listener;
+    private final PeerGroup peerGroup;
+
+    private final Peer peer;
+
+    private final MessageSender messageSender;
+
+    public NodeManagerMock(MessageSender messageSender, PeerGroup peerGroup,
+                           NodeProperties.Grpc grpc) {
+        this.peerGroup = peerGroup;
+        this.messageSender = messageSender;
+        peer = Peer.valueOf(wallet.getNodeId(), grpc.getHost(), grpc.getPort());
+        log.info("ynode uri=" + peer.getYnodeUri());
+    }
 
     private Wallet readWallet() {
         Wallet wallet = null;
@@ -69,42 +86,31 @@ public class NodeManagerMock implements NodeManager {
         return wallet;
     }
 
-    @PostConstruct
-    private void init() {
-        if (listener == null) {
-            return;
-        }
-        try {
-            List<Block> blockList = listener.syncBlock(blockChain.getLastIndex());
-            for (Block block : blockList) {
-                blockChain.addBlock(block);
-            }
-            List<Transaction> txList = listener.syncTransaction();
-            for (Transaction tx : txList) {
-                txManager.put(tx);
-            }
-        } catch (Exception e) {
-            log.warn(e.getMessage());
-        }
+    @PreDestroy
+    public void destroy() {
+        log.info("destroy uri=" + peer.getYnodeUri());
+        messageSender.destroy(peer.getYnodeUri());
     }
 
     @Override
-    public void setListener(NodeEventListener listener) {
-        this.listener = listener;
+    public void init() {
+        requestPeerList();
+        activatePeers();
+        if (!peerGroup.isEmpty()) {
+            syncBlockAndTransaction();
+        }
+        peerGroup.addPeer(peer); // add me
     }
 
     @Override
     public Transaction getTxByHash(String id) {
-        Transaction transaction = txManager.get(id);
-        return transaction;
+        return txManager.get(id);
     }
 
     @Override
-    public Transaction addTransaction(Transaction tx) {
+    public Transaction addTransaction(Transaction tx) throws IOException {
         Transaction newTx = txManager.put(tx);
-        if (listener != null) {
-            listener.newTransaction(tx);
-        }
+        messageSender.newTransaction(tx);
         return newTx;
     }
 
@@ -122,15 +128,13 @@ public class NodeManagerMock implements NodeManager {
     public Block generateBlock() throws IOException, NotValidteException {
         Block block =
                 blockBuilder.build(
+                        this.wallet,
                         new ArrayList<>(txManager.getUnconfirmedTxs()),
                         blockChain.getPrevBlock()
                 );
 
         blockChain.addBlock(block);
-
-        if (listener != null) {
-            listener.newBlock(block);
-        }
+        messageSender.newBlock(block);
         removeTxByBlock(block);
         return block;
     }
@@ -145,9 +149,7 @@ public class NodeManagerMock implements NodeManager {
             blockChain.addBlock(block);
             newBlock = block;
         }
-        if (listener != null) {
-            listener.newBlock(block);
-        }
+        messageSender.newBlock(block);
         removeTxByBlock(block);
         return newBlock;
     }
@@ -164,8 +166,98 @@ public class NodeManagerMock implements NodeManager {
     }
 
     @Override
-    public String getNodeId() {
-        return wallet.getNodeId();
+    public String getNodeUri() {
+        return peer.getYnodeUri();
+    }
+
+    @Override
+    public void addPeer(String ynodeUri) {
+        if (peerGroup.contains(ynodeUri)) {
+            log.debug("MarioCash node is exist. uri={}", ynodeUri);
+            return;
+        }
+        Peer peer = addPeerByYnodeUri(ynodeUri);
+        addActivePeer(peer);
+        List<String> peerList = messageSender.broadcastPeerConnect(ynodeUri);
+        addPeerByYnodeUri(peerList);
+    }
+
+    @Override
+    public void removePeer(String ynodeUri) {
+        if (peerGroup.removePeer(ynodeUri) != null) {
+            messageSender.broadcastPeerDisconnect(ynodeUri);
+        }
+    }
+
+    @Override
+    public List<String> getPeerUriList() {
+        return peerGroup.getPeers().stream().map(Peer::getYnodeUri).collect(Collectors.toList());
+    }
+
+    private void addPeerByYnodeUri(List<String> peerList) {
+        for (String ynodeUri : peerList) {
+            addPeerByYnodeUri(ynodeUri);
+        }
+    }
+
+    private Peer addPeerByYnodeUri(String ynodeUri) {
+        try {
+            Peer peer = Peer.valueOf(ynodeUri);
+            return peerGroup.addPeer(peer);
+        } catch (Exception e) {
+            log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
+        }
+        return null;
+    }
+
+    private void activatePeers() {
+        for (Peer peer : peerGroup.getPeers()) {
+            addActivePeer(peer);
+        }
+    }
+
+    private void addActivePeer(Peer peer) {
+        if (peer == null || this.peer.getYnodeUri().equals(peer.getYnodeUri())) {
+            return;
+        }
+        messageSender.newPeerChannel(peer);
+    }
+
+    private void requestPeerList() {
+        List<String> seedPeerList = peerGroup.getSeedPeerList();
+        if (seedPeerList == null || seedPeerList.isEmpty()) {
+            return;
+        }
+        for (String ynodeUri : seedPeerList) {
+            if (ynodeUri.equals(peer.getYnodeUri())) {
+                continue;
+            }
+            try {
+                Peer peer = Peer.valueOf(ynodeUri);
+                log.info("Trying to connecting SEED peer at {}", ynodeUri);
+                NodeSyncClient client = new NodeSyncClient(peer);
+                // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
+                List<String> peerList = client.requestPeerList(getNodeUri(), 0);
+                addPeerByYnodeUri(peerList);
+            } catch (Exception e) {
+                log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
+            }
+        }
+    }
+
+    private void syncBlockAndTransaction() {
+        try {
+            List<Block> blockList = messageSender.syncBlock(blockChain.getLastIndex());
+            for (Block block : blockList) {
+                blockChain.addBlock(block);
+            }
+            List<Transaction> txList = messageSender.syncTransaction();
+            for (Transaction tx : txList) {
+                txManager.put(tx);
+            }
+        } catch (Exception e) {
+            log.warn(e.getMessage(), e);
+        }
     }
 
     private void removeTxByBlock(Block block) throws IOException {

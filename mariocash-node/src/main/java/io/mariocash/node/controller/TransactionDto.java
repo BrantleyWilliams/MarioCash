@@ -17,8 +17,11 @@
 package dev.zhihexireng.node.controller;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.core.Account;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.node.config.NodeProperties;
+import dev.zhihexireng.node.mock.NodeManagerMock;
 
 import java.io.IOException;
 import java.security.SignatureException;
@@ -28,12 +31,14 @@ public class TransactionDto {
     private String txHash;
     private String data;
 
+    private static final NodeManager nodeManager = new NodeManagerMock(null, null,
+            new NodeProperties.Grpc());
+
     public static Transaction of(TransactionDto transactionDto) throws IOException {
-        // TODO Account from 에서 가져와서 실제 Account로 변환합니다.
-        Account account = new Account();
+        Wallet wallet = nodeManager.getWallet();
         JsonObject jsonData = new JsonObject();
         jsonData.addProperty("data", transactionDto.getData());
-        return new Transaction(account, jsonData);
+        return new Transaction(wallet, jsonData);
     }
 
     public static TransactionDto createBy(Transaction tx)
