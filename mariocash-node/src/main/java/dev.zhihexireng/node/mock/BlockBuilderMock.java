@@ -17,13 +17,13 @@
 package dev.zhihexireng.node.mock;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
-import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.node.BlockBuilder;
+import org.apache.commons.codec.binary.Hex;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,113 +31,61 @@ import java.util.List;
 
 public class BlockBuilderMock implements BlockBuilder {
 
-    private final NodeManager nodeManager;
-
-    public BlockBuilderMock(NodeManager nodeManager) {
-        this.nodeManager = nodeManager;
-    }
-
-    @Deprecated
     @Override
     public Block build(List<Transaction> txList, Block prevBlock) throws IOException {
+        Account account = new Account();
         BlockBody blockBody = new BlockBody(txList);
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .prevBlock(prevBlock)
-                .blockBody(blockBody).build(nodeManager.getWallet());
+                .blockBody(blockBody).build(account);
         return new Block(blockHeader, blockBody);
     }
 
-    @Override
-    public Block build(Wallet wallet, List<Transaction> txList, Block prevBlock)
-            throws IOException {
-
-        BlockBody blockBody = new BlockBody(txList);
-        BlockHeader blockHeader = new BlockHeader.Builder()
-                .prevBlock(prevBlock)
-                .blockBody(blockBody).build(wallet);
-        return new Block(blockHeader, blockBody);
-    }
-
-    @Deprecated
     @Override
     public Block build() throws IOException {
+        /* 1. Create an account */
+        Account from = new Account();
+        String fromAddress = Hex.encodeHexString(from.getAddress());
 
-        // Create transactions
-        JsonObject txObj1 = new JsonObject();
-        JsonObject txObj2 = new JsonObject();
-        JsonObject txObj3 = new JsonObject();
+        /* 2. Create transactions */
+        JsonObject txObj = new JsonObject();
+        JsonObject txData = new JsonObject();
 
-        txObj1.addProperty("operator", "transfer");
-        txObj1.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
-        txObj1.addProperty("value", 30);
+        txObj.addProperty("version", "0");
+        txObj.addProperty("type", "00000000000000");
+        txObj.addProperty("timestamp", "155810745733540");
+        txObj.addProperty("from",
+                "04a0cb0bc45c5889b8136127409de1ae7d3f668e5f29115730362823ed5223aff9"
+                        + "b2c22210280af1249e27b08bdeb5c0160af74ec5237292b5ee94bd148c9aabbb");
+        txObj.addProperty("dataHash",
+                "ba5f3ea40e95f49bce11942f375ebd3882eb837976eda5c0cb78b9b99ca7b485");
+        txObj.addProperty("dataSize", "13");
+        txObj.addProperty("signature",
+                "b86e02880e12c575e56c5d15e1f491595219295076721a5bfb6042463d6a2d76"
+                        + "8331691db0b8de852390305c0f2b218e596e4a59bf54029cf6a8b9afdbb274104");
+        txObj.addProperty("transactionHash",
+                "c6b5e583ec18891e9de0e29c3f0358a5c99c474bc3ee78e90c618db72193c0");
+        txObj.addProperty("transactionData", txData.toString());
 
-        txObj1.addProperty("operator", "transfer");
-        txObj1.addProperty("to", "0xdB44902E6cE92fa71Bbf06312630Cb39c5bE756C");
-        txObj1.addProperty("value", 40);
-
-        txObj1.addProperty("operator", "transfer");
-        txObj1.addProperty("to", "0xA0A2fceBF3f3cc182eCfcbB65042Af0fB43dd864");
-        txObj1.addProperty("value", 50);
-
-        Transaction tx1 = new Transaction(this.nodeManager.getWallet(), txObj1);
-        Transaction tx2 = new Transaction(this.nodeManager.getWallet(), txObj2);
-        Transaction tx3 = new Transaction(this.nodeManager.getWallet(), txObj3);
+        Transaction tx1 = new Transaction(from, txObj);
+        Transaction tx2 = new Transaction(from, txObj);
+        Transaction tx3 = new Transaction(from, txObj);
 
         List<Transaction> txList = new ArrayList<>();
         txList.add(tx1);
         txList.add(tx2);
         txList.add(tx3);
 
-        // Create a blockBody
+        /* 3. Create a blockBody */
         BlockBody blockBody = new BlockBody(txList);
         String blockBodyStr = blockBody.toString();
 
-        // Create a blockHeader
+        /* 4. Create a blockHeader */
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .prevBlock(null)
-                .blockBody(blockBody).build(this.nodeManager.getWallet());
+                .blockBody(blockBody).build(from);
 
-        // Return a created block
-        return new Block(blockHeader, blockBody);
-    }
-
-    public Block build(Wallet wallet) throws IOException {
-
-        // Create transactions
-        JsonObject txObj1 = new JsonObject();
-        JsonObject txObj2 = new JsonObject();
-        JsonObject txObj3 = new JsonObject();
-
-        txObj1.addProperty("operator", "transfer");
-        txObj1.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
-        txObj1.addProperty("value", 30);
-
-        txObj1.addProperty("operator", "transfer");
-        txObj1.addProperty("to", "0xdB44902E6cE92fa71Bbf06312630Cb39c5bE756C");
-        txObj1.addProperty("value", 40);
-
-        txObj1.addProperty("operator", "transfer");
-        txObj1.addProperty("to", "0xA0A2fceBF3f3cc182eCfcbB65042Af0fB43dd864");
-        txObj1.addProperty("value", 50);
-
-        Transaction tx1 = new Transaction(wallet, txObj1);
-        Transaction tx2 = new Transaction(wallet, txObj2);
-        Transaction tx3 = new Transaction(wallet, txObj3);
-
-        List<Transaction> txList = new ArrayList<>();
-        txList.add(tx1);
-        txList.add(tx2);
-        txList.add(tx3);
-
-        // Create a blockBody
-        BlockBody blockBody = new BlockBody(txList);
-
-        // Create a blockHeader
-        BlockHeader blockHeader = new BlockHeader.Builder()
-                .prevBlock(null)
-                .blockBody(blockBody).build(wallet);
-
-        // Return a created block
+        /* 5. Return a created block */
         return new Block(blockHeader, blockBody);
     }
 }

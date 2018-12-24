@@ -22,11 +22,10 @@ import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidteException;
-import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +33,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
+import java.util.Arrays;
 
 import static dev.zhihexireng.config.Constants.PROPERTY_KEYPATH;
 import static org.hamcrest.Matchers.containsString;
@@ -45,40 +44,32 @@ import static org.junit.Assert.assertThat;
 
 public class NodeManagerTest {
 
-    private NodeManagerMock nodeManager;
+    private NodeManager nodeManager;
     private Transaction tx;
     private Block genesisBlock;
     private Block block;
-    private PeerGroup peerGroup;
-    private MessageSender sender;
 
     @Before
     public void setUp() throws Exception {
-        peerGroup = new PeerGroup();
-        NodeProperties.Grpc grpc = new NodeProperties.Grpc();
-        grpc.setHost("localhost");
-        grpc.setPort(9090);
-        sender = new MessageSender();
-        nodeManager = new NodeManagerMock(sender, peerGroup, grpc);
-        assert nodeManager.getNodeUri() != null;
-        nodeManager.init();
+        nodeManager = new NodeManagerMock();
+        assert nodeManager.getNodeId() != null;
+
         Account author = new Account();
-        Wallet wallet = nodeManager.getWallet();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        this.tx = new Transaction(wallet, json);
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        this.tx = new Transaction(author, json);
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
                 .prevBlock(null)
-                .build(wallet);
+                .build(author);
         this.genesisBlock = new Block(genesisBlockHeader, sampleBody);
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
                 .prevBlock(genesisBlock) // genesis block
-                .build(wallet);
+                .build(author);
 
         this.block = new Block(blockHeader, sampleBody);
     }

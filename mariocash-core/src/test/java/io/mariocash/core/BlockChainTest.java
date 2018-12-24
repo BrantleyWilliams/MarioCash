@@ -1,16 +1,13 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.exception.NotValidteException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,7 +15,7 @@ public class BlockChainTest {
     private static final Logger log = LoggerFactory.getLogger(BlockChainTest.class);
 
     @Test
-    public void shouldBeGetBlockByHash() throws IOException, InvalidCipherTextException {
+    public void shouldBeGetBlockByHash() throws IOException {
         BlockChain blockChain = instantBlockchain();
         Block b0 = blockChain.getGenesisBlock();
         String blockHash = b0.getBlockHash();
@@ -29,7 +26,7 @@ public class BlockChainTest {
     }
 
     @Test
-    public void shouldBeGetBlockByIndex() throws IOException, InvalidCipherTextException {
+    public void shouldBeGetBlockByIndex() throws IOException {
         BlockChain blockChain = instantBlockchain();
         Block prevBlock = blockChain.getPrevBlock();
         String hash = prevBlock.getPrevBlockHash();
@@ -39,28 +36,26 @@ public class BlockChainTest {
     }
 
     @Test
-    public void shouldBeVerifiedBlockChain() throws IOException, InvalidCipherTextException {
+    public void shouldBeVerifiedBlockChain() throws IOException {
         BlockChain blockChain = instantBlockchain();
         assertThat(blockChain.isValidChain()).isEqualTo(true);
     }
 
     @Test
-    public void TransactionGenTest() throws NotValidteException, IOException,
-            InvalidCipherTextException {
+    public void TransactionGenTest() throws NotValidteException, IOException {
         // 모든 테스트는 독립적으로 동작 해야 합니다
         BlockChain blockchain = instantBlockchain();
         int testBlock = 100;
-        Wallet wallet = new Wallet(new DefaultConfig());
-
+        Account author = new Account();
         // create blockchain with genesis block
-        Transaction tx = new Transaction(wallet, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        Transaction tx = new Transaction(author, new JsonObject());
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
         BlockHeader.Builder builder = new BlockHeader.Builder()
                 .blockBody(sampleBody);
         BlockHeader blockHeader;
         for (int i = 0; i < testBlock; i++) {
             // create next block
-            blockHeader = builder.prevBlock(blockchain.getPrevBlock()).build(wallet);
+            blockHeader = builder.prevBlock(blockchain.getPrevBlock()).build(author);
             Block block = new Block(blockHeader, sampleBody);
             log.debug("" + block.getIndex());
 
@@ -77,16 +72,16 @@ public class BlockChainTest {
 
     }
 
-    private BlockChain instantBlockchain() throws IOException, InvalidCipherTextException {
-        Wallet wallet = new Wallet(new DefaultConfig());
+    private BlockChain instantBlockchain() throws IOException {
+        Account author = new Account();
         BlockChain blockChain = new BlockChain();
-        Transaction tx = new Transaction(wallet, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        Transaction tx = new Transaction(author, new JsonObject());
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
                 .prevBlock(null)
-                .build(wallet);
+                .build(author);
 
         Block b0 = new Block(blockHeader, sampleBody);
 
@@ -95,11 +90,11 @@ public class BlockChainTest {
             blockChain.addBlock(
                     new Block(new BlockHeader.Builder()
                             .prevBlock(blockChain.getPrevBlock())
-                            .blockBody(sampleBody).build(wallet), sampleBody));
+                            .blockBody(sampleBody).build(author), sampleBody));
             blockChain.addBlock(
                     new Block(new BlockHeader.Builder()
                             .prevBlock(blockChain.getPrevBlock())
-                            .blockBody(sampleBody).build(wallet), sampleBody));
+                            .blockBody(sampleBody).build(author), sampleBody));
         } catch (NotValidteException e) {
             e.printStackTrace();
             log.warn("invalid block....");
