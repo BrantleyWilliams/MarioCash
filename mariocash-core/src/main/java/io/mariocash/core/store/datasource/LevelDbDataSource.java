@@ -23,8 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -33,20 +31,14 @@ import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 public class LevelDbDataSource implements DbSource {
 
     private static final Logger log = LoggerFactory.getLogger(LevelDbDataSource.class);
-    private static final String DEFAULT_DB_PATH = "resources/db/";
-    boolean alive;
+    private static final String DB_PATH = "resources/db/";
+
     private ReadWriteLock resetDbLock = new ReentrantReadWriteLock();
+
     private String name;
-    private String dbPath;
     private DB db;
 
     public LevelDbDataSource(String name) {
-        this.dbPath = DEFAULT_DB_PATH;
-        this.name = name;
-    }
-
-    public LevelDbDataSource(String dbPath, String name) {
-        this.dbPath = dbPath;
         this.name = name;
     }
 
@@ -54,46 +46,15 @@ public class LevelDbDataSource implements DbSource {
         resetDbLock.writeLock().lock();
         try {
             log.debug("Initialize {} db", name);
-
-            if (alive) {
-                return;
-            }
-
-            if (name == null) {
-                throw new NullPointerException("no name set to the dbStore");
-            }
-
             // TODO resource path set by profile or setting file
             Options options = new Options();
             options.createIfMissing(true);
-            openDb(options);
-            alive = true;
+            this.db = factory.open(new File(DB_PATH + name), options);
         } catch (IOException e) {
-            throw new RuntimeException("Can't initialize db");
+            e.printStackTrace();
         } finally {
             resetDbLock.writeLock().unlock();
         }
-    }
-
-    private void openDb(Options options) throws IOException {
-        try {
-            db = factory.open(getDbFile(), options);
-        } catch (IOException e) {
-            if (e.getMessage().contains("Corruption:")) {
-                factory.repair(getDbFile(), options);
-                db = factory.open(getDbFile(), options);
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    private File getDbFile() {
-        return getDbPath().toFile();
-    }
-
-    private Path getDbPath() {
-        return Paths.get(dbPath, name);
     }
 
     public void put(byte[] key, byte[] value) {
