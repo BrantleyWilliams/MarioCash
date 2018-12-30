@@ -2,10 +2,8 @@ package dev.zhihexireng;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.exception.NotValidteException;
 import dev.zhihexireng.trie.Trie;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
