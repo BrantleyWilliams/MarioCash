@@ -16,43 +16,15 @@
 
 package dev.zhihexireng.core.store.datasource;
 
-import dev.zhihexireng.util.FileUtil;
-import org.junit.AfterClass;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 import static dev.zhihexireng.TestUtils.randomBytes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LevelDbDataSourceTest {
-    private static final String dbPath = "testOutput";
-
-    @AfterClass
-    public static void destroy() {
-        FileUtil.recursiveDelete(Paths.get(dbPath));
-    }
-
-    @Test
-    public void shouldBeReset() {
-        LevelDbDataSource ds = new LevelDbDataSource(dbPath, "reset-test");
-        ds.init();
-
-        byte[] key = randomBytes(32);
-        byte[] value = randomBytes(32);
-        ds.put(key, value);
-        byte[] foundValue = ds.get(key);
-        assertThat(foundValue).isEqualTo(value);
-
-        ds.reset();
-
-        foundValue = ds.get(key);
-        assertThat(foundValue).isNull();
-    }
-
     @Test
     public void shouldPutSomeThing() {
-        LevelDbDataSource ds = new LevelDbDataSource(dbPath, "put-test");
+        LevelDbDataSource ds = new LevelDbDataSource("test");
         ds.init();
 
         byte[] key = randomBytes(32);
@@ -64,12 +36,8 @@ public class LevelDbDataSourceTest {
     }
 
     @Test
-    public void shouldInitialize() {
-        String dbName = "initial-test";
-        LevelDbDataSource ds = new LevelDbDataSource(dbPath, dbName);
-        ds.init();
-
+    public void shouldInitializeLevelDb() {
+        LevelDbDataSource ds = new LevelDbDataSource("test");
         assertThat(ds).isNotNull();
-        assertThat(FileUtil.isExists(Paths.get(dbPath, dbName))).isTrue();
     }
 }
