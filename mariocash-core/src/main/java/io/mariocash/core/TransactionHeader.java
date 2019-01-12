@@ -66,12 +66,13 @@ public class TransactionHeader implements Serializable {
     }
 
     /**
+     * @deprecated
+     * TransactionHeader Constructor.
+     *  - do not use Account parameter for generating TransactionHeader.
      * @param from     account for creating tx
      * @param dataHash data hash
      * @param dataSize data size
      * @throws IOException IOException
-     * @deprecated TransactionHeader Constructor.
-     * - do not use Account parameter for generating TransactionHeader.
      */
     @Deprecated
     public TransactionHeader(Account from, byte[] dataHash, long dataSize) throws IOException {
@@ -117,12 +118,12 @@ public class TransactionHeader implements Serializable {
         return dataHash;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public long getDataSize() {
@@ -157,6 +158,10 @@ public class TransactionHeader implements Serializable {
         return Hex.encodeHexString(this.getHash());
     }
 
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
     /**
      * get transaction signature.
      *
@@ -164,10 +169,6 @@ public class TransactionHeader implements Serializable {
      */
     public byte[] getSignature() {
         return signature;
-    }
-
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
     }
 
     /**
@@ -195,8 +196,9 @@ public class TransactionHeader implements Serializable {
      */
     public byte[] getAddress() throws IOException, SignatureException {
         ECKey keyFromSig = ECKey.signatureToKey(getSignDataHash(), signature);
+        byte[] addressFromSig = keyFromSig.getAddress();
 
-        return keyFromSig.getAddress();
+        return addressFromSig;
     }
 
     /**
@@ -215,8 +217,9 @@ public class TransactionHeader implements Serializable {
      */
     public byte[] getPubKey() throws IOException, SignatureException {
         ECKey keyFromSig = ECKey.signatureToKey(getSignDataHash(), signature);
+        byte[] pubKeyFromSig = keyFromSig.getPubKey();
 
-        return keyFromSig.getPubKey();
+        return pubKeyFromSig;
     }
 
     /**
@@ -226,8 +229,9 @@ public class TransactionHeader implements Serializable {
      */
     @JsonIgnore
     public ECKey getEcKey() throws IOException, SignatureException {
+        ECKey keyFromSig = ECKey.signatureToKey(getSignDataHash(), signature);
 
-        return ECKey.signatureToKey(getSignDataHash(), signature);
+        return keyFromSig;
     }
 
     @Override

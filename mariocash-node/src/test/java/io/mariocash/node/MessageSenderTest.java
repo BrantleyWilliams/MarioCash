@@ -16,68 +16,44 @@
 
 package dev.zhihexireng.node;
 
-import com.google.gson.JsonObject;
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockBody;
-import dev.zhihexireng.core.BlockHeader;
-import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.Peer;
+import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.node.config.NodeProperties;
 import org.junit.Before;
 import org.junit.Test;
-import org.spongycastle.crypto.InvalidCipherTextException;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
 public class MessageSenderTest {
 
-    private MessageSender messageSender;
-    private Transaction tx;
-    private Block block;
+    MessageSender messageSender;
+
+    PeerGroup peerGroup;
+
+    @Mock
+    NodeProperties nodeProperties;
 
     @Before
-    public void setUp() throws IOException, InvalidCipherTextException {
-        Wallet wallet = new Wallet();
-        JsonObject json = new JsonObject();
-        json.addProperty("data", "TEST");
-        this.tx = new Transaction(wallet, json);
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
-
-        BlockHeader genesisBlockHeader = new BlockHeader.Builder()
-                .blockBody(sampleBody)
-                .prevBlock(null)
-                .build(wallet);
-        this.block = new Block(genesisBlockHeader, sampleBody);
-        this.messageSender = new MessageSender();
-
+    public void setUp() {
+        when(nodeProperties.getSeedPeerList())
+                .thenReturn(Arrays.asList("ynode://0462b608@localhost:9090"));
+        this.peerGroup = new PeerGroup();
+        this.messageSender = new MessageSender(peerGroup, nodeProperties);
+        messageSender.init();
     }
 
     @Test
-    public void syncBlock() throws IOException {
-        messageSender.newBlock(block);
-        assert messageSender.syncBlock(0).isEmpty();
+    public void getPeerIdList() {
+        peerGroup.addPeer(Peer.valueOf("ynode://0462b608@localhost:9090"));
+        messageSender.getPeerIdList();
+        assertThat(messageSender.getPeerIdList()).contains("0462b608");
     }
 
-    @Test
-    public void syncTransaction() throws IOException {
-        messageSender.newTransaction(tx);
-        assert messageSender.syncTransaction().isEmpty();
-    }
-
-    @Test
-    public void addActivePeer() {
-        messageSender.newPeerChannel(Peer.valueOf("ynode://75bff16c@localhost:9999"));
-        assert messageSender.getActivePeerList().isEmpty();
-    }
-
-    @Test
-    public void broadcastPeerConnect() {
-        assert messageSender.broadcastPeerConnect("ynode://75bff16c@localhost:9999").isEmpty();
-    }
-
-    @Test
-    public void broadcastPeerDisconnect() {
-        messageSender.broadcastPeerDisconnect("ynode://75bff16c@localhost:9999");
-    }
 }

@@ -21,8 +21,9 @@ import static org.junit.Assert.assertNotNull;
 public class TrieTests {
     private static final Logger log = LoggerFactory.getLogger(Trie.class);
 
-    private Transaction tx1;
-    private Transaction tx2;
+    public Wallet wallet;
+    public Transaction tx1;
+    public Transaction tx2;
 
     @Before
     public void setUp() throws Exception {
@@ -40,11 +41,11 @@ public class TrieTests {
         data2.addProperty("value", 10);
 
         // create account
-        Wallet wallet = new Wallet(new DefaultConfig());
+        this.wallet = new Wallet(new DefaultConfig());
 
         // create sample tx
-        this.tx1 = new Transaction(wallet, data1);
-        this.tx2 = new Transaction(wallet, data2);
+        this.tx1 = new Transaction(this.wallet, data1);
+        this.tx2 = new Transaction(this.wallet, data2);
 
     }
 
@@ -54,7 +55,7 @@ public class TrieTests {
         // 1. test merkle root with tx 7
         // create transactions
         List<Transaction> txsList;
-        txsList = new ArrayList<>();
+        txsList = new ArrayList<Transaction>();
         txsList.add(this.tx1);
         txsList.add(this.tx2);
         txsList.add(this.tx1);
@@ -67,27 +68,47 @@ public class TrieTests {
         merkleRoot = Trie.getMerkleRoot(txsList);
         assertNotNull(merkleRoot);
 
-        System.out.println("MerkelRoot with tx 7=" + Hex.encodeHexString(merkleRoot));
+        if (merkleRoot != null) {
+            System.out.println("MerkelRoot with tx 7=" + Hex.encodeHexString(merkleRoot));
+        } else {
+            System.out.println("MerkleRoot with tx 7 = null");
+        }
+
 
         // 2. test with tx 1
-        txsList = new ArrayList<>();
+        txsList = new ArrayList<Transaction>();
         txsList.add(this.tx1);
         merkleRoot = Trie.getMerkleRoot(txsList);
         assertNotNull(merkleRoot);
 
-        System.out.println("MerkelRoot with tx 1=" + Hex.encodeHexString(merkleRoot));
+        if (merkleRoot != null) {
+            System.out.println("MerkelRoot with tx 1=" + Hex.encodeHexString(merkleRoot));
+        } else {
+            System.out.println("MerkleRoot with tx 1 = null");
+        }
+
 
         // 3. test with tx 0
-        txsList = new ArrayList<>();
+        txsList = new ArrayList<Transaction>();
         merkleRoot = Trie.getMerkleRoot(txsList);
         assertNull(merkleRoot);
 
-        System.out.println("MerkleRoot with tx 0 = null");
+        if (merkleRoot != null) {
+            System.out.println("MerkelRoot with tx 0=" + Hex.encodeHexString(merkleRoot));
+        } else {
+            System.out.println("MerkleRoot with tx 0 = null");
+        }
+
 
         // 4. test with tx null
         merkleRoot = Trie.getMerkleRoot(null);
         assertNull(merkleRoot);
 
-        System.out.println("MerkleRoot with tx null = null");
+        if (merkleRoot != null) {
+            System.out.println("MerkelRoot with tx null=" + Hex.encodeHexString(merkleRoot));
+        } else {
+            System.out.println("MerkleRoot with tx null = null");
+        }
+
     }
 }

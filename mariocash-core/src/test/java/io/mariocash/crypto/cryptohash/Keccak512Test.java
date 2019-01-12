@@ -19,19 +19,20 @@ package dev.zhihexireng.crypto.cryptohash;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 public class Keccak512Test {
 
     Keccak512 keccak512;
-
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         keccak512 = new Keccak512();
     }
 
     @Test
     public void copy() {
         Digest digest = keccak512.copy();
-        assert digest != null;
+        assert  digest != null;
     }
 
     @Test
@@ -46,7 +47,7 @@ public class Keccak512Test {
 
     @Test
     public void engineUpdate() {
-        keccak512.engineUpdate((byte) 'b');
+        keccak512.engineUpdate((byte)'b');
         keccak512.engineUpdate("byte".getBytes(), 0, 4);
     }
 

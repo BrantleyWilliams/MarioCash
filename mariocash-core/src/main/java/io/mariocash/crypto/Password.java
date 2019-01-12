@@ -36,7 +36,11 @@ public class Password {
         }
 
         // 1 more special symbol
-        return password.matches("(.*[,~,!,@,#,$,%,^,&,*,(,),-,_,=,+,[,{,],},|,;,:,<,>,/,?].*$)");
+        if (!password.matches("(.*[,~,!,@,#,$,%,^,&,*,(,),-,_,=,+,[,{,],},|,;,:,<,>,/,?].*$)")) {
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -45,7 +49,7 @@ public class Password {
      *
      * @param input     input data
      * @param outLength output length
-     * @return kdf bytes
+     * @return
      */
     public static byte[] generateKeyDerivation(byte[] input, int outLength) {
         //todo: checking safety ( IV & ...)

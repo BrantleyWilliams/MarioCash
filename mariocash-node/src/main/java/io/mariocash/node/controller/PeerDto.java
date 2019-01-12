@@ -19,24 +19,37 @@ package dev.zhihexireng.node.controller;
 import dev.zhihexireng.core.net.Peer;
 
 class PeerDto {
-    private String id;
+    private String host;
+    private int port;
 
-    PeerDto() {
-    }
+    PeerDto() {}
 
-    PeerDto(String id) {
-        this.id = id;
+    PeerDto(String host, int port) {
+        this.host = host;
+        this.port = port;
     }
 
     public static Peer of(PeerDto peerDto) {
-        return Peer.valueOf(peerDto.id);
+        return new Peer(peerDto.host, peerDto.port);
     }
 
-    public String getId() {
-        return id;
+    public static PeerDto createdBy(Peer peer) {
+        return new PeerDto(peer.getHost(), peer.getPort());
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 }

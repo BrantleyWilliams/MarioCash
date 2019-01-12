@@ -39,7 +39,7 @@ public class TransactionManagerTest {
     TransactionManager tm;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         tm.flush();
     }
 
