@@ -27,7 +27,6 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -42,7 +41,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(BlockController.class)
 @Import(TestConfig.class)
-@IfProfileValue(name = "spring.profiles.active", value = "ci")
 public class BlockControllerTest {
     @Autowired
     private MockMvc mockMvc;

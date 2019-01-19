@@ -18,7 +18,7 @@ package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.exception.NotValidteException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,7 +40,7 @@ class BlockController {
     }
 
     @PostMapping
-    public ResponseEntity add() throws IOException, NotValidateException {
+    public ResponseEntity add() throws IOException, NotValidteException {
         Block generatedBlock = nodeManager.generateBlock();
         return ResponseEntity.ok(BlockDto.createBy(generatedBlock));
     }

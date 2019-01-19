@@ -580,7 +580,7 @@ abstract class KeccakCore extends DigestEngine {
         return 200 - 2 * engineGetDigestLength();
     }
 
-    private void doReset() {
+    private final void doReset() {
         for (int i = 0; i < 25; i++) {
             A[i] = 0;
         }

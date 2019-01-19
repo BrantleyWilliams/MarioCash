@@ -2,14 +2,14 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.exception.NotValidteException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,7 +44,7 @@ public class BlockChainTest {
     }
 
     @Test
-    public void TransactionGenTest() throws NotValidateException, IOException,
+    public void TransactionGenTest() throws NotValidteException, IOException,
             InvalidCipherTextException {
         // 모든 테스트는 독립적으로 동작 해야 합니다
         BlockChain blockchain = instantBlockchain();
@@ -53,7 +53,7 @@ public class BlockChainTest {
 
         // create blockchain with genesis block
         Transaction tx = new Transaction(wallet, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
         BlockHeader.Builder builder = new BlockHeader.Builder()
                 .blockBody(sampleBody);
         BlockHeader blockHeader;
@@ -80,7 +80,7 @@ public class BlockChainTest {
         Wallet wallet = new Wallet(new DefaultConfig());
         BlockChain blockChain = new BlockChain();
         Transaction tx = new Transaction(wallet, new JsonObject());
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
@@ -99,7 +99,7 @@ public class BlockChainTest {
                     new Block(new BlockHeader.Builder()
                             .prevBlock(blockChain.getPrevBlock())
                             .blockBody(sampleBody).build(wallet), sampleBody));
-        } catch (NotValidateException e) {
+        } catch (NotValidteException e) {
             e.printStackTrace();
             log.warn("invalid block....");
         }

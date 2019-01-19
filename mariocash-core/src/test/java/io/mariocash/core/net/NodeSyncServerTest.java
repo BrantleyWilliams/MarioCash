@@ -21,6 +21,7 @@ import io.grpc.internal.testing.StreamRecorder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcServerRule;
 import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
@@ -44,21 +45,23 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NodeSyncServerTest {
 
-    @Rule
-    public final GrpcServerRule grpcServerRule = new GrpcServerRule().directExecutor();
     @Mock
     private NodeManager nodeManagerMock;
+
+    @Rule
+    public final GrpcServerRule grpcServerRule = new GrpcServerRule().directExecutor();
+
     private Transaction tx;
     private Block block;
 
@@ -73,7 +76,7 @@ public class NodeSyncServerTest {
         this.tx = new Transaction(wallet, json);
         when(nodeManagerMock.addTransaction(any())).thenReturn(tx);
 
-        BlockBody body = new BlockBody(Collections.singletonList(tx));
+        BlockBody body = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader header = new BlockHeader.Builder()
                 .blockBody(body)
@@ -93,22 +96,6 @@ public class NodeSyncServerTest {
     }
 
     @Test
-    public void requestPeerList() {
-        when(nodeManagerMock.getPeerUriList()).thenReturn(Arrays.asList("a", "b", "c"));
-
-        BlockChainGrpc.BlockChainBlockingStub blockingStub
-                = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
-        String ynodeUri = "ynode://75bff16c@localhost:9090";
-        BlockChainProto.PeerRequest.Builder builder
-                = BlockChainProto.PeerRequest.newBuilder().setFrom(ynodeUri);
-        BlockChainProto.PeerList response = blockingStub.requestPeerList(builder.build());
-        assertEquals(3, response.getPeersCount());
-        // limit test
-        response = blockingStub.requestPeerList(builder.setLimit(2).build());
-        assertEquals(2, response.getPeersCount());
-    }
-
-    @Test
     public void syncBlock() {
         Set<Block> blocks = new HashSet<>();
         blocks.add(block);
@@ -119,18 +106,18 @@ public class NodeSyncServerTest {
         BlockChainProto.SyncLimit syncLimit
                 = BlockChainProto.SyncLimit.newBuilder().setOffset(0).build();
         BlockChainProto.BlockList list = blockingStub.syncBlock(syncLimit);
-        assertEquals(1, list.getBlocksCount());
+        assertTrue(list.getBlocksList().size() == 1);
     }
 
     @Test
     public void syncTransaction() {
-        when(nodeManagerMock.getTransactionList()).thenReturn(Collections.singletonList(tx));
+        when(nodeManagerMock.getTransactionList()).thenReturn(Arrays.asList(tx));
 
         BlockChainGrpc.BlockChainBlockingStub blockingStub
                 = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
         BlockChainProto.Empty empty = BlockChainProto.Empty.newBuilder().build();
         BlockChainProto.TransactionList list = blockingStub.syncTransaction(empty);
-        assertEquals(1, list.getTransactionsCount());
+        assertTrue(list.getTransactionsList().size() == 1);
     }
 
     @Test

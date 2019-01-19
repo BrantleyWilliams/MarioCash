@@ -52,40 +52,35 @@ public class TransactionApiImpl implements TransactionApi {
     }
 
     @Override
-    public String getTransactionByHash(String hashOfTx) throws IOException {
+    public Transaction getTransactionByHash(String hashOfTx) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        Transaction tx = txMock.retTxMock();
-        return tx.toString();
+        return txMock.retTxMock();
     }
 
     @Override
-    public String getTransactionByBlockHashAndIndex(
+    public Transaction getTransactionByBlockHashAndIndex(
             String hashOfBlock, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        Transaction tx = txMock.retTxMock();
-        return tx.toString();
+        return txMock.retTxMock();
     }
 
     @Override
-    public String getTransactionByBlockNumberAndIndex(
+    public Transaction getTransactionByBlockNumberAndIndex(
             int blockNumber, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        Transaction tx = txMock.retTxMock();
-        return tx.toString();
+        return txMock.retTxMock();
     }
 
     @Override
-    public String getTransactionByBlockNumberAndIndex(
+    public Transaction getTransactionByBlockNumberAndIndex(
             String tag, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        Transaction tx = txMock.retTxMock();
-        return tx.toString();
+        return txMock.retTxMock();
     }
 
     @Override
-    public String getTransactionReceipt(String hashOfTx) {
-        TransactionReceiptMock txReceiptMock = new TransactionReceiptMock();
-        return txReceiptMock.retTxReceiptMock();
+    public TransactionReceiptMock getTransactionReceipt(String hashOfTx) {
+        return new TransactionReceiptMock();
     }
 
     /* send */
@@ -110,7 +105,9 @@ public class TransactionApiImpl implements TransactionApi {
     private Transaction convert(String jsonStr) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return mapper.readValue(jsonStr, Transaction.class);
+        Transaction tx = mapper.readValue(jsonStr, Transaction.class);
+
+        return tx;
     }
 
     private Transaction convert(byte[] bytes) {
@@ -131,8 +128,8 @@ public class TransactionApiImpl implements TransactionApi {
         byte[] data = Arrays.copyOfRange(bytes, sum, bytes.length);
 
 
-        long timestampStr = Longs.fromByteArray(timestamp);
-        long dataSizeStr = Longs.fromByteArray(dataSize);
+        Long timestampStr = Longs.fromByteArray(timestamp);
+        Long dataSizeStr = Longs.fromByteArray(dataSize);
         String dataStr = new String(data);
 
         TransactionHeader txHeader;

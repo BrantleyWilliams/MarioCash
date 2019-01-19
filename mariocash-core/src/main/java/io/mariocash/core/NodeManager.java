@@ -17,7 +17,7 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.exception.NotValidteException;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,29 +25,23 @@ import java.util.Set;
 
 public interface NodeManager {
 
-    void init();
+    void setListener(NodeEventListener listener);
 
-    Transaction addTransaction(Transaction tx);
+    Transaction addTransaction(Transaction tx) throws IOException;
 
     List<Transaction> getTransactionList();
 
     Transaction getTxByHash(String id);
 
-    Block generateBlock() throws IOException, NotValidateException;
+    Block generateBlock() throws IOException, NotValidteException;
 
-    Block addBlock(Block block) throws IOException, NotValidateException;
+    Block addBlock(Block block) throws IOException, NotValidteException;
 
     Set<Block> getBlocks();
 
+    String getNodeId();
+
     Block getBlockByIndexOrHash(String indexOrHash);
-
-    String getNodeUri();
-
-    void addPeer(String peer);
-
-    void removePeer(String peer);
-
-    List<String> getPeerUriList();
 
     DefaultConfig getDefaultConfig();
 

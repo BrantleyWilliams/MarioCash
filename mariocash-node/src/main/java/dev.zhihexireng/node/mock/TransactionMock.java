@@ -23,6 +23,9 @@ public class TransactionMock {
         txObj.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
         txObj.addProperty("value", 100);
 
-        return new Transaction(this.nodeManager.getWallet(), txObj);
+        Transaction tx = new Transaction(this.nodeManager.getWallet(), txObj);
+
+
+        return tx;
     }
 }
