@@ -52,35 +52,40 @@ public class TransactionApiImpl implements TransactionApi {
     }
 
     @Override
-    public Transaction getTransactionByHash(String hashOfTx) throws IOException {
+    public String getTransactionByHash(String hashOfTx) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public Transaction getTransactionByBlockHashAndIndex(
+    public String getTransactionByBlockHashAndIndex(
             String hashOfBlock, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public Transaction getTransactionByBlockNumberAndIndex(
+    public String getTransactionByBlockNumberAndIndex(
             int blockNumber, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public Transaction getTransactionByBlockNumberAndIndex(
+    public String getTransactionByBlockNumberAndIndex(
             String tag, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public TransactionReceiptMock getTransactionReceipt(String hashOfTx) {
-        return new TransactionReceiptMock();
+    public String getTransactionReceipt(String hashOfTx) {
+        TransactionReceiptMock txReceiptMock = new TransactionReceiptMock();
+        return txReceiptMock.retTxReceiptMock();
     }
 
     /* send */

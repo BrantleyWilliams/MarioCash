@@ -13,9 +13,10 @@ public class BlockMock {
         this.nodeManager = nodeManager;
     }
 
-    public Block retBlockMock() throws IOException {
+    public String retBlockMock() throws IOException {
         BlockBuilderMock blockBuilderMock = new BlockBuilderMock(nodeManager);
-        return blockBuilderMock.build(nodeManager.getWallet());
+        Block block = blockBuilderMock.build(nodeManager.getWallet());
+        return block.toString();
     }
 
 }

@@ -12,10 +12,8 @@ public class Block implements Cloneable, Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Block.class);
 
-    private BlockHeader header;
-    private BlockBody data;
-
-    public Block() {}
+    private final BlockHeader header;
+    private final BlockBody data;
 
     public Block(BlockHeader header, BlockBody data) {
         this.header = header;
