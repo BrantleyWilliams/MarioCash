@@ -17,21 +17,21 @@
 package dev.zhihexireng.node.controller;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 
 import java.io.IOException;
 import java.security.SignatureException;
 
 public class TransactionDto {
-    private static final NodeManager nodeManager = new NodeManagerMock(null, null,
-            new NodeProperties.Grpc());
     private String from;
     private String txHash;
     private String data;
+
+    private static final NodeManager nodeManager = new NodeManagerMock();
 
     public static Transaction of(TransactionDto transactionDto) throws IOException {
         Wallet wallet = nodeManager.getWallet();

@@ -23,11 +23,14 @@ import dev.zhihexireng.core.mapper.BlockMapper;
 import dev.zhihexireng.proto.BlockChainProto;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
 
+@RunWith(SpringRunner.class)
 public class BlockTest {
 
     private Block block;
@@ -39,7 +42,7 @@ public class BlockTest {
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
         Transaction tx = new Transaction(wallet, json);
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        BlockBody sampleBody = new BlockBody(Arrays.asList(new Transaction[] {tx}));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
@@ -62,12 +65,10 @@ public class BlockTest {
     @Test
     public void deserializeBlockFromSerializerTest() throws IOException {
         byte[] bytes = SerializationUtils.serialize(block);
-        assert bytes != null;
         ByteString byteString = ByteString.copyFrom(bytes);
         byte[] byteStringBytes = byteString.toByteArray();
         assert bytes.length == byteStringBytes.length;
         Block deserializeBlock = (Block) SerializationUtils.deserialize(byteStringBytes);
-        assert deserializeBlock != null;
         assert block.getBlockHash().equals(deserializeBlock.getBlockHash());
     }
 
