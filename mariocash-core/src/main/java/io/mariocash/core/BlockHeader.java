@@ -41,6 +41,11 @@ public class BlockHeader implements Serializable {
      *
      * @return the index
      */
+    /*
+     * Getter & Setter
+     *
+     * 객체를 최대한 캡슐화 하기 위해서 getter, setter 는 최소한으로 작성. 특히 setter 는 지양
+     */
     public long getIndex() {
         return index;
     }
@@ -112,8 +117,8 @@ public class BlockHeader implements Serializable {
      */
     public static class Builder {
 
-        private byte[] type;
-        private byte[] version;
+        private final byte[] type;
+        private final byte[] version;
         private byte[] prevBlockHash;
         private byte[] merkleRoot;
         private long timestamp;
@@ -165,9 +170,10 @@ public class BlockHeader implements Serializable {
          * @return the block header
          */
         @Deprecated
-        public BlockHeader build(Account from) throws IOException {
+        public BlockHeader build(Account from) {
             timestamp = TimeUtils.getCurrenttime();
-            this.signature = from.getKey().sign(this.getDataHashForSigning()).toBinary();
+            this.signature = from.getKey().sign(
+                    HashUtil.sha3(SerializeUtils.serialize(this))).toByteArray();
             return new BlockHeader(this);
         }
 
@@ -176,9 +182,9 @@ public class BlockHeader implements Serializable {
          *
          * @return the block header
          */
-        public BlockHeader build(Wallet wallet) throws IOException {
+        public BlockHeader build(Wallet wallet) {
             timestamp = TimeUtils.getCurrenttime();
-            this.signature = wallet.signHashedData(this.getDataHashForSigning());
+            this.signature = wallet.sign(SerializeUtils.serialize(this));
             return new BlockHeader(this);
         }
 
@@ -194,43 +200,6 @@ public class BlockHeader implements Serializable {
             this.signature = signature;
 
             return new BlockHeader(this);
-        }
-
-        /**
-         * Get data hash for signing.
-         *
-         * @return hash of sign data
-         * @throws IOException IOException
-         */
-        private byte[] getDataHashForSigning() throws IOException {
-
-            if (type == null) {
-                throw new IOException("getDataHashForSigning(): type is null");
-            }
-
-            if (version == null) {
-                throw new IOException("getDataHashForSigning(): version is null");
-            }
-
-            ByteArrayOutputStream block = new ByteArrayOutputStream();
-
-            block.write(type);
-            block.write(version);
-
-            if (prevBlockHash == null) {
-                prevBlockHash = new byte[32];
-            }
-            block.write(prevBlockHash);
-
-            if (merkleRoot == null) {
-                merkleRoot = new byte[32];
-            }
-            block.write(merkleRoot);
-
-            block.write(ByteUtil.longToBytes(timestamp));
-            block.write(ByteUtil.longToBytes(dataSize));
-
-            return HashUtil.sha3(block.toByteArray());
         }
     }
 }
