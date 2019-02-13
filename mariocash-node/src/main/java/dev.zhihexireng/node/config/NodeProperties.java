@@ -24,8 +24,8 @@ import java.util.List;
 @Component
 @ConfigurationProperties(prefix = "mariocash.node", ignoreUnknownFields = false)
 public class NodeProperties {
-    private final Grpc grpc = new Grpc();
-    private List<String> seedPeerList;
+    private Grpc grpc = new Grpc();
+    List<String> seedPeerList;
 
     public Grpc getGrpc() {
         return grpc;

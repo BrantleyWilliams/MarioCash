@@ -173,7 +173,7 @@ public class EthereumIESEngine {
             int inLen,
             byte[] macData)
             throws InvalidCipherTextException {
-        byte[] C, K, K1, K2;
+        byte[] C = null, K = null, K1 = null, K2 = null;
         int len;
 
         if (cipher == null) {
@@ -271,7 +271,7 @@ public class EthereumIESEngine {
             int inLen,
             byte[] macData)
             throws InvalidCipherTextException {
-        byte[] M, K, K1, K2;
+        byte[] M = null, K = null, K1 = null, K2 = null;
         int len;
 
         // Ensure that the length of the input is greater than the MAC in bytes

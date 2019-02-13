@@ -8,7 +8,7 @@ import java.util.List;
 
 public class BlockBody implements Serializable {
 
-    private final List<Transaction> transactionList;
+    private List<Transaction> transactionList;
 
     /**
      * Instantiates a new Block body.
@@ -33,7 +33,7 @@ public class BlockBody implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder();
+        StringBuffer buffer = new StringBuffer();
         buffer.append("transactionList=>");
         for (Transaction tx : this.transactionList) {
             buffer.append(tx.toString());

@@ -6,7 +6,7 @@ cache:
   - $HOME/.m2/repository
   - $HOME/.gradle
 script:
-  - ./gradlew clean build -PspringProfiles=ci
+  - ./gradlew clean build
 
 after_success:
   - ./gradlew jacocoRootReport coveralls
