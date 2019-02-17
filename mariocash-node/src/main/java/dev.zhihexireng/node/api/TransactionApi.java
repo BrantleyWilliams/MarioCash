@@ -4,11 +4,14 @@ import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.node.exception.FailedOperationException;
 import dev.zhihexireng.node.exception.NonExistObjectException;
 import dev.zhihexireng.node.exception.RejectedAccessException;
+import dev.zhihexireng.node.mock.TransactionReceiptMock;
 
 import java.io.IOException;
+import java.security.SignatureException;
 
 @JsonRpcService("/api/transaction")
 public interface TransactionApi {
@@ -82,7 +85,7 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                           code = NonExistObjectException.code)})
-    String getTransactionByHash(
+    Transaction getTransactionByHash(
             @JsonRpcParam(value = "hashOfTx") String hashOfTx) throws IOException;
 
     /**
@@ -94,7 +97,7 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                           code = NonExistObjectException.code)})
-    String getTransactionByBlockHashAndIndex(
+    Transaction getTransactionByBlockHashAndIndex(
             @JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
             @JsonRpcParam(value = "txIndexPosition") int txIndexPosition) throws IOException;
 
@@ -107,7 +110,7 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                           code = NonExistObjectException.code)})
-    String getTransactionByBlockNumberAndIndex(
+    Transaction getTransactionByBlockNumberAndIndex(
             @JsonRpcParam(value = "blockNumber") int blockNumber,
             @JsonRpcParam(value = "txIndexPosition") int txIndexPosition) throws IOException;
 
@@ -120,7 +123,7 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                           code = NonExistObjectException.code)})
-    String getTransactionByBlockNumberAndIndex(
+    Transaction getTransactionByBlockNumberAndIndex(
             @JsonRpcParam(value = "tag") String tag,
             @JsonRpcParam(value = "txIndexPosition") int txIndexPosition) throws IOException;
 
@@ -132,7 +135,7 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = FailedOperationException.class,
                           code = FailedOperationException.code)})
-    String getTransactionReceipt(
+    TransactionReceiptMock getTransactionReceipt(
             @JsonRpcParam(value = "hashOfTx") String hashOfTx);
 
     /* send */
@@ -147,7 +150,7 @@ public interface TransactionApi {
             @JsonRpcError(exception = FailedOperationException.class,
                           code = FailedOperationException.code)})
     String sendTransaction(
-            @JsonRpcParam(value = "tx") String tx) throws IOException;
+            @JsonRpcParam(value = "tx") String tx) throws IOException,SignatureException;
 
     /**
      *  Creates new message call transaction or a contract creation for signed transactions.
@@ -158,7 +161,7 @@ public interface TransactionApi {
             @JsonRpcError(exception = FailedOperationException.class,
                           code = FailedOperationException.code)})
     byte[] sendRawTransaction(
-            @JsonRpcParam(value = "rawTx") byte[] rawTx) throws IOException;
+            @JsonRpcParam(value = "rawTx") byte[] rawTx) throws IOException,SignatureException;
 
     /**
      *  Creates a filter in the node, to notify when new pending transactions arrive.

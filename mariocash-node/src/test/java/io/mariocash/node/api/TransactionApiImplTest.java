@@ -1,16 +1,16 @@
 package dev.zhihexireng.node.api;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Longs;
 import com.google.gson.JsonObject;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
-import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import dev.zhihexireng.node.mock.TransactionMock;
-import dev.zhihexireng.node.mock.TransactionReceiptMock;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -22,8 +22,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.SignatureException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @Import(JsonRpcConfig.class)
@@ -94,7 +96,7 @@ public class TransactionApiImplTest {
             TransactionApi api = ProxyUtil.createClientProxy(getClass().getClassLoader(),
                     TransactionApi.class, jsonRpcHttpClient);
             assertThat(api).isNotNull();
-            assertThat(api.getTransactionByHash(hashOfBlock)).isNotEmpty();
+            assertThat(api.getTransactionByHash(hashOfBlock)).isNotNull();
         } catch (Exception exception) {
             log.debug("\n\ngetTransactionByHashTest :: exception => " + exception);
         }
@@ -107,7 +109,7 @@ public class TransactionApiImplTest {
                     TransactionApi.class, jsonRpcHttpClient);
             assertThat(api).isNotNull();
             assertThat(api.getTransactionByBlockHashAndIndex(hashOfBlock, txIndexPosition))
-                    .isNotEmpty();
+                    .isNotNull();
         } catch (Exception exception) {
             log.debug("\n\ngetTransactionByBlockHashAndIndexTest :: exception => " + exception);
         }
@@ -120,7 +122,7 @@ public class TransactionApiImplTest {
                     TransactionApi.class, jsonRpcHttpClient);
             assertThat(api).isNotNull();
             assertThat(api.getTransactionByBlockNumberAndIndex(blockNumber, txIndexPosition))
-                    .isNotEmpty();
+                    .isNotNull();
         } catch (Exception exception) {
             log.debug("\n\ngetTransactionByBlockNumberAndIndexTest :: exception => " + exception);
         }
@@ -132,7 +134,7 @@ public class TransactionApiImplTest {
             TransactionApi api = ProxyUtil.createClientProxy(getClass().getClassLoader(),
                     TransactionApi.class, jsonRpcHttpClient);
             assertThat(api).isNotNull();
-            assertThat(api.getTransactionReceipt(hashOfTx)).isNotEmpty();
+            assertThat(api.getTransactionReceipt(hashOfTx)).isNotNull();
         } catch (Exception exception) {
             log.debug("\n\ngetTransactionReceiptTest :: exception => " + exception);
         }
@@ -251,6 +253,28 @@ public class TransactionApiImplTest {
         }
     }
 
+    @Test
+    public void txSigValidateTest() throws IOException,SignatureException {
+        // Create Transaction
+        JsonObject json = new JsonObject();
+        json.addProperty("id", "0");
+        json.addProperty("name", "Rachael");
+        json.addProperty("age", "27");
+        Transaction tx = new Transaction(this.nodeManager.getWallet(), json);
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        String jsonStr = mapper.writeValueAsString(tx);
+
+        // Receive Transaction
+        Transaction resTx = mapper.readValue(jsonStr, Transaction.class);
+        byte[] resSignature = resTx.getHeader().getSignature();
+        byte[] resSignDataHash = resTx.getHeader().getSignDataHash();
+
+        // Signature Validation
+        TransactionValidator txValidator = new TransactionValidator();
+        assertTrue(txValidator.txSigValidate(resSignDataHash, resSignature));
+    }
 }
 
 
