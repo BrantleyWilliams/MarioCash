@@ -2,7 +2,8 @@
 build/
 out/
 !gradle/wrapper/gradle-wrapper.jar
-.mariocash/
+**/resources/db
+**/.mariocash/keystore
 tmp/
 
 .coveralls.yml
