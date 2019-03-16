@@ -16,6 +16,8 @@
 
 package dev.zhihexireng.core.store.datasource;
 
+import dev.zhihexireng.config.Constants;
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.util.FileUtil;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
@@ -36,7 +38,6 @@ import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 public class LevelDbDataSource implements DbSource {
 
     private static final Logger log = LoggerFactory.getLogger(LevelDbDataSource.class);
-    private static final String DEFAULT_DB_PATH = "resources/db/";
 
     private boolean alive;
     private ReadWriteLock resetDbLock = new ReentrantReadWriteLock();
@@ -45,7 +46,7 @@ public class LevelDbDataSource implements DbSource {
     private DB db;
 
     public LevelDbDataSource(String name) {
-        this.dbPath = DEFAULT_DB_PATH;
+        this.dbPath = new DefaultConfig().getConfig().getString(Constants.DATABASE_PATH);
         this.name = name;
     }
 
