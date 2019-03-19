@@ -7,15 +7,12 @@ import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHeader;
-import dev.zhihexireng.core.TransactionValidator;
-import dev.zhihexireng.node.exception.FailedOperationException;
 import dev.zhihexireng.node.mock.TransactionMock;
 import dev.zhihexireng.node.mock.TransactionReceiptMock;
 import org.spongycastle.util.Arrays;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.security.SignatureException;
 
 @Service
 @AutoJsonRpcServiceImpl
@@ -55,63 +52,65 @@ public class TransactionApiImpl implements TransactionApi {
     }
 
     @Override
-    public Transaction getTransactionByHash(String hashOfTx) throws IOException {
+    public String getTransactionByHash(String hashOfTx) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public Transaction getTransactionByBlockHashAndIndex(
+    public String getTransactionByBlockHashAndIndex(
             String hashOfBlock, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public Transaction getTransactionByBlockNumberAndIndex(
+    public String getTransactionByBlockNumberAndIndex(
             int blockNumber, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public Transaction getTransactionByBlockNumberAndIndex(
+    public String getTransactionByBlockNumberAndIndex(
             String tag, int txIndexPosition) throws IOException {
         TransactionMock txMock = new TransactionMock(this.nodeManager);
-        return txMock.retTxMock();
+        Transaction tx = txMock.retTxMock();
+        return tx.toString();
     }
 
     @Override
-    public TransactionReceiptMock getTransactionReceipt(String hashOfTx) {
-        return new TransactionReceiptMock();
+    public String getTransactionReceipt(String hashOfTx) {
+        TransactionReceiptMock txReceiptMock = new TransactionReceiptMock();
+        return txReceiptMock.retTxReceiptMock();
     }
 
     /* send */
     @Override
-    public String sendTransaction(Transaction tx) throws IOException,SignatureException {
-        if (valiate(tx)) {
-            Transaction addedTx = nodeManager.addTransaction(tx);
-            return addedTx.getHashString();
-        } else {
-            throw new FailedOperationException("Transaction");
-        }
+    public String sendTransaction(String jsonStr) throws IOException {
+        Transaction tx = convert(jsonStr);
+        return tx.getHashString();
     }
 
     @Override
-    public byte[] sendRawTransaction(byte[] bytes) throws IOException,SignatureException {
+    public byte[] sendRawTransaction(byte[] bytes) throws IOException {
         Transaction tx = convert(bytes);
-        if (valiate(tx)) {
-            Transaction addedTx = nodeManager.addTransaction(tx);
-            return addedTx.getHash();
-        } else {
-            throw new FailedOperationException("Transaction");
-        }
+        return tx.getHash();
     }
 
     /* filter */
     @Override
     public int newPendingTransactionFilter() {
         return 6;
+    }
+
+    private Transaction convert(String jsonStr) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return mapper.readValue(jsonStr, Transaction.class);
     }
 
     private Transaction convert(byte[] bytes) {
@@ -141,10 +140,5 @@ public class TransactionApiImpl implements TransactionApi {
                 type, version, dataHash, timestampStr, dataSizeStr, signature);
 
         return new Transaction(txHeader, dataStr);
-    }
-
-    private Boolean valiate(Transaction tx) throws IOException,SignatureException {
-        TransactionValidator txValidator = new TransactionValidator();
-        return txValidator.txSigValidate(tx);
     }
 }
