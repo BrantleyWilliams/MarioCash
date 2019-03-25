@@ -1,6 +1,9 @@
 package dev.zhihexireng.node.api;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
+import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.node.exception.InternalErrorException;
 import dev.zhihexireng.node.exception.NonExistObjectException;
@@ -27,18 +30,24 @@ public class BlockApiImpl implements BlockApi {
     }
 
     @Override
-    public String getBlockByHash(String address, String tag) {
+    public Block getBlockByHash(String address, Boolean bool) {
         try {
             //todo: getBlockByNumber
             BlockMock blockMock = new BlockMock(nodeManager);
-            return blockMock.retBlockMock();
+            Block block = blockMock.retBlockMock();
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            String jsonStr = mapper.writeValueAsString(block);
+            return mapper.readValue(jsonStr, Block.class);
         } catch (Exception exception) {
+            System.out.println("\n\nException :: getBlockHashImp");
+            exception.printStackTrace();
             throw new NonExistObjectException("block");
         }
     }
 
     @Override
-    public String getBlockByNumber(String hashOfBlock, Boolean bool) {
+    public Block getBlockByNumber(String hashOfBlock, Boolean bool) {
         try {
             //todo: getBlockByNumber
             BlockMock blockMock = new BlockMock(nodeManager);
