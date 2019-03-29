@@ -8,18 +8,15 @@ import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.core.TransactionValidator;
+import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import dev.zhihexireng.node.mock.TransactionMock;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,8 +25,6 @@ import java.security.SignatureException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(SpringRunner.class)
-@Import(JsonRpcConfig.class)
 public class TransactionApiImplTest {
     private static final Logger log = LoggerFactory.getLogger(TransactionApi.class);
 
