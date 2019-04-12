@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.security.SignatureException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -202,7 +203,7 @@ public class NodeSyncServer {
                         Transaction transaction
                                 = TransactionMapper.protoTransactionToTransaction(tx);
                         newTransaction = nodeManager.addTransaction(transaction);
-                    } catch (IOException e) {
+                    } catch (SignatureException | IOException e) {
                         log.error(e.getMessage(), e);
                     }
                     // ignore broadcast by other node's broadcast
@@ -239,11 +240,11 @@ public class NodeSyncServer {
             return new StreamObserver<BlockChainProto.Block>() {
                 @Override
                 public void onNext(BlockChainProto.Block protoBlock) {
-                    long id = protoBlock.getHeader().getIndex();
+                    log.debug("Received block id=[{}]", protoBlock.getHeader().getIndex());
                     Block newBlock = null;
                     try {
                         Block block = BlockMapper.protoBlockToBlock(protoBlock);
-                        log.debug("Received block id=[{}], hash={}", id, block.getBlockHash());
+                        log.debug("Received block hash=" + block.getBlockHash());
                         newBlock = nodeManager.addBlock(block);
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);

@@ -22,6 +22,7 @@ import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionManager;
+import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.net.NodeSyncClient;
@@ -31,17 +32,18 @@ import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.BlockBuilder;
 import dev.zhihexireng.node.MessageSender;
 import dev.zhihexireng.node.config.NodeProperties;
+import dev.zhihexireng.node.exception.FailedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class NodeManagerMock implements NodeManager {
@@ -109,20 +111,25 @@ public class NodeManagerMock implements NodeManager {
     }
 
     @Override
-    public Transaction addTransaction(Transaction tx) {
-        Transaction newTx = txManager.put(tx);
-        messageSender.newTransaction(tx);
-        return newTx;
+    public Transaction addTransaction(Transaction tx) throws IOException,SignatureException {
+        TransactionValidator txValidator = new TransactionValidator();
+
+        if (txValidator.txSigValidate(tx)) {
+            Transaction newTx = txManager.put(tx);
+            messageSender.newTransaction(tx);
+            return newTx;
+        }
+        throw new FailedOperationException("Transaction");
     }
 
     @Override
     public List<Transaction> getTransactionList() {
-        return new ArrayList<>(txManager.getUnconfirmedTxs());
+        return (List<Transaction>) txManager.getUnconfirmedTxs();
     }
 
     @Override
     public Set<Block> getBlocks() {
-        return new TreeSet<>(blockChain.getBlocks().values());
+        return new HashSet<>(blockChain.getBlocks().values());
     }
 
     @Override
