@@ -1,6 +1,7 @@
 logging:
   level:
     dev.zhihexireng: debug
+    io.grpc.netty: error
 
 mariocash.node:
   grpc.host: "localhost"
