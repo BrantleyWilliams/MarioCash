@@ -89,15 +89,23 @@ public class TransactionApiImpl implements TransactionApi {
     /* send */
     @Override
     public String sendTransaction(Transaction tx) throws IOException,SignatureException {
-        Transaction addedTx = nodeManager.addTransaction(tx);
-        return addedTx.getHashString();
+        if (valiate(tx)) {
+            Transaction addedTx = nodeManager.addTransaction(tx);
+            return addedTx.getHashString();
+        } else {
+            throw new FailedOperationException("Transaction");
+        }
     }
 
     @Override
     public byte[] sendRawTransaction(byte[] bytes) throws IOException,SignatureException {
         Transaction tx = convert(bytes);
-        Transaction addedTx = nodeManager.addTransaction(tx);
-        return addedTx.getHash();
+        if (valiate(tx)) {
+            Transaction addedTx = nodeManager.addTransaction(tx);
+            return addedTx.getHash();
+        } else {
+            throw new FailedOperationException("Transaction");
+        }
     }
 
     /* filter */
@@ -133,5 +141,10 @@ public class TransactionApiImpl implements TransactionApi {
                 type, version, dataHash, timestampStr, dataSizeStr, signature);
 
         return new Transaction(txHeader, dataStr);
+    }
+
+    private Boolean valiate(Transaction tx) throws IOException,SignatureException {
+        TransactionValidator txValidator = new TransactionValidator();
+        return txValidator.txSigValidate(tx);
     }
 }

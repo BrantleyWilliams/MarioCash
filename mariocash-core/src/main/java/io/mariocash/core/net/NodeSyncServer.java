@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.security.SignatureException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -203,7 +202,7 @@ public class NodeSyncServer {
                         Transaction transaction
                                 = TransactionMapper.protoTransactionToTransaction(tx);
                         newTransaction = nodeManager.addTransaction(transaction);
-                    } catch (SignatureException | IOException e) {
+                    } catch (IOException e) {
                         log.error(e.getMessage(), e);
                     }
                     // ignore broadcast by other node's broadcast
