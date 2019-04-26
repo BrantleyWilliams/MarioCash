@@ -34,7 +34,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.SignatureException;
 import java.util.Collections;
 
 import static dev.zhihexireng.config.Constants.PROPERTY_KEYPATH;
@@ -92,7 +91,7 @@ public class NodeManagerTest {
     }
 
     @Test
-    public void addBlockTest() throws IOException, NotValidateException, SignatureException {
+    public void addBlockTest() throws IOException, NotValidateException {
         nodeManager.addTransaction(tx);
         nodeManager.addBlock(genesisBlock);
         nodeManager.addBlock(block);
@@ -103,7 +102,7 @@ public class NodeManagerTest {
     }
 
     @Test
-    public void generateBlockTest() throws IOException, NotValidateException, SignatureException {
+    public void generateBlockTest() throws IOException, NotValidateException {
         nodeManager.addTransaction(tx);
         Block newBlock = nodeManager.generateBlock();
         assert nodeManager.getBlocks().size() == 1;

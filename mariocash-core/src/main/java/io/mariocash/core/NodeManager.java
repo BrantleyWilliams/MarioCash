@@ -20,7 +20,6 @@ import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.exception.NotValidateException;
 
 import java.io.IOException;
-import java.security.SignatureException;
 import java.util.List;
 import java.util.Set;
 
@@ -28,7 +27,7 @@ public interface NodeManager {
 
     void init();
 
-    Transaction addTransaction(Transaction tx) throws IOException,SignatureException;
+    Transaction addTransaction(Transaction tx);
 
     List<Transaction> getTransactionList();
 
