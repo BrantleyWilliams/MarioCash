@@ -17,13 +17,14 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.core.event.PeerEventListener;
 import dev.zhihexireng.core.exception.NotValidateException;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-public interface NodeManager {
+public interface NodeManager extends PeerEventListener {
 
     void init();
 
