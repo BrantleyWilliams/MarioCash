@@ -9,7 +9,6 @@ import com.googlecode.jsonrpc4j.ProxyUtil;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionValidator;
-import dev.zhihexireng.node.MessageSender;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.NodeManagerMock;
 import dev.zhihexireng.node.mock.TransactionMock;
@@ -17,6 +16,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,8 +28,9 @@ import static org.junit.Assert.assertTrue;
 public class TransactionApiImplTest {
     private static final Logger log = LoggerFactory.getLogger(TransactionApi.class);
 
-    private final NodeManager nodeManager = new NodeManagerMock(new MessageSender(), null, new NodeProperties.Grpc());
+    private final NodeManager nodeManager = new NodeManagerMock(null, null, new NodeProperties.Grpc());
 
+    @Autowired
     JsonRpcHttpClient jsonRpcHttpClient;
 
     private final TransactionApiImpl txApiImpl = new TransactionApiImpl(nodeManager);

@@ -18,7 +18,6 @@ package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.event.PeerEventListener;
 import dev.zhihexireng.core.mapper.BlockMapper;
 import dev.zhihexireng.core.mapper.TransactionMapper;
 import dev.zhihexireng.core.net.NodeSyncClient;
@@ -42,31 +41,12 @@ public class MessageSender {
 
     private final Map<String, NodeSyncClient> peerChannel = new ConcurrentHashMap<>();
 
-    private PeerEventListener listener;
-
-    public void setListener(PeerEventListener listener) {
-        this.listener = listener;
-    }
-
     public void destroy(String ynodeUri) {
         peerChannel.values().forEach(client -> client.stop(ynodeUri));
     }
 
     void ping() {
-        List<NodeSyncClient> peerChannelList = new ArrayList<>(peerChannel.values());
-        for (NodeSyncClient client : peerChannelList) {
-            try {
-                Pong pong = client.ping("Ping");
-                if (pong.getPong().equals("Pong")) {
-                    continue;
-                }
-            } catch (Exception e) {
-                log.warn("Health check fail. peer=" + client.getPeer().getYnodeUri());
-            }
-            peerChannel.remove(client.getPeer().getYnodeUri());
-            client.stop();
-            listener.disconnected(client.getPeer());
-        }
+        peerChannel.values().forEach(client -> client.ping("Ping"));
     }
 
     public void newTransaction(Transaction tx) {
