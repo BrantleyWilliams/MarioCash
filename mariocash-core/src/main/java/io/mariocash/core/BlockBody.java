@@ -1,5 +1,6 @@
 package dev.zhihexireng.core;
 
+import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.trie.Trie;
 
 import java.io.IOException;
@@ -26,8 +27,12 @@ public class BlockBody implements Serializable {
         return transactionList;
     }
 
-    public byte[] getMerkleRoot() throws IOException {
-        return Trie.getMerkleRoot(this.transactionList);
+    public byte[] getMerkleRoot() {
+        try {
+            return Trie.getMerkleRoot(this.transactionList);
+        } catch (IOException e) {
+            throw new NotValidateException(e);
+        }
     }
 
     public long getSize() {
