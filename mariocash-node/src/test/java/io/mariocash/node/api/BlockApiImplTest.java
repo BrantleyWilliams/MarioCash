@@ -2,16 +2,27 @@ package dev.zhihexireng.node.api;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.NodeManager;
+import dev.zhihexireng.node.config.NodeProperties;
+import dev.zhihexireng.node.mock.BlockBuilderMock;
+import dev.zhihexireng.node.mock.BlockMock;
+import dev.zhihexireng.node.mock.NodeManagerMock;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BlockApiImplTest {
     private static final Logger log = LoggerFactory.getLogger(TransactionApi.class);
 
-    JsonRpcHttpClient jsonRpcHttpClient;
+    private final NodeManager nodeManager
+            = new NodeManagerMock(null, null, new NodeProperties.Grpc());
+
+    private final JsonRpcHttpClient jsonRpcHttpClient = new JsonRpcConfig().jsonRpcHttpClient();
 
     @Test
     public void blockNumberTest() {
@@ -49,6 +60,19 @@ public class BlockApiImplTest {
         } catch (Exception exception) {
             log.debug("getBlockByNumberTest :: exception : " + exception);
         }
+    }
+
+    @Test
+    public void createBlockMock() throws IOException {
+        BlockMock blockMock = new BlockMock(nodeManager);
+        log.debug("blockMock" + blockMock.retBlockMock());
+    }
+
+    @Test
+    public void blockBuildMockTest() throws IOException {
+        BlockBuilderMock blockBuilderMock = new BlockBuilderMock(nodeManager);
+        Block block = blockBuilderMock.build(nodeManager.getWallet());
+        log.debug("blockBuilderMock : " + block.toString());
     }
 
     @Test

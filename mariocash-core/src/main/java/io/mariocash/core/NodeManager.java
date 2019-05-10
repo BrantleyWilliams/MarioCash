@@ -16,24 +16,27 @@
 
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.event.PeerEventListener;
+import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.core.exception.NotValidateException;
 
+import java.io.IOException;
+import java.security.SignatureException;
 import java.util.List;
 import java.util.Set;
 
-public interface NodeManager extends PeerEventListener {
+public interface NodeManager {
 
     void init();
 
-    Transaction addTransaction(Transaction tx);
+    Transaction addTransaction(Transaction tx) throws IOException,SignatureException;
 
     List<Transaction> getTransactionList();
 
     Transaction getTxByHash(String id);
 
-    Block generateBlock();
+    Block generateBlock() throws IOException, NotValidateException;
 
-    Block addBlock(Block block);
+    Block addBlock(Block block) throws IOException, NotValidateException;
 
     Set<Block> getBlocks();
 
@@ -47,7 +50,7 @@ public interface NodeManager extends PeerEventListener {
 
     List<String> getPeerUriList();
 
-    Wallet getWallet();
+    DefaultConfig getDefaultConfig();
 
-    Transaction signByNode(Transaction tx);
+    Wallet getWallet();
 }

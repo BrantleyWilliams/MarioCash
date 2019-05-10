@@ -51,6 +51,7 @@ public class ActuatorTest {
     @Test
     public void getGrpc() {
         assert properties.getGrpc().getHost().equals("localhost");
+        assert properties.getGrpc().getPort() == 9090;
     }
 
     @Test

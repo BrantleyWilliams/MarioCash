@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.util.SerializationUtils;
 
+import java.io.IOException;
 import java.util.Collections;
 
 public class BlockTest {
@@ -37,8 +38,7 @@ public class BlockTest {
 
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        Transaction tx = new Transaction(json);
-        WalletMock.sign(tx);
+        Transaction tx = new Transaction(wallet, json);
         BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
@@ -54,13 +54,13 @@ public class BlockTest {
     }
 
     @Test
-    public void blockTest() {
+    public void blockTest() throws IOException {
         assert !block.getBlockHash().isEmpty();
         assert block.getIndex() == 1;
     }
 
     @Test
-    public void deserializeBlockFromSerializerTest() {
+    public void deserializeBlockFromSerializerTest() throws IOException {
         byte[] bytes = SerializationUtils.serialize(block);
         assert bytes != null;
         ByteString byteString = ByteString.copyFrom(bytes);
@@ -72,7 +72,7 @@ public class BlockTest {
     }
 
     @Test
-    public void deserializeTransactionFromProtoTest() {
+    public void deserializeTransactionFromProtoTest() throws IOException {
         BlockChainProto.Block protoBlock = BlockMapper.blockToProtoBlock(block);
         Block deserializeBlock = BlockMapper.protoBlockToBlock(protoBlock);
         assert block.getBlockHash().equals(deserializeBlock.getBlockHash());

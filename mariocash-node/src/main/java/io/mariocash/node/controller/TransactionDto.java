@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,21 +17,31 @@
 package dev.zhihexireng.node.controller;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.node.config.NodeProperties;
+import dev.zhihexireng.node.mock.NodeManagerMock;
+
+import java.io.IOException;
+import java.security.SignatureException;
 
 public class TransactionDto {
-
+    private static final NodeManager nodeManager = new NodeManagerMock(null, null,
+            new NodeProperties.Grpc());
     private String from;
     private String txHash;
     private String data;
 
-    public static Transaction of(TransactionDto transactionDto) {
+    public static Transaction of(TransactionDto transactionDto) throws IOException {
+        Wallet wallet = nodeManager.getWallet();
         JsonObject jsonData = new JsonObject();
         jsonData.addProperty("data", transactionDto.getData());
-        return new Transaction(jsonData);
+        return new Transaction(wallet, jsonData);
     }
 
-    public static TransactionDto createBy(Transaction tx) {
+    public static TransactionDto createBy(Transaction tx)
+            throws IOException, SignatureException {
         TransactionDto transactionDto = new TransactionDto();
         transactionDto.setFrom(tx.getHeader().getAddressToString());
         transactionDto.setData(tx.getData());

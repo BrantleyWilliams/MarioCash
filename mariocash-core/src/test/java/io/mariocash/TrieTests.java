@@ -1,12 +1,15 @@
 package dev.zhihexireng;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.WalletMock;
+import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.trie.Trie;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,12 +19,13 @@ import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertNotNull;
 
 public class TrieTests {
+    private static final Logger log = LoggerFactory.getLogger(Trie.class);
 
     private Transaction tx1;
     private Transaction tx2;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
 
         // create tx_data1
         JsonObject data1 = new JsonObject();
@@ -35,12 +39,13 @@ public class TrieTests {
         data2.addProperty("operator", "transfer");
         data2.addProperty("value", 10);
 
-        // create sample tx
-        this.tx1 = new Transaction(data1);
-        WalletMock.sign(tx1);
+        // create account
+        Wallet wallet = new Wallet(new DefaultConfig());
 
-        this.tx2 = new Transaction(data2);
-        WalletMock.sign(tx2);
+        // create sample tx
+        this.tx1 = new Transaction(wallet, data1);
+        this.tx2 = new Transaction(wallet, data2);
+
     }
 
     @Test
