@@ -16,12 +16,9 @@
 
 package dev.zhihexireng.core.husk;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import dev.zhihexireng.crypto.ECKey;
-import dev.zhihexireng.crypto.HashUtil;
-import dev.zhihexireng.proto.BlockChainProto.TransactionHeader;
 import dev.zhihexireng.proto.BlockChainProto.Transaction;
+import dev.zhihexireng.proto.BlockChainProto.TransactionHeader;
 
 public class TransactionHusk implements ProtoHusk<Transaction> {
     private Transaction transaction;
@@ -34,13 +31,13 @@ public class TransactionHusk implements ProtoHusk<Transaction> {
         this.transaction = Transaction.parseFrom(data);
     }
 
-    public void sign(byte[] privateKey) {
-        ECKey ecKey = ECKey.fromPrivate(privateKey);
-        ECKey.ECDSASignature signature = ecKey.sign(
-                HashUtil.sha3(this.transaction.toByteArray()));
-        ByteString sig = ByteString.copyFrom(signature.toByteArray());
-        getHeader().toBuilder().setSignature(sig).build();
+    public TransactionHusk(String body) {
+        TransactionHeader txHeaderPrototype = TransactionHeader.getDefaultInstance();
+        this.transaction = Transaction.newBuilder()
+                .setHeader(txHeaderPrototype)
+                .setData(body).build();
     }
+
 
     private TransactionHeader getHeader() {
         return this.transaction.getHeader();
