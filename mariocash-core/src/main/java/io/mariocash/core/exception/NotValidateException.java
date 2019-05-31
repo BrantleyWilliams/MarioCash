@@ -1,16 +1,5 @@
 package dev.zhihexireng.core.exception;
 
-public class NotValidateException extends RuntimeException {
+public class NotValidateException extends Exception {
 
-    public NotValidateException() {
-        super();
-    }
-
-    public NotValidateException(String s) {
-        super(s);
-    }
-
-    public NotValidateException(Throwable cause) {
-        super(cause);
-    }
 }

@@ -21,6 +21,8 @@ import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHeader;
 import dev.zhihexireng.proto.BlockChainProto;
 
+import java.io.IOException;
+
 /**
  * The Mapper for the transaction and proto transaction.
  */
@@ -33,7 +35,7 @@ public class TransactionMapper {
      * @return the transaction
      */
     public static Transaction protoTransactionToTransaction(
-            BlockChainProto.Transaction protoTx) {
+            BlockChainProto.Transaction protoTx) throws IOException {
         TransactionHeader header = protoHeaderToHeader(protoTx.getHeader());
         return new Transaction(header, protoTx.getData());
     }
@@ -51,14 +53,12 @@ public class TransactionMapper {
     }
 
     private static TransactionHeader protoHeaderToHeader(
-            BlockChainProto.TransactionHeader protoHeader) {
-        return new TransactionHeader(
-                protoHeader.getType().toByteArray(),
-                protoHeader.getVersion().toByteArray(),
-                protoHeader.getDataHash().toByteArray(),
-                protoHeader.getDataSize(),
-                protoHeader.getTimestamp(),
-                protoHeader.getSignature().toByteArray());
+            BlockChainProto.TransactionHeader protoHeader) throws IOException {
+        TransactionHeader header = new TransactionHeader(protoHeader.getDataHash().toByteArray(),
+                protoHeader.getDataSize());
+        header.setTimestamp(protoHeader.getTimestamp());
+        header.setSignature(protoHeader.getSignature().toByteArray());
+        return header;
     }
 
     private static BlockChainProto.TransactionHeader headerToProtoHeader(TransactionHeader header) {

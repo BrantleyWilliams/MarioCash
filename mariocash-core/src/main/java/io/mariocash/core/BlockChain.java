@@ -6,6 +6,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -64,7 +65,7 @@ public class BlockChain {
      * @param nextBlock the next block
      * @throws NotValidateException the not validate exception
      */
-    public void addBlock(Block nextBlock) {
+    public void addBlock(Block nextBlock) throws NotValidateException, IOException {
         if (isGenesisBlock(nextBlock)) {
             this.genesisBlock = nextBlock;
         } else if (!isValidNewBlock(prevBlock, nextBlock)) {
@@ -84,7 +85,7 @@ public class BlockChain {
         return genesisBlock == null && prevBlock == null && newBlock.getIndex() == 0;
     }
 
-    private boolean isValidNewBlock(Block prevBlock, Block nextBlock) {
+    private boolean isValidNewBlock(Block prevBlock, Block nextBlock) throws IOException {
         if (prevBlock == null) {
             return true;
         }

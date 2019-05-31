@@ -5,12 +5,13 @@ import com.google.protobuf.ByteString;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.mapper.TransactionMapper;
 import dev.zhihexireng.proto.BlockChainProto;
-import dev.zhihexireng.util.SerializeUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.crypto.InvalidCipherTextException;
+import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
+import java.security.SignatureException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -21,45 +22,49 @@ public class TransactionTest {
     private Wallet wallet;
 
     @Before
-    public void setUp() throws IOException, InvalidCipherTextException {
-        wallet = new Wallet();
+    public void setUp() throws Exception {
+        DefaultConfig config = new DefaultConfig();
+        this.wallet = new Wallet(config);
+
+        System.out.println("Before Wallet: " + wallet.toString());
+
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        this.tx = new Transaction(wallet, json);
+        this.tx = new Transaction(this.wallet, json);
 
         System.out.println("Before Transaction: " + tx.toString());
         System.out.println("Before Transaction address: " + tx.getHeader().getAddressToString());
         System.out.println("\n");
+
     }
 
     @Test
-    public void transactionTest() {
+    public void transactionTest() throws IOException {
         assert !tx.getHashString().isEmpty();
     }
 
     @Test
-    public void deserializeTransactionFromSerializerTest() throws IOException,
-            ClassNotFoundException {
-        byte[] bytes = SerializeUtils.convertToBytes(tx);
+    public void deserializeTransactionFromSerializerTest() throws IOException {
+        byte[] bytes = SerializationUtils.serialize(tx);
         ByteString byteString = ByteString.copyFrom(bytes);
         byte[] byteStringBytes = byteString.toByteArray();
         assert bytes.length == byteStringBytes.length;
-        Transaction deserializeTx = (Transaction) SerializeUtils.convertFromBytes(byteStringBytes);
+        Transaction deserializeTx = (Transaction) SerializationUtils.deserialize(byteStringBytes);
         assert tx.getHashString().equals(deserializeTx.getHashString());
     }
 
     @Test
-    public void deserializeTransactionFromProtoTest() {
+    public void deserializeTransactionFromProtoTest() throws IOException {
         BlockChainProto.Transaction protoTx = TransactionMapper.transactionToProtoTransaction(tx);
         Transaction deserializeTx = TransactionMapper.protoTransactionToTransaction(protoTx);
         assert tx.getHashString().equals(deserializeTx.getHashString());
     }
 
     @Test
-    public void testMakeTransaction() {
+    public void testMakeTransaction() throws IOException, SignatureException {
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        Transaction tx = new Transaction(wallet, json);
+        Transaction tx = new Transaction(this.wallet, json);
 
         System.out.println("Transaction 2: " + tx.toString());
         System.out.println("Transaction 2 address: " + tx.getHeader().getAddressToString());
@@ -68,7 +73,8 @@ public class TransactionTest {
     }
 
     @Test
-    public void testGetAddressWithAccount() throws IOException, InvalidCipherTextException {
+    public void testGetAddressWithAccount()
+            throws IOException, SignatureException, InvalidCipherTextException {
         Wallet wallet = new Wallet(new DefaultConfig());
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
@@ -86,7 +92,8 @@ public class TransactionTest {
     }
 
     @Test
-    public void testGetAddressWithWallet() throws IOException, InvalidCipherTextException {
+    public void testGetAddressWithWallet()
+            throws IOException, SignatureException, InvalidCipherTextException {
         Wallet wallet = new Wallet(new DefaultConfig());
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
@@ -112,7 +119,8 @@ public class TransactionTest {
     }
 
     @Test
-    public void testGetAddressWithWalletAccount() throws IOException, InvalidCipherTextException {
+    public void testGetAddressWithWalletAccount()
+            throws IOException, SignatureException, InvalidCipherTextException {
         Account account = new Account();
         System.out.println("Account: " + account.toString());
 

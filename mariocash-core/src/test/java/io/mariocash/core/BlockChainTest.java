@@ -1,6 +1,7 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.exception.NotValidateException;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class BlockChainTest {
         // 모든 테스트는 독립적으로 동작 해야 합니다
         BlockChain blockchain = instantBlockchain();
         int testBlock = 100;
-        Wallet wallet = new Wallet();
+        Wallet wallet = new Wallet(new DefaultConfig());
 
         // create blockchain with genesis block
         Transaction tx = new Transaction(wallet, new JsonObject());
@@ -76,7 +77,7 @@ public class BlockChainTest {
     }
 
     private BlockChain instantBlockchain() throws IOException, InvalidCipherTextException {
-        Wallet wallet = new Wallet();
+        Wallet wallet = new Wallet(new DefaultConfig());
         BlockChain blockChain = new BlockChain();
         Transaction tx = new Transaction(wallet, new JsonObject());
         BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
