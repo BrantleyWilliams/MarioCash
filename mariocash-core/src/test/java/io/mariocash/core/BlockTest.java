@@ -21,9 +21,9 @@ import com.google.protobuf.ByteString;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.mapper.BlockMapper;
 import dev.zhihexireng.proto.BlockChainProto;
+import dev.zhihexireng.util.SerializeUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -38,7 +38,8 @@ public class BlockTest {
 
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        Transaction tx = new Transaction(wallet, json);
+        Transaction tx = new Transaction(json);
+        WalletMock.sign(tx);
         BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
@@ -54,28 +55,27 @@ public class BlockTest {
     }
 
     @Test
-    public void blockTest() throws IOException {
+    public void blockTest() {
         assert !block.getBlockHash().isEmpty();
         assert block.getIndex() == 1;
     }
 
     @Test
-    public void deserializeBlockFromSerializerTest() throws IOException {
-        byte[] bytes = SerializationUtils.serialize(block);
+    public void deserializeBlockFromSerializerTest() throws IOException, ClassNotFoundException {
+        byte[] bytes = SerializeUtils.convertToBytes(block);
         assert bytes != null;
         ByteString byteString = ByteString.copyFrom(bytes);
         byte[] byteStringBytes = byteString.toByteArray();
         assert bytes.length == byteStringBytes.length;
-        Block deserializeBlock = (Block) SerializationUtils.deserialize(byteStringBytes);
+        Block deserializeBlock = (Block) SerializeUtils.convertFromBytes(byteStringBytes);
         assert deserializeBlock != null;
         assert block.getBlockHash().equals(deserializeBlock.getBlockHash());
     }
 
     @Test
-    public void deserializeTransactionFromProtoTest() throws IOException {
+    public void deserializeTransactionFromProtoTest() {
         BlockChainProto.Block protoBlock = BlockMapper.blockToProtoBlock(block);
         Block deserializeBlock = BlockMapper.protoBlockToBlock(protoBlock);
         assert block.getBlockHash().equals(deserializeBlock.getBlockHash());
     }
-
 }

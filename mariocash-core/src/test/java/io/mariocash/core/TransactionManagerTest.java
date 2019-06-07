@@ -18,33 +18,29 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.store.StoreConfiguration;
+import dev.zhihexireng.core.store.HashMapTransactionPool;
+import dev.zhihexireng.core.store.TransactionPool;
+import dev.zhihexireng.core.store.datasource.DbSource;
+import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {StoreConfiguration.class})
 public class TransactionManagerTest {
-    @Autowired
+
     TransactionManager tm;
 
     @Before
     public void setUp() {
+        DbSource db = new HashMapDbSource();
+        TransactionPool pool = new HashMapTransactionPool();
+        tm = new TransactionManager(db, pool);
         tm.flush();
     }
 
     @Test
-    public void shouldGetFromDb() throws IOException {
+    public void shouldGetFromDb() {
         Transaction dummyTx = TestUtils.createDummyTx();
         tm.put(dummyTx);
         tm.batchAll();
@@ -54,14 +50,14 @@ public class TransactionManagerTest {
     }
 
     @Test
-    public void shouldBatch() throws IOException {
+    public void shouldBatch() {
         byte[] key = TestUtils.createDummyTx().getHash();
         tm.batchAll();
         assertThat(tm.count()).isZero();
     }
 
     @Test
-    public void shouldGetFromPool() throws IOException {
+    public void shouldGetFromPool() {
         Transaction dummyTx = TestUtils.createDummyTx();
         byte[] key = dummyTx.getHash().clone();
         tm.put(dummyTx);
@@ -70,8 +66,10 @@ public class TransactionManagerTest {
     }
 
     @Test
-    public void shouldPutByTxObject() throws IOException, InvalidCipherTextException {
-        tm.put(new Transaction(new Wallet(new DefaultConfig()), new JsonObject()));
+    public void shouldPutByTxObject() {
+        Transaction tx = new Transaction(new JsonObject());
+        WalletMock.sign(tx);
+        tm.put(tx);
     }
 
     @Test
