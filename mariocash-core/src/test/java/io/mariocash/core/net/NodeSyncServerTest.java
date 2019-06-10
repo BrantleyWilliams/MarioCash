@@ -26,7 +26,6 @@ import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.WalletMock;
 import dev.zhihexireng.core.mapper.BlockMapper;
 import dev.zhihexireng.core.mapper.TransactionMapper;
 import dev.zhihexireng.core.net.NodeSyncServer.BlockChainImpl;
@@ -71,8 +70,7 @@ public class NodeSyncServerTest {
         Wallet wallet = new Wallet();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        this.tx = new Transaction(json);
-        WalletMock.sign(tx);
+        this.tx = new Transaction(wallet, json);
         when(nodeManagerMock.addTransaction(any())).thenReturn(tx);
 
         BlockBody body = new BlockBody(Collections.singletonList(tx));
