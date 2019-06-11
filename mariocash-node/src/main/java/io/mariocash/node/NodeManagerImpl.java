@@ -21,7 +21,7 @@ import dev.zhihexireng.core.BlockBuilder;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionStore;
+import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.NodeSyncClient;
@@ -50,7 +50,7 @@ public class NodeManagerImpl implements NodeManager {
 
     private BlockChain blockChain;
 
-    private TransactionStore txManager;
+    private TransactionManager txManager;
 
     private TransactionValidator txValidator;
 
@@ -80,7 +80,7 @@ public class NodeManagerImpl implements NodeManager {
     }
 
     @Autowired
-    public void setTxManager(TransactionStore txManager) {
+    public void setTxManager(TransactionManager txManager) {
         this.txManager = txManager;
     }
 

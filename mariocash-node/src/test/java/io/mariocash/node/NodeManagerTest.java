@@ -22,7 +22,7 @@ import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionStore;
+import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.PeerGroup;
@@ -49,7 +49,7 @@ public class NodeManagerTest {
         NodeProperties nodeProperties = new NodeProperties();
         nodeProperties.getGrpc().setHost("localhost");
         nodeProperties.getGrpc().setPort(9090);
-        TransactionStore txManager = new TransactionStore(new HashMapDbSource(),
+        TransactionManager txManager = new TransactionManager(new HashMapDbSource(),
                 new HashMapTransactionPool());
         nodeManager = new NodeManagerImpl();
         nodeManager.setPeerGroup(new PeerGroup());
