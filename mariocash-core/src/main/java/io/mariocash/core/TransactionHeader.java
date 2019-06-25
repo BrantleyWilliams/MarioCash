@@ -22,8 +22,8 @@ public class TransactionHeader implements Serializable {
     private byte[] type;
     private byte[] version;
     private byte[] dataHash;
-    private long dataSize;
     private long timestamp;
+    private long dataSize;
     private byte[] signature;
 
     public TransactionHeader() {
@@ -32,14 +32,14 @@ public class TransactionHeader implements Serializable {
     public TransactionHeader(byte[] type,
                              byte[] version,
                              byte[] dataHash,
-                             long dataSize,
                              long timestamp,
+                             long dataSize,
                              byte[] signature) {
         this.type = type;
         this.version = version;
         this.dataHash = dataHash;
-        this.dataSize = dataSize;
         this.timestamp = timestamp;
+        this.dataSize = dataSize;
         this.signature = signature;
     }
 
@@ -49,7 +49,7 @@ public class TransactionHeader implements Serializable {
      * @param dataHash data hash
      * @param dataSize data size
      */
-    public TransactionHeader(Wallet wallet, byte[] dataHash, long dataSize) {
+    public TransactionHeader(byte[] dataHash, long dataSize) {
         if (dataHash == null) {
             throw new NotValidateException("dataHash is not valid");
         }
@@ -63,7 +63,6 @@ public class TransactionHeader implements Serializable {
         this.dataHash = dataHash;
         this.dataSize = dataSize;
         this.timestamp = TimeUtils.time();
-        this.signature = wallet.signHashedData(getDataHashForSigning());
     }
 
     public byte[] getType() {
@@ -76,6 +75,10 @@ public class TransactionHeader implements Serializable {
 
     public byte[] getDataHash() {
         return dataHash;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public long getTimestamp() {
@@ -98,8 +101,8 @@ public class TransactionHeader implements Serializable {
             transaction.write(type);
             transaction.write(version);
             transaction.write(dataHash);
-            transaction.write(ByteUtil.longToBytes(dataSize));
             transaction.write(ByteUtil.longToBytes(timestamp));
+            transaction.write(ByteUtil.longToBytes(dataSize));
             transaction.write(signature);
         } catch (IOException e) {
             throw new NotValidateException(e);
@@ -117,6 +120,10 @@ public class TransactionHeader implements Serializable {
         return Hex.encodeHexString(this.getHash());
     }
 
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
     /**
      * Get transaction signature.
      *
@@ -132,14 +139,27 @@ public class TransactionHeader implements Serializable {
      * @return hash of sign data
      */
     public byte[] getDataHashForSigning() {
+
+        if (type == null) {
+            throw new NotValidateException("type is null");
+        }
+
+        if (version == null) {
+            throw new NotValidateException("version is null");
+        }
+
+        if (dataHash == null) {
+            throw new NotValidateException("dataHash is null");
+        }
+
         ByteArrayOutputStream transaction = new ByteArrayOutputStream();
 
         try {
             transaction.write(type);
             transaction.write(version);
             transaction.write(dataHash);
-            transaction.write(ByteUtil.longToBytes(dataSize));
             transaction.write(ByteUtil.longToBytes(timestamp));
+            transaction.write(ByteUtil.longToBytes(dataSize));
         } catch (IOException e) {
             throw new NotValidateException(e);
         }
@@ -180,6 +200,7 @@ public class TransactionHeader implements Serializable {
      * @return ECKey(include pubKey)
      */
     public ECKey ecKey() {
+        ECKey ecKey = null;
         try {
             return ECKey.signatureToKey(getDataHashForSigning(), signature);
         } catch (SignatureException e) {
@@ -193,9 +214,11 @@ public class TransactionHeader implements Serializable {
                 + "type=" + Hex.encodeHexString(type)
                 + ", version=" + Hex.encodeHexString(version)
                 + ", dataHash=" + Hex.encodeHexString(dataHash)
-                + ", dataSize=" + dataSize
                 + ", timestamp=" + timestamp
+                + ", dataSize=" + dataSize
                 + ", signature=" + Hex.encodeHexString(signature)
                 + '}';
     }
+
+
 }

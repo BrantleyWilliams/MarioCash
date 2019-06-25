@@ -18,6 +18,7 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.mapper.BlockMapper;
 import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.util.SerializeUtils;
@@ -33,11 +34,12 @@ public class BlockTest {
 
     @Before
     public void setUp() throws Exception {
-        Wallet wallet = new Wallet();
+        Wallet wallet = new Wallet(new DefaultConfig());
 
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        Transaction tx = new Transaction(wallet, json);
+        Transaction tx = new Transaction(json);
+        WalletMock.sign(tx);
         BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()

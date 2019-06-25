@@ -18,19 +18,19 @@ package dev.zhihexireng.node.mock;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.Wallet;
 
 public class TransactionMock {
 
-    public Transaction retTxMock(Wallet wallet) {
+    public Transaction retTxMock() {
 
         // Create transaction
         JsonObject txObj = new JsonObject();
 
         txObj.addProperty("operator", "transfer");
         txObj.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
-        txObj.addProperty("value", 100);
+        txObj.addProperty("amount", 100);
 
-        return new Transaction(wallet, txObj);
+        Transaction tx = new Transaction(txObj);
+        return WalletMock.sign(tx);
     }
 }

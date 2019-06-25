@@ -24,9 +24,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonObject;
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.WalletMock;
 import dev.zhihexireng.crypto.ECKey.ECDSASignature;
 import dev.zhihexireng.crypto.jce.SpongyCastleProvider;
 import org.junit.Assert;
@@ -77,7 +79,8 @@ public class ECKeyTest {
 
     @Before
     public void setUp() throws IOException, InvalidCipherTextException {
-        wallet = new Wallet();
+        final DefaultConfig defaultConfig = new DefaultConfig();
+        wallet = new Wallet(defaultConfig);
     }
 
     @Test
@@ -249,7 +252,8 @@ public class ECKeyTest {
         data.addProperty("balance", "10");
 
         // create tx
-        Transaction tx = new Transaction(wallet, data);
+        Transaction tx = new Transaction(data);
+        WalletMock.sign(tx);
 
         // get the sig & key(pub)
         byte[] messageHash = tx.getHeader().getDataHashForSigning();
@@ -314,7 +318,8 @@ public class ECKeyTest {
         // create tx
         JsonObject data = new JsonObject();
         data.addProperty("balance", "10");
-        Transaction tx = new Transaction(wallet, data);
+        Transaction tx = new Transaction(data);
+        WalletMock.sign(tx);
 
         // get the sig & key(pub)
         byte[] messageHash = tx.getHeader().getDataHashForSigning();
@@ -349,7 +354,8 @@ public class ECKeyTest {
         JsonObject data = new JsonObject();
         data.addProperty("balance", "10");
 
-        Transaction tx = new Transaction(wallet, data);
+        Transaction tx = new Transaction(data);
+        WalletMock.sign(tx);
 
         System.out.println("tx: " + tx.toString());
 

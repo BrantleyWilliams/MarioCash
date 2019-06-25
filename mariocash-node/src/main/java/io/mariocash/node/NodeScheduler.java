@@ -47,8 +47,8 @@ class NodeScheduler {
     }
 
     @Scheduled(fixedRate = 1000 * 10)
-    public void healthCheck() {
-        messageSender.healthCheck();
+    public void ping() {
+        messageSender.ping();
     }
 
     @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * BLOCK_MINE_SEC)

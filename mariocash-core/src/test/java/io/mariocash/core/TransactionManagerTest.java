@@ -24,9 +24,6 @@ import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import org.junit.Before;
 import org.junit.Test;
-import org.spongycastle.crypto.InvalidCipherTextException;
-
-import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,8 +66,9 @@ public class TransactionManagerTest {
     }
 
     @Test
-    public void shouldPutByTxObject() throws IOException, InvalidCipherTextException {
-        Transaction tx = new Transaction(new Wallet(), new JsonObject());
+    public void shouldPutByTxObject() {
+        Transaction tx = new Transaction(new JsonObject());
+        WalletMock.sign(tx);
         tm.put(tx);
     }
 

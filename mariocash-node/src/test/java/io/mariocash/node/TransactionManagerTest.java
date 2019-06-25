@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+//(properties = "mariocash.node.grpc.port=0")
 @IfProfileValue(name = "spring.profiles.active", value = "ci")
 public class TransactionManagerTest {
 
@@ -74,7 +75,8 @@ public class TransactionManagerTest {
 
     @Test
     public void shouldPutByTxObject() {
-        Transaction tx = new Transaction(nodeManager.getWallet(), new JsonObject());
+        Transaction tx = new Transaction(new JsonObject());
+        nodeManager.signByNode(tx);
         tm.put(tx);
     }
 

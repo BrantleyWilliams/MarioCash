@@ -105,8 +105,8 @@ public class TransactionManager {
                         .setType(ByteString.copyFrom(txHeader.getType()))
                         .setVersion(ByteString.copyFrom(txHeader.getVersion()))
                         .setDataHash(ByteString.copyFrom(txHeader.getDataHash()))
-                        .setDataSize(txHeader.getDataSize())
                         .setTimestamp(txHeader.getTimestamp())
+                        .setDataSize(txHeader.getDataSize())
                         .setSignature(ByteString.copyFrom(txHeader.getSignature()))
                         .build();
         return BlockChainProto.Transaction.newBuilder()
@@ -132,8 +132,8 @@ public class TransactionManager {
                 txHeaderProto.getType().toByteArray(),
                 txHeaderProto.getVersion().toByteArray(),
                 txHeaderProto.getDataHash().toByteArray(),
-                txHeaderProto.getDataSize(),
                 txHeaderProto.getTimestamp(),
+                txHeaderProto.getDataSize(),
                 txHeaderProto.getSignature().toByteArray()
         );
 

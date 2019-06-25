@@ -52,13 +52,11 @@ public class TransactionMapper {
 
     private static TransactionHeader protoHeaderToHeader(
             BlockChainProto.TransactionHeader protoHeader) {
-        return new TransactionHeader(
-                protoHeader.getType().toByteArray(),
-                protoHeader.getVersion().toByteArray(),
-                protoHeader.getDataHash().toByteArray(),
-                protoHeader.getDataSize(),
-                protoHeader.getTimestamp(),
-                protoHeader.getSignature().toByteArray());
+        TransactionHeader header = new TransactionHeader(protoHeader.getDataHash().toByteArray(),
+                protoHeader.getDataSize());
+        header.setTimestamp(protoHeader.getTimestamp());
+        header.setSignature(protoHeader.getSignature().toByteArray());
+        return header;
     }
 
     private static BlockChainProto.TransactionHeader headerToProtoHeader(TransactionHeader header) {
@@ -66,8 +64,8 @@ public class TransactionMapper {
                 .setType(toByteString(header.getType()))
                 .setVersion(toByteString(header.getVersion()))
                 .setDataHash(toByteString(header.getDataHash()))
-                .setDataSize(header.getDataSize())
                 .setTimestamp(header.getTimestamp())
+                .setDataSize(header.getDataSize())
                 .setSignature(toByteString(header.getSignature()))
                 .build();
     }
