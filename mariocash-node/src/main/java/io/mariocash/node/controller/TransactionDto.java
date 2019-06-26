@@ -18,6 +18,7 @@ package dev.zhihexireng.node.controller;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.Wallet;
 
 public class TransactionDto {
 
@@ -25,10 +26,10 @@ public class TransactionDto {
     private String txHash;
     private String data;
 
-    public static Transaction of(TransactionDto transactionDto) {
+    public static Transaction of(Wallet wallet, TransactionDto transactionDto) {
         JsonObject jsonData = new JsonObject();
         jsonData.addProperty("data", transactionDto.getData());
-        return new Transaction(jsonData);
+        return new Transaction(wallet, jsonData);
     }
 
     public static TransactionDto createBy(Transaction tx) {

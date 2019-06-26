@@ -1,21 +1,15 @@
 package dev.zhihexireng.node.api;
 
 import com.google.common.primitives.Longs;
+import com.google.gson.JsonObject;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHeader;
 import dev.zhihexireng.core.TransactionReceipt;
-import dev.zhihexireng.node.exception.NonExistObjectException;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.spongycastle.util.Arrays;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.security.SignatureException;
 
 @Service
 @AutoJsonRpcServiceImpl
@@ -23,102 +17,55 @@ public class TransactionApiImpl implements TransactionApi {
 
     private final NodeManager nodeManager;
 
+    @Autowired
     public TransactionApiImpl(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
-    }
-
-    public int getCount(String address, BlockBody blockBody) {
-        Integer cnt = 0;
-        for (Transaction tx : blockBody.getTransactionList()) {
-            try {
-                if (Arrays.areEqual(Hex.decodeHex(address), tx.getHeader().getAddress())) {
-                    cnt += 1;
-                }
-            } catch (DecoderException e) {
-                e.printStackTrace();
-            }
-        }
-        return cnt;
     }
 
     /* get */
     @Override
     public int getTransactionCount(String address, String tag) {
-        Integer blockNumber;
-        if ("latest".equals(tag)) {
-            blockNumber = 0;
-        } else {
-            blockNumber = -1;
-        }
-        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-        return getCount(address, block.getData());
+        return 1;
     }
 
     @Override
     public int getTransactionCount(String address, int blockNumber) {
-        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-        return getCount(address, block.getData());
+        return 2;
     }
 
     @Override
     public int getBlockTransactionCountByHash(String hashOfBlock) {
-        Block block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
-        BlockBody txList = block.getData();
-        return txList.getTransactionList().size();
+        return 3;
     }
 
     @Override
     public int getBlockTransactionCountByNumber(int blockNumber) {
-        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-        BlockBody txList = block.getData();
-        return txList.getTransactionList().size();
+        return 4;
     }
 
     @Override
     public int getBlockTransactionCountByNumber(String tag) {
-        if ("latest".equals(tag)) {
-            Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(0));
-            BlockBody txList = block.getData();
-            return txList.getTransactionList().size();
-        }
-        return 0;
+        return 5;
     }
 
     @Override
     public Transaction getTransactionByHash(String hashOfTx) {
-        Transaction tx = nodeManager.getTxByHash(hashOfTx);
-        if (tx == null) {
-            throw new NonExistObjectException("Transaction");
-        }
-        return tx;
+        return retTxMock();
     }
 
     @Override
-    public Transaction getTransactionByBlockHashAndIndex(
-            String hashOfBlock, int txIndexPosition) throws IOException {
-        Block block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
-        BlockBody txList = block.getData();
-        return txList.getTransactionList().get(txIndexPosition);
+    public Transaction getTransactionByBlockHashAndIndex(String hashOfBlock, int txIndexPosition) {
+        return retTxMock();
     }
 
     @Override
-    public Transaction getTransactionByBlockNumberAndIndex(
-            int blockNumber, int txIndexPosition) throws IOException {
-        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-        BlockBody txList = block.getData();
-        return txList.getTransactionList().get(txIndexPosition);
+    public Transaction getTransactionByBlockNumberAndIndex(int blockNumber, int txIndexPosition) {
+        return retTxMock();
     }
 
     @Override
-    public Transaction getTransactionByBlockNumberAndIndex(String tag, int txIndexPosition)
-            throws IOException {
-        if ("latest".equals(tag)) {
-            int blockNumber = 0;
-            Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-            BlockBody txList = block.getData();
-            return txList.getTransactionList().get(txIndexPosition);
-        }
-        return null;
+    public Transaction getTransactionByBlockNumberAndIndex(String tag, int txIndexPosition) {
+        return retTxMock();
     }
 
     @Override
@@ -128,13 +75,13 @@ public class TransactionApiImpl implements TransactionApi {
 
     /* send */
     @Override
-    public String sendTransaction(Transaction tx) throws IOException,SignatureException {
+    public String sendTransaction(Transaction tx) {
         Transaction addedTx = nodeManager.addTransaction(tx);
         return addedTx.getHashString();
     }
 
     @Override
-    public byte[] sendRawTransaction(byte[] bytes) throws IOException,SignatureException {
+    public byte[] sendRawTransaction(byte[] bytes) {
         Transaction tx = convert(bytes);
         Transaction addedTx = nodeManager.addTransaction(tx);
         return addedTx.getHash();
@@ -173,5 +120,17 @@ public class TransactionApiImpl implements TransactionApi {
                 type, version, dataHash, timestampStr, dataSizeStr, signature);
 
         return new Transaction(txHeader, dataStr);
+    }
+
+    private Transaction retTxMock() {
+
+        // Create transaction
+        JsonObject txObj = new JsonObject();
+
+        txObj.addProperty("operator", "transfer");
+        txObj.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
+        txObj.addProperty("value", 100);
+
+        return new Transaction(nodeManager.getWallet(), txObj);
     }
 }

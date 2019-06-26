@@ -23,7 +23,6 @@ import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.node.mock.WalletMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -42,8 +41,7 @@ public class MessageSenderTest {
         Wallet wallet = new Wallet();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        this.tx = new Transaction(json);
-        WalletMock.sign(tx);
+        this.tx = new Transaction(wallet, json);
         BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
@@ -52,7 +50,6 @@ public class MessageSenderTest {
                 .build(wallet);
         this.block = new Block(genesisBlockHeader, sampleBody);
         this.messageSender = new MessageSender();
-
     }
 
     @Test
