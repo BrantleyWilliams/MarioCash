@@ -21,12 +21,11 @@ import dev.zhihexireng.core.BlockBuilder;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionManager;
+import dev.zhihexireng.core.TransactionStore;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.net.GrpcClientChannel;
+import dev.zhihexireng.core.net.NodeSyncClient;
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.exception.FailedOperationException;
@@ -51,7 +50,7 @@ public class NodeManagerImpl implements NodeManager {
 
     private BlockChain blockChain;
 
-    private TransactionManager txManager;
+    private TransactionStore txManager;
 
     private TransactionValidator txValidator;
 
@@ -63,9 +62,7 @@ public class NodeManagerImpl implements NodeManager {
 
     private Peer peer;
 
-    private MessageSender<PeerClientChannel> messageSender;
-
-    private NodeHealthIndicator nodeHealthIndicator;
+    private MessageSender messageSender;
 
     @Autowired
     public void setNodeProperties(NodeProperties nodeProperties) {
@@ -83,7 +80,7 @@ public class NodeManagerImpl implements NodeManager {
     }
 
     @Autowired
-    public void setTxManager(TransactionManager txManager) {
+    public void setTxManager(TransactionStore txManager) {
         this.txManager = txManager;
     }
 
@@ -103,13 +100,8 @@ public class NodeManagerImpl implements NodeManager {
     }
 
     @Autowired
-    public void setMessageSender(MessageSender<PeerClientChannel> messageSender) {
+    public void setMessageSender(MessageSender messageSender) {
         this.messageSender = messageSender;
-    }
-
-    @Autowired
-    public void setNodeHealthIndicator(NodeHealthIndicator nodeHealthIndicator) {
-        this.nodeHealthIndicator = nodeHealthIndicator;
     }
 
     @PreDestroy
@@ -126,12 +118,10 @@ public class NodeManagerImpl implements NodeManager {
         requestPeerList();
         activatePeers();
         if (!peerGroup.isEmpty()) {
-            nodeHealthIndicator.sync();
             syncBlockAndTransaction();
         }
         peerGroup.addPeer(peer);
         log.info("Init node=" + peer.getYnodeUri());
-        nodeHealthIndicator.up();
     }
 
     @Override
@@ -237,10 +227,6 @@ public class NodeManagerImpl implements NodeManager {
 
     private Peer addPeerByYnodeUri(String ynodeUri) {
         try {
-            if (peerGroup.count() >= nodeProperties.getMaxPeers()) {
-                log.warn("Ignore to add the peer. count={}, peer={}", peerGroup.count(), ynodeUri);
-                return null;
-            }
             Peer peer = Peer.valueOf(ynodeUri);
             return peerGroup.addPeer(peer);
         } catch (Exception e) {
@@ -259,7 +245,7 @@ public class NodeManagerImpl implements NodeManager {
         if (peer == null || this.peer.getYnodeUri().equals(peer.getYnodeUri())) {
             return;
         }
-        messageSender.newPeerChannel(new GrpcClientChannel(peer));
+        messageSender.newPeerChannel(peer);
     }
 
     private void requestPeerList() {
@@ -274,7 +260,7 @@ public class NodeManagerImpl implements NodeManager {
             try {
                 Peer peer = Peer.valueOf(ynodeUri);
                 log.info("Trying to connecting SEED peer at {}", ynodeUri);
-                GrpcClientChannel client = new GrpcClientChannel(peer);
+                NodeSyncClient client = new NodeSyncClient(peer);
                 // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
                 List<String> peerList = client.requestPeerList(getNodeUri(), 0);
                 client.stop();

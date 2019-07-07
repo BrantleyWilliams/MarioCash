@@ -1,12 +1,12 @@
 package dev.zhihexireng.node.api;
 
-import dev.zhihexireng.core.store.TransactionPool;
+import dev.zhihexireng.core.store.CachePool;
 
 public class TransactionReceiptDto {
 
-    private final TransactionPool txPool;
+    private final CachePool txPool;
 
-    public TransactionReceiptDto(TransactionPool txPool) {
+    public TransactionReceiptDto(CachePool txPool) {
         this.txPool = txPool;
     }
 
