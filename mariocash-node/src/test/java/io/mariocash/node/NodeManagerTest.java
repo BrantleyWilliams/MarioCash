@@ -22,7 +22,7 @@ import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionStore;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.PeerGroup;
@@ -57,7 +57,7 @@ public class NodeManagerTest {
         nodeManager.setMessageSender(new MessageSender());
         nodeManager.setWallet(new Wallet());
         nodeManager.setTxValidator(new TransactionValidator());
-        nodeManager.setTxManager(txManager);
+        nodeManager.setTransactionStore(txManager);
         nodeManager.setBlockChain(new BlockChain());
         nodeManager.setBlockBuilder(new BlockBuilderImpl());
         nodeManager.init();

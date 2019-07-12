@@ -21,6 +21,7 @@ import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.core.store.CachePool;
 import dev.zhihexireng.core.store.HashMapTransactionPool;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import org.junit.Before;

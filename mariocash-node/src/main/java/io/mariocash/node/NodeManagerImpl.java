@@ -16,12 +16,13 @@
 
 package dev.zhihexireng.node;
 
+import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBuilder;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionStore;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.NodeSyncClient;
@@ -50,7 +51,7 @@ public class NodeManagerImpl implements NodeManager {
 
     private BlockChain blockChain;
 
-    private TransactionStore txManager;
+    private TransactionStore transactionStore;
 
     private TransactionValidator txValidator;
 
@@ -80,8 +81,8 @@ public class NodeManagerImpl implements NodeManager {
     }
 
     @Autowired
-    public void setTxManager(TransactionStore txManager) {
-        this.txManager = txManager;
+    public void setTransactionStore(TransactionStore transactionStore) {
+        this.transactionStore = transactionStore;
     }
 
     @Autowired
@@ -126,14 +127,14 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public Transaction getTxByHash(String id) {
-        return txManager.get(id);
+        return transactionStore.get(id);
     }
 
     @Override
     public Transaction addTransaction(Transaction tx) {
 
         if (txValidator.txSigValidate(tx)) {
-            Transaction newTx = txManager.put(tx);
+            Transaction newTx = transactionStore.put(tx);
             messageSender.newTransaction(tx);
             return newTx;
         }
@@ -142,7 +143,7 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public List<Transaction> getTransactionList() {
-        return new ArrayList<>(txManager.getUnconfirmedTxs());
+        return new ArrayList<>(transactionStore.getUnconfirmedTxs());
     }
 
     @Override
@@ -155,7 +156,7 @@ public class NodeManagerImpl implements NodeManager {
         Block block =
                 blockBuilder.build(
                         this.wallet,
-                        new ArrayList<>(txManager.getUnconfirmedTxs()),
+                        new ArrayList<>(transactionStore.getUnconfirmedTxs()),
                         blockChain.getPrevBlock()
                 );
 
@@ -279,7 +280,7 @@ public class NodeManagerImpl implements NodeManager {
             }
             List<Transaction> txList = messageSender.syncTransaction();
             for (Transaction tx : txList) {
-                txManager.put(tx);
+                transactionStore.put(tx);
             }
         } catch (Exception e) {
             log.warn(e.getMessage(), e);
@@ -290,12 +291,12 @@ public class NodeManagerImpl implements NodeManager {
         if (block == null || block.getData().getTransactionList() == null) {
             return;
         }
-        Set<String> keys = new HashSet<>();
+        Set<Sha3Hash> keys = new HashSet<>();
 
         for (Transaction tx : block.getData().getTransactionList()) {
-            keys.add(tx.getHashString());
+            keys.add(new Sha3Hash(tx.getHashString()));
         }
-        this.txManager.batch(keys);
+        this.transactionStore.batch(keys);
     }
 
     private boolean isNumeric(String str) {
