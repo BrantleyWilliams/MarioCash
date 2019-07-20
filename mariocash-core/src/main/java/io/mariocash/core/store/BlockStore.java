@@ -19,14 +19,13 @@ package dev.zhihexireng.core.store;
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.husk.BlockHusk;
-import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
+import dev.zhihexireng.core.store.datasource.DbSource;
 
 public class BlockStore implements Store<Sha3Hash, BlockHusk> {
-    private LevelDbDataSource db;
+    private DbSource<byte[], byte[]> db;
 
-    public BlockStore() {
-        this.db = new LevelDbDataSource("block");
-        db.init();
+    public BlockStore(DbSource<byte[], byte[]> dbSource) {
+        this.db = dbSource;
     }
 
     @Override

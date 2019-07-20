@@ -19,21 +19,28 @@ package dev.zhihexireng.core.store;
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.husk.BlockHusk;
+import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 import dev.zhihexireng.proto.BlockChainProto;
+import dev.zhihexireng.util.FileUtil;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
+import org.junit.AfterClass;
 import org.junit.Test;
+
+import java.nio.file.Paths;
 
 public class BlockStoreTest {
     private BlockStore blockStore;
+    private static final String dbPath = "testOutput";
 
-    @Before
-    public void setUp() throws Exception {
-        this.blockStore = new BlockStore();
+    @AfterClass
+    public static void destroy() {
+        FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 
     @Test
     public void shouldBeGotBlock() throws InvalidProtocolBufferException {
+        blockStore = new BlockStore(
+                new LevelDbDataSource(dbPath, "get-test").init());
         BlockHusk blockHuskFixture = getBlockHuskFixture();
         blockStore.put(blockHuskFixture.getHash(), blockHuskFixture);
         BlockHusk foundBlockHusk = blockStore.get(blockHuskFixture.getHash());
@@ -42,6 +49,8 @@ public class BlockStoreTest {
 
     @Test
     public void shouldBePutBlock() throws InvalidProtocolBufferException {
+        blockStore = new BlockStore(
+                new LevelDbDataSource(dbPath, "put-test").init());
         BlockHusk blockHusk = getBlockHuskFixture();
         blockStore.put(blockHusk.getHash(), blockHusk);
     }

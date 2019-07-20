@@ -17,7 +17,7 @@
 package dev.zhihexireng.core.store.datasource;
 
 public interface DbSource <K, V> {
-    void init();
+    DbSource init();
 
     V get(K key);
 
