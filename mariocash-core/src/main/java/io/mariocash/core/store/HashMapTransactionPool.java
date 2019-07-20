@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class HashMapTransactionPool implements CachePool<String, Transaction> {
+public class HashMapTransactionPool implements TransactionPool {
     private final Map<String, Transaction> txs = new ConcurrentHashMap<>();
 
     @Override

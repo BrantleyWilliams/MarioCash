@@ -20,7 +20,6 @@ import dev.zhihexireng.config.Constants;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.util.FileUtil;
 import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.WriteBatch;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
-public class LevelDbDataSource implements DbSource<byte[], byte[]> {
+public class LevelDbDataSource implements DbSource {
 
     private static final Logger log = LoggerFactory.getLogger(LevelDbDataSource.class);
 
@@ -56,13 +55,13 @@ public class LevelDbDataSource implements DbSource<byte[], byte[]> {
         this.name = name;
     }
 
-    public LevelDbDataSource init() {
+    public void init() {
         resetDbLock.writeLock().lock();
         try {
             log.debug("Initialize db: {}", name);
 
             if (isAlive()) {
-                log.info("DbSource is alive.");
+                return;
             }
 
             if (name == null) {
@@ -79,8 +78,6 @@ public class LevelDbDataSource implements DbSource<byte[], byte[]> {
         } finally {
             resetDbLock.writeLock().unlock();
         }
-
-        return this;
     }
 
     private void openDb(Options options) throws IOException {
@@ -120,21 +117,6 @@ public class LevelDbDataSource implements DbSource<byte[], byte[]> {
         } finally {
             resetDbLock.readLock().unlock();
         }
-    }
-
-    @Override
-    public long count() {
-        resetDbLock.readLock().lock();
-        long count = 0;
-        try {
-            DBIterator iterator = db.iterator();
-            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                count++;
-            }
-        } finally {
-            resetDbLock.readLock().unlock();
-        }
-        return count;
     }
 
     public void updateByBatch(Map<byte[], byte[]> rows) {
