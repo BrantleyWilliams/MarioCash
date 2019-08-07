@@ -1,6 +1,5 @@
 package dev.zhihexireng.node.api;
 
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
@@ -9,7 +8,6 @@ import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.node.mock.TransactionMock;
-import dev.zhihexireng.node.mock.WalletMock;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +37,7 @@ public class TransactionMockitoTest {
     private NodeManager nodeManagerMock;
     private Transaction tx;
     private Block block;
+    private Wallet wallet;
 
     private TransactionApiImpl txApiImpl;
     private String hashOfTx;
@@ -48,21 +47,19 @@ public class TransactionMockitoTest {
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        wallet = new Wallet();
         txApiImpl = new TransactionApiImpl(nodeManagerMock);
 
         TransactionMock txMock = new TransactionMock();
-        tx = txMock.retTxMock();
+        tx = txMock.retTxMock(wallet);
         hashOfTx = tx.getHashString();
-
-        Wallet wallet = new Wallet(new DefaultConfig());
-        WalletMock.sign(tx);
         List<Transaction> txList = new ArrayList<>();
         txList.add(tx);
         txList.add(tx);
         txList.add(tx);
-        //BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
-        BlockBody sampleBody = new BlockBody(txList);
 
+        BlockBody sampleBody = new BlockBody(txList);
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
                 .prevBlock(null)

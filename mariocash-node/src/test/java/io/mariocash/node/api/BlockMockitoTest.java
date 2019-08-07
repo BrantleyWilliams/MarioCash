@@ -1,6 +1,5 @@
 package dev.zhihexireng.node.api;
 
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
@@ -8,7 +7,6 @@ import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.node.mock.TransactionMock;
-import dev.zhihexireng.node.mock.WalletMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+
 @RunWith(MockitoJUnitRunner.class)
 public class BlockMockitoTest {
     @Mock
@@ -36,20 +35,18 @@ public class BlockMockitoTest {
     private String hashOfBlock;
     private String numOfblock;
     private Set<Block> blockList = new HashSet<>();
+    private Wallet wallet;
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+        wallet = new Wallet();
         blockApiImpl = new BlockApiImpl(nodeManagerMock);
 
         TransactionMock txMock = new TransactionMock();
-        Transaction tx = txMock.retTxMock();
-
-        Wallet wallet = new Wallet(new DefaultConfig());
-        WalletMock.sign(tx);
+        Transaction tx = txMock.retTxMock(wallet);
 
         BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
-
         BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
                 .prevBlock(null)
