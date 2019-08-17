@@ -16,13 +16,10 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.contract.CoinContract;
-import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBuilder;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.TransactionValidator;
@@ -39,9 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,10 +64,6 @@ public class NodeManagerImpl implements NodeManager {
     private Peer peer;
 
     private MessageSender<PeerClientChannel> messageSender;
-
-    private StateStore stateStore;
-
-    private NodeHealthIndicator nodeHealthIndicator;
 
     @Autowired
     public void setNodeProperties(NodeProperties nodeProperties) {
@@ -114,11 +105,6 @@ public class NodeManagerImpl implements NodeManager {
         this.messageSender = messageSender;
     }
 
-    @Autowired
-    public void setNodeHealthIndicator(NodeHealthIndicator nodeHealthIndicator) {
-        this.nodeHealthIndicator = nodeHealthIndicator;
-    }
-
     @PreDestroy
     public void destroy() {
         log.info("destroy uri=" + peer.getYnodeUri());
@@ -127,45 +113,16 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public void init() {
-        this.stateStore = new StateStore();
-        System.out.println("\n\n getStateStore : " + getStateStore());
         NodeProperties.Grpc grpc = nodeProperties.getGrpc();
-        try {
-            List<Transaction> txList = txManager.getAllTxs();
-            executeAllTx(txList);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         messageSender.setListener(this);
         peer = Peer.valueOf(wallet.getNodeId(), grpc.getHost(), grpc.getPort());
         requestPeerList();
         activatePeers();
         if (!peerGroup.isEmpty()) {
-            nodeHealthIndicator.sync();
             syncBlockAndTransaction();
         }
         peerGroup.addPeer(peer);
         log.info("Init node=" + peer.getYnodeUri());
-        nodeHealthIndicator.up();
-    }
-
-    private void executeAllTx(List<Transaction> txList) throws Exception {
-        CoinContract coinContract = new CoinContract(stateStore);
-        Runtime runtime = new Runtime();
-        for (Transaction tx : txList) {
-            runtime.execute(coinContract, tx);
-        }
-    }
-
-    @Override
-    public Integer getBalanceOf(String address) {
-        return stateStore.getState().get(address);
-    }
-
-    @Override
-    public StateStore getStateStore() {
-        return this.stateStore;
     }
 
     @Override

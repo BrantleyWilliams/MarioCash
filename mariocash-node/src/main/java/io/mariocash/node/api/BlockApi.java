@@ -8,8 +8,6 @@ import dev.zhihexireng.core.Block;
 import dev.zhihexireng.node.exception.InternalErrorException;
 import dev.zhihexireng.node.exception.NonExistObjectException;
 
-import java.util.Set;
-
 @JsonRpcService("/api/block")
 public interface BlockApi {
     /**
@@ -21,37 +19,29 @@ public interface BlockApi {
     int blockNumber();
 
     /**
-     * Returns all blocks.
-     */
-    @JsonRpcErrors({
-            @JsonRpcError(exception = InternalErrorException.class,
-                          code = InternalErrorException.code)})
-    Set<Block> getAllBlock();
-
-    /**
      * Returns information about a block by hash.
      *
-     * @param hashOfBlock Hash of block
-     * @param bool        If true, it returns the full transaction objects,
-     *                    if false only the hashes of the transactions.
+     * @param address account address
+     * @param bool    If true, it returns the full transaction objects,
+     *                if false only the hashes of the transactions.
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    Block getBlockByHash(@JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
+    Block getBlockByHash(@JsonRpcParam(value = "address") String address,
                          @JsonRpcParam(value = "bool") Boolean bool);
 
     /**
      * Returns information about a block by block number.
      *
-     * @param numOfBlock  Number of block
+     * @param hashOfBlock hash of block
      * @param bool        If true, it returns the full transaction objects,
      *                    if false only the hashes of the transactions.
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    Block getBlockByNumber(@JsonRpcParam(value = "numOfBlock") String numOfBlock,
+    Block getBlockByNumber(@JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
                            @JsonRpcParam(value = "bool") Boolean bool);
 
     /**

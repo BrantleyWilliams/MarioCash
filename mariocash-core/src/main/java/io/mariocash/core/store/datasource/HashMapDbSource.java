@@ -18,11 +18,7 @@ package dev.zhihexireng.core.store.datasource;
 
 import org.apache.commons.codec.binary.Hex;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 public class HashMapDbSource implements DbSource {
     HashMap<String, byte[]> db;
@@ -40,15 +36,5 @@ public class HashMapDbSource implements DbSource {
     @Override
     public void put(byte[] key, byte[] value) {
         db.put(Hex.encodeHexString(key), value);
-    }
-
-    @Override
-    public List<byte[]> getAllKey() {
-        List<byte[]> keyList = new ArrayList<>();
-        Iterator<String> iterator = db.keySet().iterator();
-        while (iterator.hasNext()) {
-            keyList.add(db.get(iterator.next()));
-        }
-        return keyList;
     }
 }
