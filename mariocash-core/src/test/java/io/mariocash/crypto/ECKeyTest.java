@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonObject;
+import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
@@ -77,7 +78,8 @@ public class ECKeyTest {
 
     @Before
     public void setUp() throws IOException, InvalidCipherTextException {
-        wallet = new Wallet();
+        final DefaultConfig defaultConfig = new DefaultConfig();
+        wallet = new Wallet(defaultConfig);
     }
 
     @Test
@@ -241,7 +243,7 @@ public class ECKeyTest {
     }
 
     @Test
-    public void testVerifySignature3() throws SignatureException {
+    public void testVerifySignature3() throws SignatureException, IOException {
 
         // create account with set privateKey
         // create tx data(test)
@@ -309,7 +311,7 @@ public class ECKeyTest {
 
 
     @Test
-    public void testVerifySignature7() throws SignatureException {
+    public void testVerifySignature7() throws SignatureException, IOException {
 
         // create tx
         JsonObject data = new JsonObject();
@@ -334,7 +336,7 @@ public class ECKeyTest {
     }
 
     @Test
-    public void testGetAddressFromSignature() throws SignatureException {
+    public void testGetAddressFromSignature() throws SignatureException, IOException {
         // create account with privateKey
         Account account = new Account(ECKey.fromPrivate(privateKey));
         System.out.println("Account: " + account.toString());
@@ -350,7 +352,6 @@ public class ECKeyTest {
         data.addProperty("balance", "10");
 
         Transaction tx = new Transaction(wallet, data);
-
         System.out.println("tx: " + tx.toString());
 
         assertArrayEquals(key.getAddress(), tx.getHeader().getAddress());
@@ -522,6 +523,15 @@ public class ECKeyTest {
         assertEquals(key1, key1);
         assertEquals(key1, key2);
     }
+
+    /*
+    @Test
+    public void decryptAECSIC() {
+        ECKey key = ECKey.fromPrivate(Hex.decode("abb51256c1324a1350598653f46aa3ad693ac3cf5d05f36eba3f495a1f51590f"));
+        byte[] payload = key.decryptAES(Hex.decode("84a727bc81fa4b13947dc9728b88fd08"));
+        System.out.println(Hex.toHexString(payload));
+    }
+    */
 
     @Test
     public void testNodeId() {

@@ -19,7 +19,6 @@ package dev.zhihexireng.node.controller;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.node.MessageSender;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,11 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("peers")
 class PeerController {
-
     private final PeerGroup peerGroup;
     private final MessageSender messageSender;
 
-    @Autowired
     public PeerController(PeerGroup peerGroup, MessageSender messageSender) {
         this.peerGroup = peerGroup;
         this.messageSender = messageSender;
