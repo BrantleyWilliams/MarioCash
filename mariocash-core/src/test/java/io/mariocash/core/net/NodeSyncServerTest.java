@@ -20,7 +20,6 @@ import com.google.gson.JsonObject;
 import io.grpc.internal.testing.StreamRecorder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcServerRule;
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
@@ -68,7 +67,7 @@ public class NodeSyncServerTest {
         grpcServerRule.getServiceRegistry().addService(new PingPongImpl());
         grpcServerRule.getServiceRegistry().addService(new BlockChainImpl(nodeManagerMock));
 
-        Wallet wallet = new Wallet(new DefaultConfig());
+        Wallet wallet = new Wallet();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
         this.tx = new Transaction(wallet, json);

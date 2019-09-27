@@ -9,6 +9,7 @@ services:
     - 9090:9090
     environment:
     - MARIOCASH_NODE_GRPC_HOST=node1
+    - MARIOCASH_NODE_MAX_PEERS=25
   node2:
     image: zhihexireng/mariocash-node
     container_name: node2
