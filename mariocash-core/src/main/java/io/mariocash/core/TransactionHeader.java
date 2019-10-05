@@ -1,8 +1,7 @@
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.core.exception.NotValidateException;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.util.ByteUtil;
