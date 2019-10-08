@@ -1,6 +1,5 @@
 package dev.zhihexireng.core;
 
-import com.google.gson.JsonArray;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.trie.Trie;
 
@@ -48,20 +47,6 @@ public class BlockBody implements Serializable {
             buffer.append(tx.toString());
         }
         return buffer.toString();
-    }
-
-    /**
-     * Covert BlockBody.class to JsonArray
-     * @return blockbody as JsonArray
-     */
-    public JsonArray toJsonArray() {
-        JsonArray jsonArray = new JsonArray();
-
-        for (Transaction tx : this.transactionList) {
-            jsonArray.add(tx.toJsonObject());
-        }
-
-        return jsonArray;
     }
 
 }
