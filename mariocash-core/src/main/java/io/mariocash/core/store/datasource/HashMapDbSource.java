@@ -20,12 +20,13 @@ import org.apache.commons.codec.binary.Hex;
 
 import java.util.HashMap;
 
-public class HashMapDbSource implements DbSource {
+public class HashMapDbSource implements DbSource<byte[], byte[]> {
     HashMap<String, byte[]> db;
 
     @Override
-    public void init() {
+    public DbSource init() {
         db = new HashMap<>();
+        return this;
     }
 
     @Override
@@ -36,5 +37,10 @@ public class HashMapDbSource implements DbSource {
     @Override
     public void put(byte[] key, byte[] value) {
         db.put(Hex.encodeHexString(key), value);
+    }
+
+    @Override
+    public long count() {
+        return db.size();
     }
 }

@@ -16,10 +16,12 @@
 
 package dev.zhihexireng.core.store.datasource;
 
-public interface DbSource {
-    void init();
+public interface DbSource <K, V> {
+    DbSource init();
 
-    byte[] get(byte[] key);
+    V get(K key);
 
-    void put(byte[] key, byte[] value);
+    void put(K key, V value);
+
+    long count();
 }

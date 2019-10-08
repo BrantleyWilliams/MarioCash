@@ -22,10 +22,9 @@ import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionManager;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.HashMapTransactionPool;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
@@ -37,35 +36,30 @@ import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
 
 public class NodeManagerTest {
 
     private NodeManagerImpl nodeManager;
-    private NodeProperties nodeProperties;
     private Transaction tx;
     private Block genesisBlock;
     private Block block;
 
     @Before
     public void setUp() throws Exception {
-        this.nodeProperties = new NodeProperties();
+        NodeProperties nodeProperties = new NodeProperties();
         nodeProperties.getGrpc().setHost("localhost");
         nodeProperties.getGrpc().setPort(9090);
-        TransactionManager txManager = new TransactionManager(new HashMapDbSource(),
+        TransactionStore txManager = new TransactionStore(new HashMapDbSource(),
                 new HashMapTransactionPool());
-        this.nodeManager = new NodeManagerImpl();
+        nodeManager = new NodeManagerImpl();
         nodeManager.setPeerGroup(new PeerGroup());
         nodeManager.setNodeProperties(nodeProperties);
-        MessageSender<PeerClientChannel> messageSender = new MessageSender<>(nodeProperties);
-        messageSender.setListener(nodeManager);
-        nodeManager.setMessageSender(messageSender);
+        nodeManager.setMessageSender(new MessageSender());
         nodeManager.setWallet(new Wallet());
         nodeManager.setTxValidator(new TransactionValidator());
-        nodeManager.setTxManager(txManager);
+        nodeManager.setTransactionStore(txManager);
         nodeManager.setBlockChain(new BlockChain());
         nodeManager.setBlockBuilder(new BlockBuilderImpl());
-        nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));
         nodeManager.init();
         assert nodeManager.getNodeUri() != null;
         JsonObject json = new JsonObject();
@@ -115,15 +109,5 @@ public class NodeManagerTest {
         assert chainedBlock.getData().getSize() == 1;
         assertThat(nodeManager.getTxByHash(tx.getHashString()).getHashString(),
                 is(tx.getHashString()));
-    }
-
-    @Test
-    public void addPeerTest() {
-        int testCount = nodeProperties.getMaxPeers() + 5;
-        for (int i = 0; i < testCount; i++) {
-            int port = i + 9000;
-            nodeManager.addPeer("ynode://75bff16c@localhost:" + port);
-        }
-        assert nodeProperties.getMaxPeers() == nodeManager.getPeerUriList().size();
     }
 }

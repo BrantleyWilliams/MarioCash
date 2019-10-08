@@ -17,16 +17,15 @@
 package dev.zhihexireng.node.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Configuration
+@Component
 @ConfigurationProperties(prefix = "mariocash.node", ignoreUnknownFields = false)
 public class NodeProperties {
     private final Grpc grpc = new Grpc();
     private List<String> seedPeerList;
-    private int maxPeers = 25;
 
     public Grpc getGrpc() {
         return grpc;
@@ -38,14 +37,6 @@ public class NodeProperties {
 
     public void setSeedPeerList(List<String> seedPeerList) {
         this.seedPeerList = seedPeerList;
-    }
-
-    public void setMaxPeers(int maxPeers) {
-        this.maxPeers = maxPeers;
-    }
-
-    public int getMaxPeers() {
-        return maxPeers;
     }
 
     public static class Grpc {

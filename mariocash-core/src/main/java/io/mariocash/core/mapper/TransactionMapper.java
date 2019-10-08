@@ -66,8 +66,8 @@ public class TransactionMapper {
                 .setType(toByteString(header.getType()))
                 .setVersion(toByteString(header.getVersion()))
                 .setDataHash(toByteString(header.getDataHash()))
-                .setDataSize(header.getDataSize())
                 .setTimestamp(header.getTimestamp())
+                .setDataSize(header.getDataSize())
                 .setSignature(toByteString(header.getSignature()))
                 .build();
     }
