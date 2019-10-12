@@ -16,11 +16,8 @@
 
 package dev.zhihexireng;
 
-import dev.zhihexireng.core.Address;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHeader;
-import dev.zhihexireng.crypto.ECKey;
-import dev.zhihexireng.proto.BlockChainProto;
 
 import java.util.Random;
 
@@ -40,19 +37,5 @@ public class TestUtils {
                 8L,
                 TestUtils.randomBytes(65));
         return new Transaction(transactionHeader, "dummy");
-    }
-
-    public static Address getTestAddress() {
-        return new Address(new ECKey().getAddress());
-    }
-
-    public static BlockChainProto.Block getBlockFixture() {
-        BlockChainProto.BlockHeader defaultHeader =
-                BlockChainProto.BlockHeader.getDefaultInstance();
-        BlockChainProto.BlockBody defaultBody = BlockChainProto.BlockBody.getDefaultInstance();
-        return BlockChainProto.Block.newBuilder()
-                .setHeader(defaultHeader)
-                .setData(defaultBody)
-                .build();
     }
 }
