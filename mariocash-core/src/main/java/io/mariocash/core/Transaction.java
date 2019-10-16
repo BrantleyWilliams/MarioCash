@@ -1,7 +1,6 @@
 package dev.zhihexireng.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.util.SerializeUtils;
@@ -90,18 +89,4 @@ public class Transaction implements Serializable {
     public String toString() {
         return header.toString() + "transactionData=" + data;
     }
-
-    /**
-     * Convert from Transaction.class to JSON string.
-     * @return transaction as JsonObject
-     */
-    public JsonObject toJsonObject() {
-        //todo: change to serialize method
-
-        JsonObject jsonObject = this.getHeader().toJsonObject();
-        jsonObject.add("data", new Gson().fromJson(this.data, JsonObject.class));
-
-        return jsonObject;
-    }
-
 }
