@@ -18,18 +18,18 @@ package dev.zhihexireng.core.husk;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.proto.BlockChainProto;
+import dev.zhihexireng.proto.Proto;
 
 import java.util.Objects;
 
-public class BlockHusk implements ProtoHusk<BlockChainProto.Block> {
-    private BlockChainProto.Block block;
+public class BlockHusk implements ProtoHusk<Proto.BlockV2> {
+    private Proto.BlockV2 block;
 
     public BlockHusk(byte[] bytes) throws InvalidProtocolBufferException {
-        this.block = BlockChainProto.Block.parseFrom(bytes);
+        this.block = Proto.BlockV2.parseFrom(bytes);
     }
 
-    public BlockHusk(BlockChainProto.Block block) {
+    public BlockHusk(Proto.BlockV2 block) {
         this.block = block;
     }
 
@@ -39,7 +39,7 @@ public class BlockHusk implements ProtoHusk<BlockChainProto.Block> {
     }
 
     @Override
-    public BlockChainProto.Block getInstance() {
+    public Proto.BlockV2 getInstance() {
         return this.block;
     }
 

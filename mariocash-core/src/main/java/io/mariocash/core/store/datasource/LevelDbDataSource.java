@@ -19,28 +19,24 @@ package dev.zhihexireng.core.store.datasource;
 import dev.zhihexireng.config.Constants;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.util.FileUtil;
-import org.apache.commons.codec.binary.Base64;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.WriteBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
-public class LevelDbDataSource implements DbSource {
+public class LevelDbDataSource implements DbSource<byte[], byte[]> {
 
     private static final Logger log = LoggerFactory.getLogger(LevelDbDataSource.class);
 
@@ -60,13 +56,13 @@ public class LevelDbDataSource implements DbSource {
         this.name = name;
     }
 
-    public void init() {
+    public LevelDbDataSource init() {
         resetDbLock.writeLock().lock();
         try {
             log.debug("Initialize db: {}", name);
 
             if (isAlive()) {
-                return;
+                log.info("DbSource is alive.");
             }
 
             if (name == null) {
@@ -83,6 +79,8 @@ public class LevelDbDataSource implements DbSource {
         } finally {
             resetDbLock.writeLock().unlock();
         }
+
+        return this;
     }
 
     private void openDb(Options options) throws IOException {
@@ -124,6 +122,21 @@ public class LevelDbDataSource implements DbSource {
         }
     }
 
+    @Override
+    public long count() {
+        resetDbLock.readLock().lock();
+        long count = 0;
+        try {
+            DBIterator iterator = db.iterator();
+            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+                count++;
+            }
+        } finally {
+            resetDbLock.readLock().unlock();
+        }
+        return count;
+    }
+
     public void updateByBatch(Map<byte[], byte[]> rows) {
         resetDbLock.readLock().lock();
         try {
@@ -163,22 +176,5 @@ public class LevelDbDataSource implements DbSource {
 
     public boolean isAlive() {
         return alive;
-    }
-
-    public List<byte[]> getAllKey() throws IOException {
-        DBIterator iterator = db.iterator();
-        List<byte[]> keyList = new ArrayList<>();
-        try {
-            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                byte[] key = iterator.peekNext().getKey();
-                byte[] value = iterator.peekNext().getValue();
-                String keyStr = Hex.toHexString(key);
-                String valueStr = Base64.encodeBase64String(value);
-                keyList.add(key);
-            }
-        } finally {
-            iterator.close();
-        }
-        return keyList;
     }
 }

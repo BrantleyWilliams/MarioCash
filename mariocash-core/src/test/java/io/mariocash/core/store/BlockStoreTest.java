@@ -20,7 +20,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.husk.BlockHusk;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
-import dev.zhihexireng.proto.BlockChainProto;
+import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.FileUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.AfterClass;
@@ -56,7 +56,7 @@ public class BlockStoreTest {
     }
 
     private BlockHusk getBlockHuskFixture() {
-        BlockChainProto.Block blockFixture = TestUtils.getBlockFixture();
+        Proto.BlockV2 blockFixture = TestUtils.getBlockFixture();
         return new BlockHusk(blockFixture);
     }
 }

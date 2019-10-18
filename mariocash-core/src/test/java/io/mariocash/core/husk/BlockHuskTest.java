@@ -14,21 +14,7 @@
  * limitations under the License.
  */
 
-package dev.zhihexireng.core.net;
+package dev.zhihexireng.core.husk;
 
-/**
- * The type Node sync demo client.
- */
-public class NodeSyncDemoClient {
-    /**
-     * The entry point of application.
-     *
-     * @param args the input arguments
-     */
-    public static void main(String[] args) throws InterruptedException {
-        NodeSyncClient client = new NodeSyncClient(Peer.valueOf("ynode://75bff16c@127.0.0.1:9090"));
-        client.ping("Ping");
-        client.broadcastTransaction(NodeTestData.transactions());
-        client.blockUtilShutdown();
-    }
+public class BlockHuskTest {
 }
