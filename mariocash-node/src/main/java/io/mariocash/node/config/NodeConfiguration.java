@@ -17,6 +17,7 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.NodeSyncServer;
@@ -60,4 +61,8 @@ public class NodeConfiguration {
         return new Wallet(defaultConfig);
     }
 
+    @Bean
+    StateStore stateStore() {
+        return new StateStore();
+    }
 }

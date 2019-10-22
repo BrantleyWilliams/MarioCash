@@ -1,7 +1,5 @@
 package dev.zhihexireng.contract;
 
-import com.google.gson.JsonObject;
-import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionReceipt;
 
 import java.util.HashMap;
@@ -60,17 +58,5 @@ public class CoinContract implements Contract {
             txRecipt.setStatus(0);
         }
         return txRecipt;
-    }
-
-    @Override
-    public boolean invoke(Transaction tx) throws Exception {
-        // @TODO excute transfer method
-        return false;
-    }
-
-    @Override
-    public JsonObject query(JsonObject qurey) throws Exception {
-        // @TODO excute balanceOf
-        return null;
     }
 }
