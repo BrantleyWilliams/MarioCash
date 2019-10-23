@@ -1,9 +1,6 @@
 package dev.zhihexireng.core.genesis;
 
-import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonWriter;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.util.FileUtil;
 import org.junit.Before;
 import org.junit.Test;
