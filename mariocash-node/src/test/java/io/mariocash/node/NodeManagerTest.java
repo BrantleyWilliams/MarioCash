@@ -30,8 +30,12 @@ import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.HashMapTransactionPool;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.config.NodeProperties;
+import dev.zhihexireng.util.ByteUtil;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.Collections;
 
@@ -40,6 +44,8 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 public class NodeManagerTest {
+
+    private static final Logger log = LoggerFactory.getLogger(NodeManagerTest.class);
 
     private NodeManagerImpl nodeManager;
     private NodeProperties nodeProperties;
@@ -115,7 +121,7 @@ public class NodeManagerTest {
         assert nodeManager.getBlocks().size() == 2;
         Block chainedBlock = nodeManager.getBlockByIndexOrHash(newBlock.getBlockHash());
         assert chainedBlock.getBlockHash().equals(newBlock.getBlockHash());
-        System.out.println(chainedBlock.getData().getSize());
+        log.debug(Hex.toHexString(ByteUtil.longToBytes(chainedBlock.getData().getSize())));
         assert chainedBlock.getData().getSize() != 0;
         assertThat(nodeManager.getTxByHash(tx.getHashString()).getHashString(),
                 is(tx.getHashString()));
