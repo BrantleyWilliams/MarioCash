@@ -17,9 +17,9 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.store.CachePool;
 import dev.zhihexireng.core.store.HashMapTransactionPool;
 import dev.zhihexireng.core.store.SimpleTransactionPool;
-import dev.zhihexireng.core.store.CachePool;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;

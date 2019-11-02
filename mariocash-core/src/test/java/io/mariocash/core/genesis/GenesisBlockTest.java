@@ -1,7 +1,6 @@
 package dev.zhihexireng.core.genesis;
 
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.crypto.ECKeyTest;
 import dev.zhihexireng.util.FileUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class GenesisBlockTest {
                     new DefaultConfig().getConfig().getString("genesis.block")).getFile());
             String genesisString = FileUtil.readFileToString(genesisFile);
 
-           log.debug(genesisString);
+            log.debug(genesisString);
 
         } catch (Exception e) {
             log.error(e.getMessage());

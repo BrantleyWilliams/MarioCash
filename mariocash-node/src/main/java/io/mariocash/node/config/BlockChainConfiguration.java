@@ -18,9 +18,9 @@ package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.core.BlockBuilder;
 import dev.zhihexireng.core.BlockChain;
-import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.store.CachePool;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.node.BlockBuilderImpl;
 import org.springframework.context.annotation.Bean;

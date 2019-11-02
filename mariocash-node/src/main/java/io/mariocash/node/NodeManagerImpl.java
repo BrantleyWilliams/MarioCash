@@ -25,13 +25,13 @@ import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.GrpcClientChannel;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.exception.FailedOperationException;
 import org.slf4j.Logger;
@@ -40,9 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -86,11 +84,6 @@ public class NodeManagerImpl implements NodeManager {
     }
 
     @Autowired
-    public void setBlockChain(BlockChain blockChain) {
-        this.blockChain = blockChain;
-    }
-
-    @Autowired
     public void setTransactionStore(TransactionStore transactionStore) {
         this.transactionStore = transactionStore;
     }
@@ -98,11 +91,6 @@ public class NodeManagerImpl implements NodeManager {
     @Autowired
     public void setTxValidator(TransactionValidator txValidator) {
         this.txValidator = txValidator;
-    }
-
-    @Autowired
-    public void setWallet(Wallet wallet) {
-        this.wallet = wallet;
     }
 
     @Autowired
@@ -361,6 +349,11 @@ public class NodeManagerImpl implements NodeManager {
         return wallet;
     }
 
+    @Autowired
+    public void setWallet(Wallet wallet) {
+        this.wallet = wallet;
+    }
+
     @Override
     public void disconnected(Peer peer) {
         removePeer(peer.getYnodeUri());
@@ -368,5 +361,10 @@ public class NodeManagerImpl implements NodeManager {
 
     public BlockChain getBlockChain() {
         return blockChain;
+    }
+
+    @Autowired
+    public void setBlockChain(BlockChain blockChain) {
+        this.blockChain = blockChain;
     }
 }
