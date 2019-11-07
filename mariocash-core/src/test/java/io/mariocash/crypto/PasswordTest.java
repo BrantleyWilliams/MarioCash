@@ -2,8 +2,6 @@ package dev.zhihexireng.crypto;
 
 import dev.zhihexireng.util.ByteUtil;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.zhihexireng.crypto.Password.generateKeyDerivation;
 import static org.junit.Assert.assertArrayEquals;
@@ -11,8 +9,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class PasswordTest {
-
-    private static final Logger log = LoggerFactory.getLogger(PasswordTest.class);
 
     @Test
     public void testPasswordCheck() {
@@ -81,7 +77,7 @@ public class PasswordTest {
             }
 
             assertTrue(Password.passwordValid(sample+(char)i));
-            log.debug("password test ok: " + sample + (char)i);
+            System.out.println("password test ok: " + sample + (char)i);
         }
 
     }
@@ -91,7 +87,7 @@ public class PasswordTest {
     public void testGenerateKeyDerivation() {
         byte[] kdfData;
         kdfData = generateKeyDerivation("testdata".getBytes(), 32);
-        log.debug(ByteUtil.toHexString(kdfData));
+        System.out.println(ByteUtil.toHexString(kdfData));
         assertArrayEquals(kdfData, ByteUtil.hexStringToBytes("0cc2fac56bbf672b4f6922d8938d62a0eb590efe9acfac00bd0fa771f2bf42c7"));
     }
 

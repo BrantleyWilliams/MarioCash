@@ -22,20 +22,16 @@ import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.HashMapTransactionPool;
-import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.config.NodeProperties;
-import dev.zhihexireng.util.ByteUtil;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.Collections;
 
@@ -45,19 +41,19 @@ import static org.mockito.Mockito.mock;
 
 public class NodeManagerTest {
 
-    private static final Logger log = LoggerFactory.getLogger(NodeManagerTest.class);
-
     private NodeManagerImpl nodeManager;
     private NodeProperties nodeProperties;
     private Transaction tx;
-    private Block firstBlock;
-    private Block secondBlock;
+    private Block genesisBlock;
+    private Block block;
 
     @Before
     public void setUp() throws Exception {
         this.nodeProperties = new NodeProperties();
         nodeProperties.getGrpc().setHost("localhost");
         nodeProperties.getGrpc().setPort(9090);
+        TransactionManager txManager = new TransactionManager(new HashMapDbSource(),
+                new HashMapTransactionPool());
         this.nodeManager = new NodeManagerImpl();
         nodeManager.setPeerGroup(new PeerGroup());
         nodeManager.setNodeProperties(nodeProperties);
@@ -66,11 +62,7 @@ public class NodeManagerTest {
         nodeManager.setMessageSender(messageSender);
         nodeManager.setWallet(new Wallet());
         nodeManager.setTxValidator(new TransactionValidator());
-
-        TransactionStore transactionStore = new TransactionStore(new HashMapDbSource(),
-                new HashMapTransactionPool());
-
-        nodeManager.setTransactionStore(transactionStore);
+        nodeManager.setTxManager(txManager);
         nodeManager.setBlockChain(new BlockChain());
         nodeManager.setBlockBuilder(new BlockBuilderImpl());
         nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));
@@ -81,18 +73,18 @@ public class NodeManagerTest {
         this.tx = new Transaction(nodeManager.getWallet(), json);
         BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
 
-        BlockHeader firstBlockHeader = new BlockHeader.Builder()
+        BlockHeader genesisBlockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
-                .prevBlock(nodeManager.getBlockChain().getPrevBlock())
+                .prevBlock(null)
                 .build(nodeManager.getWallet());
-        this.firstBlock = new Block(firstBlockHeader, sampleBody);
+        this.genesisBlock = new Block(genesisBlockHeader, sampleBody);
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
-                .prevBlock(firstBlock) // genesis block
+                .prevBlock(genesisBlock) // genesis block
                 .build(nodeManager.getWallet());
 
-        this.secondBlock = new Block(blockHeader, sampleBody);
+        this.block = new Block(blockHeader, sampleBody);
     }
 
     @Test
@@ -105,11 +97,10 @@ public class NodeManagerTest {
     @Test
     public void addBlockTest() {
         nodeManager.addTransaction(tx);
-        nodeManager.addBlock(firstBlock);
-        nodeManager.addBlock(secondBlock);
-        assert nodeManager.getBlocks().size() == 3;
-        assert nodeManager.getBlockByIndexOrHash("2").getBlockHash()
-                .equals(secondBlock.getBlockHash());
+        nodeManager.addBlock(genesisBlock);
+        nodeManager.addBlock(block);
+        assert nodeManager.getBlocks().size() == 2;
+        assert nodeManager.getBlockByIndexOrHash("1").getBlockHash().equals(block.getBlockHash());
         Transaction foundTx = nodeManager.getTxByHash(tx.getHashString());
         assert foundTx.getHashString().equals(tx.getHashString());
     }
@@ -118,10 +109,10 @@ public class NodeManagerTest {
     public void generateBlockTest() {
         nodeManager.addTransaction(tx);
         Block newBlock = nodeManager.generateBlock();
-        assert nodeManager.getBlocks().size() == 2;
+        assert nodeManager.getBlocks().size() == 1;
         Block chainedBlock = nodeManager.getBlockByIndexOrHash(newBlock.getBlockHash());
         assert chainedBlock.getBlockHash().equals(newBlock.getBlockHash());
-        log.debug(Hex.toHexString(ByteUtil.longToBytes(chainedBlock.getData().getSize())));
+        System.out.println(chainedBlock.getData().getSize());
         assert chainedBlock.getData().getSize() != 0;
         assertThat(nodeManager.getTxByHash(tx.getHashString()).getHashString(),
                 is(tx.getHashString()));

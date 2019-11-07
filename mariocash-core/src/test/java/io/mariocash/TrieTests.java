@@ -7,8 +7,6 @@ import dev.zhihexireng.trie.Trie;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
@@ -19,8 +17,6 @@ import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertNotNull;
 
 public class TrieTests {
-
-    private static final Logger log = LoggerFactory.getLogger(TrieTests.class);
 
     private Transaction tx1;
     private Transaction tx2;
@@ -65,7 +61,7 @@ public class TrieTests {
         merkleRoot = Trie.getMerkleRoot(txsList);
         assertNotNull(merkleRoot);
 
-        log.debug("MerkelRoot with tx 7=" + Hex.encodeHexString(merkleRoot));
+        System.out.println("MerkelRoot with tx 7=" + Hex.encodeHexString(merkleRoot));
 
         // 2. test with tx 1
         txsList = new ArrayList<>();
@@ -73,19 +69,19 @@ public class TrieTests {
         merkleRoot = Trie.getMerkleRoot(txsList);
         assertNotNull(merkleRoot);
 
-        log.debug("MerkelRoot with tx 1=" + Hex.encodeHexString(merkleRoot));
+        System.out.println("MerkelRoot with tx 1=" + Hex.encodeHexString(merkleRoot));
 
         // 3. test with tx 0
         txsList = new ArrayList<>();
         merkleRoot = Trie.getMerkleRoot(txsList);
         assertNull(merkleRoot);
 
-        log.debug("MerkleRoot with tx 0 = null");
+        System.out.println("MerkleRoot with tx 0 = null");
 
         // 4. test with tx null
         merkleRoot = Trie.getMerkleRoot(null);
         assertNull(merkleRoot);
 
-        log.debug("MerkleRoot with tx null = null");
+        System.out.println("MerkleRoot with tx null = null");
     }
 }

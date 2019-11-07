@@ -60,7 +60,7 @@ public class TransactionManager {
             txPool.put(tx);
             unconfirmedTxSet.add(tx.getHashString());
         } catch (IOException e) {
-            log.error(e.getMessage());
+            e.printStackTrace();
         }
 
         return tx;
@@ -132,7 +132,7 @@ public class TransactionManager {
         try {
             txProto = BlockChainProto.Transaction.parseFrom(stream);
         } catch (InvalidProtocolBufferException e) {
-            log.error(e.getMessage());
+            e.printStackTrace();
         }
 
         if (txProto == null) {

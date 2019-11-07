@@ -1,12 +1,10 @@
 package dev.zhihexireng.core;
 
-import com.google.gson.JsonObject;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.TimeUtils;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -95,6 +93,7 @@ public class BlockHeader implements Serializable {
             block.write(ByteUtil.longToBytes(timestamp));
             block.write(ByteUtil.longToBytes(dataSize));
             block.write(signature);
+            block.write(ByteUtil.longToBytes(index));
         } catch (IOException e) {
             throw new NotValidateException(e);
         }
@@ -239,25 +238,5 @@ public class BlockHeader implements Serializable {
                 throw new NotValidateException(e);
             }
         }
-    }
-
-    /**
-     * Convert from BlockHeader.class to JsonObject.
-     * @return block as JsonObject
-     */
-    public JsonObject toJsonObject() {
-        //todo: change to serialize method
-
-        JsonObject jsonObject = new JsonObject();
-
-        jsonObject.addProperty("type", Hex.toHexString(this.type));
-        jsonObject.addProperty("version", Hex.toHexString(this.version));
-        jsonObject.addProperty("prevBlockHash", Hex.toHexString(this.prevBlockHash));
-        jsonObject.addProperty("merkleRoot", Hex.toHexString(this.merkleRoot));
-        jsonObject.addProperty("timestamp", Hex.toHexString(ByteUtil.longToBytes(this.timestamp)));
-        jsonObject.addProperty("dataSize", Hex.toHexString(ByteUtil.longToBytes(this.dataSize)));
-        jsonObject.addProperty("signature", Hex.toHexString(this.signature));
-
-        return jsonObject;
     }
 }

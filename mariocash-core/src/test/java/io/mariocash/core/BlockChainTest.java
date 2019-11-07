@@ -29,13 +29,11 @@ public class BlockChainTest {
     @Test
     public void shouldBeGetBlockByIndex() throws IOException, InvalidCipherTextException {
         BlockChain blockChain = instantBlockchain();
-        log.debug(blockChain.toStringStatus());
-
         Block prevBlock = blockChain.getPrevBlock();
         String hash = prevBlock.getPrevBlockHash();
         assertThat(blockChain.getBlockByIndex(0L)).isEqualTo(blockChain.getGenesisBlock());
-        assertThat(blockChain.getBlockByIndex(3L)).isEqualTo(prevBlock);
-        assertThat(blockChain.getBlockByIndex(2L)).isEqualTo(blockChain.getBlockByHash(hash));
+        assertThat(blockChain.getBlockByIndex(2L)).isEqualTo(prevBlock);
+        assertThat(blockChain.getBlockByIndex(1L)).isEqualTo(blockChain.getBlockByHash(hash));
     }
 
     @Test
@@ -68,12 +66,12 @@ public class BlockChainTest {
                 log.debug("chain prev block hash : "
                         + blockchain.getPrevBlock().getPrevBlockHash());
             }
-            assert block.getIndex() == i + 4;
+            assert block.getIndex() == i + 3;
             // add next block in blockchain
             blockchain.addBlock(block);
         }
 
-        assert blockchain.size() == testBlock + 4;
+        assert blockchain.size() == testBlock + 3;
 
     }
 
@@ -85,7 +83,7 @@ public class BlockChainTest {
 
         BlockHeader blockHeader = new BlockHeader.Builder()
                 .blockBody(sampleBody)
-                .prevBlock(blockChain.getPrevBlock())
+                .prevBlock(null)
                 .build(wallet);
 
         Block b0 = new Block(blockHeader, sampleBody);
@@ -101,9 +99,8 @@ public class BlockChainTest {
                             .prevBlock(blockChain.getPrevBlock())
                             .blockBody(sampleBody).build(wallet), sampleBody));
         } catch (NotValidateException e) {
-            log.error(e.getMessage());
+            e.printStackTrace();
             log.warn("invalid block....");
-            assert false;
         }
         return blockChain;
     }

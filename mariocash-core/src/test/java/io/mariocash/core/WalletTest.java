@@ -315,11 +315,11 @@ public class WalletTest {
         String keyPath = path.getParent().toString();
         String keyName = path.getFileName().toString();
 
-        log.debug("walletKeyPath: " + wallet.getKeyPath());
-        log.debug("walletKeyName: " + wallet.getKeyName());
+        System.out.println("walletKeyPath: " + wallet.getKeyPath());
+        System.out.println("walletKeyName: " + wallet.getKeyName());
 
-        log.debug("configKeyPath: " + keyPath);
-        log.debug("configKeyName: " + keyName);
+        System.out.println("configKeyPath: " + keyPath);
+        System.out.println("configKeyName: " + keyName);
 
         assertEquals(wallet.getKeyPath(), keyPath);
         assertEquals(wallet.getKeyName(), keyName);
