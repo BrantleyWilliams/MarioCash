@@ -40,7 +40,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
-public class LevelDbDataSource implements DbSource {
+public class LevelDbDataSource implements DbSource<byte[], byte[]> {
 
     private static final Logger log = LoggerFactory.getLogger(LevelDbDataSource.class);
 
@@ -60,13 +60,13 @@ public class LevelDbDataSource implements DbSource {
         this.name = name;
     }
 
-    public void init() {
+    public LevelDbDataSource init() {
         resetDbLock.writeLock().lock();
         try {
             log.debug("Initialize db: {}", name);
 
             if (isAlive()) {
-                return;
+                log.info("DbSource is alive.");
             }
 
             if (name == null) {
@@ -83,6 +83,8 @@ public class LevelDbDataSource implements DbSource {
         } finally {
             resetDbLock.writeLock().unlock();
         }
+
+        return this;
     }
 
     private void openDb(Options options) throws IOException {
@@ -122,6 +124,21 @@ public class LevelDbDataSource implements DbSource {
         } finally {
             resetDbLock.readLock().unlock();
         }
+    }
+
+    @Override
+    public long count() {
+        resetDbLock.readLock().lock();
+        long count = 0;
+        try {
+            DBIterator iterator = db.iterator();
+            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+                count++;
+            }
+        } finally {
+            resetDbLock.readLock().unlock();
+        }
+        return count;
     }
 
     public void updateByBatch(Map<byte[], byte[]> rows) {
