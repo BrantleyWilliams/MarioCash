@@ -1,6 +1,8 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
+import com.google.protobuf.InvalidProtocolBufferException;
+import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.husk.BlockHusk;
@@ -22,7 +24,7 @@ public class BlockChain {
     private Block genesisBlock;
     private Block prevBlock;
     private Map<Object, Block> blocks; // <blockheader_hash, block>
-    private final JsonObject packageInfo;
+    private JsonObject packageInfo;
 
     // For Husk
     private BlockHusk genesisBlockHusk;
@@ -38,6 +40,10 @@ public class BlockChain {
     public BlockChain(BlockStore blockStore) {
         this(new JsonObject());
         this.blockStore = blockStore;
+    }
+
+    public BlockChain(String chainId) {
+        this.blockStore = new BlockStore(chainId);
     }
 
     private BlockChain(JsonObject packageInfo) {
@@ -159,8 +165,8 @@ public class BlockChain {
         return true;
     }
 
-    public int size() {
-        return blocks.size() / 2;
+    public long size() {
+        return blockStore.size();
     }
 
     /**
@@ -214,6 +220,10 @@ public class BlockChain {
     }
 
 
+    public BlockHusk getBlockByHash(Sha3Hash key) throws InvalidProtocolBufferException {
+        return blockStore.get(key);
+    }
+
     /**
      * Replace chain.
      *
@@ -256,6 +266,10 @@ public class BlockChain {
         this.blocks.clear();
         this.prevBlock = null;
         this.genesisBlock = null;
+    }
+
+    public void close() {
+        this.blockStore.close();
     }
 
     public String toStringStatus() {
