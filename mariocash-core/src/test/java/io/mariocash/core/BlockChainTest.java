@@ -1,10 +1,7 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
-import com.google.protobuf.InvalidProtocolBufferException;
-import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.core.husk.BlockHusk;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,26 +74,7 @@ public class BlockChainTest {
         }
 
         assert blockchain.size() == testBlock + 4;
-    }
 
-    @Test
-    public void shouldBeLoadedStoredBlocks() throws InvalidProtocolBufferException {
-        String chainId = "chainId";
-        BlockChain blockChain = new BlockChain(chainId);
-        BlockHusk testBlock = new BlockHusk(TestUtils.getBlockFixture());
-        blockChain.addBlock(testBlock);
-        blockChain.close();
-
-        BlockChain otherBlockChain = new BlockChain(chainId);
-        BlockHusk foundBlock = otherBlockChain.getBlockByHash(testBlock.getHash());
-        assertThat(otherBlockChain.size()).isEqualTo(1);
-        assertThat(testBlock).isEqualTo(foundBlock);
-    }
-
-    @Test
-    public void shouldBeCreatedNewBlockChain() {
-        String chainId = "chainId";
-        new BlockChain(chainId);
     }
 
     private BlockChain instantBlockchain() throws IOException, InvalidCipherTextException {

@@ -19,16 +19,12 @@ package dev.zhihexireng.core.store.datasource;
 import java.io.IOException;
 import java.util.List;
 
-public interface DbSource<K, V> {
-    DbSource init();
+public interface DbSource {
+    void init();
 
-    V get(K key);
+    byte[] get(byte[] key);
 
-    void put(K key, V value);
+    void put(byte[] key, byte[] value);
 
-    long count();
-
-    List<K> getAllKey() throws IOException;
-
-    void close();
+    List<byte[]> getAllKey() throws IOException;
 }

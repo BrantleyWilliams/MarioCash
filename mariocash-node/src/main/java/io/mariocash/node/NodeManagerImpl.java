@@ -16,7 +16,6 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.Block;
@@ -25,13 +24,13 @@ import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.GrpcClientChannel;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.exception.FailedOperationException;
 import org.slf4j.Logger;
@@ -40,7 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,7 +56,7 @@ public class NodeManagerImpl implements NodeManager {
 
     private BlockChain blockChain;
 
-    private TransactionStore transactionStore;
+    private TransactionManager txManager;
 
     private TransactionValidator txValidator;
 
@@ -84,13 +85,23 @@ public class NodeManagerImpl implements NodeManager {
     }
 
     @Autowired
-    public void setTransactionStore(TransactionStore transactionStore) {
-        this.transactionStore = transactionStore;
+    public void setBlockChain(BlockChain blockChain) {
+        this.blockChain = blockChain;
+    }
+
+    @Autowired
+    public void setTxManager(TransactionManager txManager) {
+        this.txManager = txManager;
     }
 
     @Autowired
     public void setTxValidator(TransactionValidator txValidator) {
         this.txValidator = txValidator;
+    }
+
+    @Autowired
+    public void setWallet(Wallet wallet) {
+        this.wallet = wallet;
     }
 
     @Autowired
@@ -120,7 +131,7 @@ public class NodeManagerImpl implements NodeManager {
         log.debug("\n\n getStateStore : " + getStateStore());
         NodeProperties.Grpc grpc = nodeProperties.getGrpc();
         try {
-            List<Transaction> txList = transactionStore.getAllTxs();
+            List<Transaction> txList = txManager.getAllTxs();
             executeAllTx(txList);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -159,14 +170,14 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public Transaction getTxByHash(String id) {
-        return transactionStore.get(id);
+        return txManager.get(id);
     }
 
     @Override
     public Transaction addTransaction(Transaction tx) {
 
         if (txValidator.txSigValidate(tx)) {
-            Transaction newTx = transactionStore.put(tx);
+            Transaction newTx = txManager.put(tx);
             messageSender.newTransaction(tx);
             return newTx;
         }
@@ -175,7 +186,7 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public List<Transaction> getTransactionList() {
-        return new ArrayList<>(transactionStore.getUnconfirmedTxs());
+        return new ArrayList<>(txManager.getUnconfirmedTxs());
     }
 
     @Override
@@ -188,7 +199,7 @@ public class NodeManagerImpl implements NodeManager {
         Block block =
                 blockBuilder.build(
                         this.wallet,
-                        new ArrayList<>(transactionStore.getUnconfirmedTxs()),
+                        new ArrayList<>(txManager.getUnconfirmedTxs()),
                         blockChain.getPrevBlock()
                 );
 
@@ -316,7 +327,7 @@ public class NodeManagerImpl implements NodeManager {
             }
             List<Transaction> txList = messageSender.syncTransaction();
             for (Transaction tx : txList) {
-                transactionStore.put(tx);
+                txManager.put(tx);
             }
         } catch (Exception e) {
             log.warn(e.getMessage(), e);
@@ -327,12 +338,12 @@ public class NodeManagerImpl implements NodeManager {
         if (block == null || block.getData().getTransactionList() == null) {
             return;
         }
-        Set<Sha3Hash> keys = new HashSet<>();
+        Set<String> keys = new HashSet<>();
 
         for (Transaction tx : block.getData().getTransactionList()) {
-            keys.add(new Sha3Hash(tx.getHashString()));
+            keys.add(tx.getHashString());
         }
-        this.transactionStore.batch(keys);
+        this.txManager.batch(keys);
     }
 
     private boolean isNumeric(String str) {
@@ -349,11 +360,6 @@ public class NodeManagerImpl implements NodeManager {
         return wallet;
     }
 
-    @Autowired
-    public void setWallet(Wallet wallet) {
-        this.wallet = wallet;
-    }
-
     @Override
     public void disconnected(Peer peer) {
         removePeer(peer.getYnodeUri());
@@ -361,10 +367,5 @@ public class NodeManagerImpl implements NodeManager {
 
     public BlockChain getBlockChain() {
         return blockChain;
-    }
-
-    @Autowired
-    public void setBlockChain(BlockChain blockChain) {
-        this.blockChain = blockChain;
     }
 }

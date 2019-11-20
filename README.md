@@ -8,7 +8,8 @@
 
 ## What is mariocash?
 
-MARIOCASH is a trust-based multi-dimensional blockchains (branches) built with a vision to “Digitize everything into reality” and to connect everything and any blockchain networks.
+MARIOCASH is a trust-based multi-dimensional blockchains (branches) built with a vision to 
+“Digitize everything into reality” and to connect everything and any blockchain networks.
 
 ## Table of contents
 
@@ -35,7 +36,7 @@ This is the implementation written in Java and runs on Linux, OSX and Windows.
 
 ### Requirements
 
-MarioCash requires `JAVA` 1.8+ compiler to build. To install Java, follow this [link](http://www.oracle.com/technetwork/java/javase/overview/index.html).
+MarioCash requires `JAVA` 1.8+ compiler to build. To install Java, follow this [link](http://www.oracle.com/technetwork/java/javase/overview/index.html). 
 
 ### Getting the source
 

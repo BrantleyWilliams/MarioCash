@@ -18,18 +18,18 @@ package dev.zhihexireng.core.store.datasource;
 
 import org.apache.commons.codec.binary.Hex;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-public class HashMapDbSource implements DbSource<byte[], byte[]> {
+public class HashMapDbSource implements DbSource {
     HashMap<String, byte[]> db;
 
     @Override
-    public DbSource init() {
+    public void init() {
         db = new HashMap<>();
-        return this;
     }
 
     @Override
@@ -43,11 +43,6 @@ public class HashMapDbSource implements DbSource<byte[], byte[]> {
     }
 
     @Override
-    public long count() {
-        return db.size();
-    }
-
-    @Override
     public List<byte[]> getAllKey() {
         List<byte[]> keyList = new ArrayList<>();
         Iterator<String> iterator = db.keySet().iterator();
@@ -55,10 +50,5 @@ public class HashMapDbSource implements DbSource<byte[], byte[]> {
             keyList.add(db.get(iterator.next()));
         }
         return keyList;
-    }
-
-    @Override
-    public void close() {
-        db = null;
     }
 }
