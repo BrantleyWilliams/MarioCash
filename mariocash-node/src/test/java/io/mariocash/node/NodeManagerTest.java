@@ -22,12 +22,12 @@ import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.core.TransactionManager;
 import dev.zhihexireng.core.TransactionValidator;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.HashMapTransactionPool;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.util.ByteUtil;
@@ -67,10 +67,10 @@ public class NodeManagerTest {
         nodeManager.setWallet(new Wallet());
         nodeManager.setTxValidator(new TransactionValidator());
 
-        TransactionManager txManager = new TransactionManager(new HashMapDbSource(),
+        TransactionStore transactionStore = new TransactionStore(new HashMapDbSource(),
                 new HashMapTransactionPool());
 
-        nodeManager.setTxManager(txManager);
+        nodeManager.setTransactionStore(transactionStore);
         nodeManager.setBlockChain(new BlockChain());
         nodeManager.setBlockBuilder(new BlockBuilderImpl());
         nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));

@@ -17,9 +17,9 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.store.CachePool;
 import dev.zhihexireng.core.store.HashMapTransactionPool;
 import dev.zhihexireng.core.store.SimpleTransactionPool;
-import dev.zhihexireng.core.store.TransactionPool;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
@@ -50,7 +50,7 @@ public class StoreConfiguration {
     @Bean
     @Profile("prod")
     @Primary
-    TransactionPool simpleTransactionPool(Cache<String, Transaction> cache) {
+    CachePool simpleTransactionPool(Cache<String, Transaction> cache) {
         return new SimpleTransactionPool(cache);
     }
 
@@ -60,7 +60,7 @@ public class StoreConfiguration {
     }
 
     @Bean
-    TransactionPool transactionPool() {
+    CachePool transactionPool() {
         return new HashMapTransactionPool();
     }
 

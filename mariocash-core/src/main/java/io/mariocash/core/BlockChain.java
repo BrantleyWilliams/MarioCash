@@ -1,8 +1,12 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
+import com.google.protobuf.InvalidProtocolBufferException;
+import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.genesis.GenesisBlock;
+import dev.zhihexireng.core.husk.BlockHusk;
+import dev.zhihexireng.core.store.BlockStore;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,58 +21,52 @@ public class BlockChain {
     private static final Logger log = LoggerFactory.getLogger(BlockChain.class);
 
     // <Variable>
+    private Block genesisBlock;
     private Block prevBlock;
-    private Block currentBlock;
     private Map<Object, Block> blocks; // <blockheader_hash, block>
-    private final JsonObject branchInfo;
+    private JsonObject packageInfo;
 
-    /**
-     * Branch Information (Load Json File)
-     * @param branchInfo
-     */
-    public BlockChain(JsonObject branchInfo) {
-        this.branchInfo = branchInfo;
+    // For Husk
+    private BlockHusk genesisBlockHusk;
+    private BlockHusk prevBlockHusk;
+    private BlockStore blockStore;
+
+    @Deprecated
+    public BlockChain() {
+        this(new JsonObject());
+    }
+
+    public BlockChain(BlockStore blockStore) {
+        this(new JsonObject());
+        this.blockStore = blockStore;
+    }
+
+    public BlockChain(String chainId) {
+        this(new JsonObject());
+        this.blockStore = new BlockStore(chainId);
+    }
+
+    private BlockChain(JsonObject packageInfo) {
         this.blocks = new ConcurrentHashMap<>();
-
-        // @TODO loadBlockchain
-        loadBlockChain();
-    }
-
-    private void loadBlockChain() {
-        // @TODO check is exist;
-        if(isExist()) { // Load Exist
-
-        }else{ // Generate GenensisBlock
-            loadGenesis();
+        this.packageInfo = packageInfo;
+        try {
+            this.genesisBlock = new GenesisBlock().getGenesisBlock();
+        } catch (IOException e) {
+            throw new NotValidateException("IOException");
+        } catch (InvalidCipherTextException e) {
+            throw new NotValidateException("InvalidCipherTextException");
         }
-
+        this.prevBlock = null;
+        this.addBlock(this.genesisBlock);
     }
-    private boolean isExist() {
-
-        // @TODO Check exist self storage
-        return false;
-    }
-
-
-    private boolean loadGenesis() {
-        // load Genesis By PackageInfo
-//        try {
-//            this.genesisBlock = new GenesisBlock().getGenesisBlock();
-//        } catch (IOException e) {
-//            throw new NotValidateException("IOException");
-//        } catch (InvalidCipherTextException e) {
-//            throw new NotValidateException("InvalidCipherTextException");
-//        }
-//        this.prevBlock = null;
-//        this.addBlock(this.genesisBlock);
-
-        return true;
-    }
-
-
 
     public JsonObject getPackageInfo() {
-        return branchInfo;
+        return packageInfo;
+    }
+
+    // <Get_Set Method>
+    Block getGenesisBlock() {
+        return this.genesisBlock;
     }
 
     public Block getPrevBlock() {
@@ -97,6 +95,7 @@ public class BlockChain {
      * @param nextBlock the next block
      * @throws NotValidateException the not validate exception
      */
+    @Deprecated
     public void addBlock(Block nextBlock) {
 
         if (!isValidNewBlock(prevBlock, nextBlock)) {
@@ -112,6 +111,25 @@ public class BlockChain {
         this.prevBlock = nextBlock;
     }
 
+    public void addBlock(BlockHusk nextBlock) {
+        if (!isValidNewBlock(prevBlockHusk, nextBlock)) {
+            throw new NotValidateException();
+        }
+        log.debug("Added block index=[{}], blockHash={}", nextBlock.getIndex(),
+                nextBlock.getHash());
+        this.blockStore.put(nextBlock.getHash(), nextBlock);
+    }
+
+    @Deprecated
+    private boolean isGenesisBlock(Block newBlock) {
+        return genesisBlock == null && prevBlock == null && newBlock.getIndex() == 0;
+    }
+
+    private boolean isGenesisBlockHusk(BlockHusk newBlock) {
+        return genesisBlock == null && prevBlock == null && newBlock.getIndex() == 0;
+    }
+
+    @Deprecated
     private boolean isValidNewBlock(Block prevBlock, Block nextBlock) {
         if (prevBlock == null) {
             return true;
@@ -130,7 +148,25 @@ public class BlockChain {
         return true;
     }
 
-    public int size() {
+    private boolean isValidNewBlock(BlockHusk prevBlock, BlockHusk nextBlock) {
+        if (prevBlock == null) {
+            return true;
+        }
+        log.trace(" prev : " + prevBlock.getHash());
+        log.trace(" new : " + nextBlock.getHash());
+
+        if (prevBlock.getIndex() + 1 != nextBlock.getIndex()) {
+            log.warn("invalid index: prev:{} / new:{}", prevBlock.getIndex(), nextBlock.getIndex());
+            return false;
+        } else if (!prevBlock.equals(nextBlock)) {
+            log.warn("invalid previous hash");
+            return false;
+        }
+
+        return true;
+    }
+
+    public long size() {
         return blocks.size() / 2;
     }
 
@@ -185,6 +221,10 @@ public class BlockChain {
     }
 
 
+    public BlockHusk getBlockByHash(Sha3Hash key) throws InvalidProtocolBufferException {
+        return blockStore.get(key);
+    }
+
     /**
      * Replace chain.
      *
@@ -213,9 +253,10 @@ public class BlockChain {
     @Override
     public String toString() {
         return "BlockChain{"
-                + "prevBlock=" + prevBlock
+                + "genesisBlock=" + genesisBlock
+                + ", prevBlock=" + prevBlock
                 + ", blocks=" + blocks
-                + ", packageInfo=" + branchInfo
+                + ", packageInfo=" + packageInfo
                 + '}';
     }
 
@@ -225,27 +266,27 @@ public class BlockChain {
     public void clear() {
         this.blocks.clear();
         this.prevBlock = null;
+        this.genesisBlock = null;
+    }
+
+    public void close() {
+        this.blockStore.close();
     }
 
     public String toStringStatus() {
-//        String currentBlockHash = prevBlock.getBlockHash();
+        String currentBlockHash = prevBlock.getBlockHash();
         StringBuffer stringBuffer = new StringBuffer();
-//
-//        stringBuffer.append("[BlockChain Status]\n")
-//                .append("currentBlock=[")
-//                .append(prevBlock.getIndex())
-//                .append("]")
-//                .append(currentBlockHash)
-//                .append("\n");
-//
-//        String prevBlockHash = this.prevBlock.getPrevBlockHash();
-        String prevBlockHash = prevBlock.getBlockHash();
+
+        stringBuffer.append("[BlockChain Status]\n");
+        stringBuffer.append("genesisBlock=" + genesisBlock.getBlockHash() + "\n");
+        stringBuffer.append("currentBlock=" + "[" + prevBlock.getIndex() + "]"
+                + currentBlockHash + "\n");
+
+        String prevBlockHash = this.prevBlock.getPrevBlockHash();
+
         do {
-            stringBuffer.append("[")
-                    .append(blocks.get(prevBlockHash).getIndex())
-                    .append("]")
-                    .append(prevBlockHash)
-                    .append("\n");
+            stringBuffer.append("<-- " + "[" + blocks.get(prevBlockHash).getIndex() + "]"
+                    + prevBlockHash + "\n");
 
             prevBlockHash = blocks.get(prevBlockHash).getPrevBlockHash();
 
