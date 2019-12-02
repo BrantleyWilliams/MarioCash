@@ -23,11 +23,19 @@ import dev.zhihexireng.core.TransactionHeader;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.util.FileUtil;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.util.Random;
 
 public class TestUtils {
+    public static final String YGG_HOME = "testOutput";
+
+    public static void clearOutput() {
+        FileUtil.recursiveDelete(Paths.get(YGG_HOME));
+    }
+
     public static byte[] randomBytes(int length) {
         byte[] result = new byte[length];
         new Random().nextBytes(result);
