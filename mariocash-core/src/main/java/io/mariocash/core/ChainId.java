@@ -19,7 +19,8 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.common.Sha3Hash;
 
 public class ChainId {
-    final private Sha3Hash id;
+
+    private final Sha3Hash id;
 
     public ChainId(Sha3Hash hash) {
         this.id = hash;
