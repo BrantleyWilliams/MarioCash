@@ -39,12 +39,8 @@ public class BlockStore implements Store<Sha3Hash, BlockHusk> {
     }
 
     @Override
-    public BlockHusk get(Sha3Hash key) {
-        try {
-            return new BlockHusk(db.get(key.getBytes()));
-        } catch (InvalidProtocolBufferException e) {
-            throw new IllegalArgumentException(e);
-        }
+    public BlockHusk get(Sha3Hash key) throws InvalidProtocolBufferException {
+        return new BlockHusk(db.get(key.getBytes()));
     }
 
     public long size() {

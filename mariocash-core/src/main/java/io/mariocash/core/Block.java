@@ -15,6 +15,8 @@ public class Block implements Cloneable, Serializable, Comparable<Block> {
     private BlockHeader header;
     private BlockBody data;
 
+    public Block() {}
+
     public Block(BlockHeader header, BlockBody data) {
         this.header = header;
         this.data = data;

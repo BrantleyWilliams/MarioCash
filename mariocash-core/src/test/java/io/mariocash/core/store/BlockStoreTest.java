@@ -30,16 +30,17 @@ import java.nio.file.Paths;
 
 public class BlockStoreTest {
     private BlockStore blockStore;
+    private static final String dbPath = "testOutput";
 
     @AfterClass
     public static void destroy() {
-        FileUtil.recursiveDelete(Paths.get(TestUtils.YGG_HOME));
+        FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 
     @Test
     public void shouldBeGotBlock() throws InvalidProtocolBufferException {
         blockStore = new BlockStore(
-                new LevelDbDataSource(getPath(), "get-test").init());
+                new LevelDbDataSource(dbPath, "get-test").init());
         BlockHusk blockHuskFixture = getBlockHuskFixture();
         blockStore.put(blockHuskFixture.getHash(), blockHuskFixture);
         BlockHusk foundBlockHusk = blockStore.get(blockHuskFixture.getHash());
@@ -49,7 +50,7 @@ public class BlockStoreTest {
     @Test
     public void shouldBePutBlock() throws InvalidProtocolBufferException {
         blockStore = new BlockStore(
-                new LevelDbDataSource(getPath(), "put-test").init());
+                new LevelDbDataSource(dbPath, "put-test").init());
         BlockHusk blockHusk = getBlockHuskFixture();
         blockStore.put(blockHusk.getHash(), blockHusk);
     }
@@ -57,9 +58,5 @@ public class BlockStoreTest {
     private BlockHusk getBlockHuskFixture() {
         Proto.BlockV2 blockFixture = TestUtils.getBlockFixture();
         return new BlockHusk(blockFixture);
-    }
-
-    private String getPath() {
-        return Paths.get(TestUtils.YGG_HOME, "store").toString();
     }
 }
