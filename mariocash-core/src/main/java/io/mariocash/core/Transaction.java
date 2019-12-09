@@ -8,6 +8,7 @@ import dev.zhihexireng.util.SerializeUtils;
 
 import java.io.Serializable;
 
+@Deprecated
 public class Transaction implements Serializable {
 
     // Header

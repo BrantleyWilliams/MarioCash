@@ -16,11 +16,11 @@
 
 package dev.zhihexireng.core;
 
+import com.google.gson.JsonObject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.husk.TransactionHusk;
-import dev.zhihexireng.core.store.CachePool;
-import dev.zhihexireng.core.store.HashMapTransactionPool;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
@@ -36,17 +36,15 @@ public class TransactionStoreTest {
     @Before
     public void setUp() {
         DbSource db = new HashMapDbSource();
-        CachePool pool = new HashMapTransactionPool();
-        ts = new TransactionStore(db, pool);
+        ts = new TransactionStore(db);
         ts.flush();
     }
 
     @Test
     public void shouldGetFromDb() throws InvalidProtocolBufferException {
-        String body = "1";
-        TransactionHusk tx = new TransactionHusk(body);
+        TransactionHusk tx = TestUtils.createTxHusk();
         Sha3Hash key = tx.getHash();
-        ts.put(key, tx);
+        ts.put(tx);
 
         ts.batchAll();
         TransactionHusk transactionHusk = ts.get(key);
@@ -55,10 +53,8 @@ public class TransactionStoreTest {
 
     @Test
     public void shouldBeBatched() {
-        String body = "1";
-        TransactionHusk tx = new TransactionHusk(body);
-        Sha3Hash key = tx.getHash();
-        ts.put(key, tx);
+        TransactionHusk tx = TestUtils.createTxHusk();
+        ts.put(tx);
 
         ts.batchAll();
         assertThat(ts.countFromCache()).isZero();
@@ -67,20 +63,20 @@ public class TransactionStoreTest {
 
     @Test
     public void shouldBeGotTxFromCache() throws InvalidProtocolBufferException {
-        String body = "1";
-        TransactionHusk tx = new TransactionHusk(body);
+        TransactionHusk tx = new TransactionHusk(new JsonObject());
+
         Sha3Hash key = tx.getHash();
-        ts.put(key, tx);
+        ts.put(tx);
 
         TransactionHusk foundTx = ts.get(key);
         assertThat(foundTx).isNotNull();
-        assertThat(foundTx.getBody()).isEqualTo(body);
+        assertThat(foundTx.getBody()).isEqualTo("{}");
     }
 
     @Test
     public void shouldBePutTx() {
-        TransactionHusk tx = new TransactionHusk("1");
-        ts.put(tx.getHash(), tx);
+        TransactionHusk tx = new TransactionHusk(new JsonObject());
+        ts.put(tx);
     }
 
     @Test

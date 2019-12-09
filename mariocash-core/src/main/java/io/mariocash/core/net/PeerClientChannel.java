@@ -1,7 +1,7 @@
 package dev.zhihexireng.core.net;
 
-import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Pong;
+import dev.zhihexireng.proto.Proto;
 
 import java.util.List;
 
@@ -15,13 +15,13 @@ public interface PeerClientChannel {
 
     Pong ping(String message);
 
-    List<BlockChainProto.Block> syncBlock(long offset);
+    List<Proto.Block> syncBlock(long offset);
 
-    List<BlockChainProto.Transaction> syncTransaction();
+    List<Proto.Transaction> syncTransaction();
 
-    void broadcastTransaction(BlockChainProto.Transaction[] txs);
+    void broadcastTransaction(Proto.Transaction[] txs);
 
-    void broadcastBlock(BlockChainProto.Block[] blocks);
+    void broadcastBlock(Proto.Block[] blocks);
 
     List<String> requestPeerList(String ynodeUri, int limit);
 

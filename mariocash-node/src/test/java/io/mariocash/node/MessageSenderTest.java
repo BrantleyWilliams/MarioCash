@@ -17,12 +17,10 @@
 package dev.zhihexireng.node;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.core.Block;
-import dev.zhihexireng.core.BlockBody;
-import dev.zhihexireng.core.BlockHeader;
-import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.event.PeerEventListener;
+import dev.zhihexireng.core.husk.BlockHusk;
+import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.ChannelMock;
 import org.junit.Before;
@@ -30,13 +28,12 @@ import org.junit.Test;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
-import java.util.Collections;
 
 public class MessageSenderTest {
 
     private MessageSender<ChannelMock> messageSender;
-    private Transaction tx;
-    private Block block;
+    private TransactionHusk tx;
+    private BlockHusk block;
     private NodeProperties nodeProperties;
     private PeerEventListener listener;
 
@@ -45,14 +42,8 @@ public class MessageSenderTest {
         Wallet wallet = new Wallet();
         JsonObject json = new JsonObject();
         json.addProperty("data", "TEST");
-        this.tx = new Transaction(wallet, json);
-        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
-
-        BlockHeader genesisBlockHeader = new BlockHeader.Builder()
-                .blockBody(sampleBody)
-                .prevBlock(null)
-                .build(wallet);
-        this.block = new Block(genesisBlockHeader, sampleBody);
+        this.tx = new TransactionHusk(json).sign(wallet);
+        this.block = BlockHusk.genesis(wallet, json);
         this.nodeProperties = new NodeProperties();
         this.messageSender = new MessageSender<>(nodeProperties);
         listener = peer -> {
