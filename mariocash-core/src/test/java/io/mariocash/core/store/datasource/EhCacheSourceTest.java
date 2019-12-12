@@ -17,7 +17,7 @@
 package dev.zhihexireng.core.store.datasource;
 
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.core.husk.TransactionHusk;
+import dev.zhihexireng.core.TransactionHusk;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheConfigurationBuilder;

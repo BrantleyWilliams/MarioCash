@@ -17,7 +17,7 @@
 package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.husk.TransactionHusk;
+import dev.zhihexireng.core.TransactionHusk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

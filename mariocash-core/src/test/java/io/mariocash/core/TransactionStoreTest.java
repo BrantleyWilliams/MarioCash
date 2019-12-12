@@ -20,7 +20,6 @@ import com.google.gson.JsonObject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;

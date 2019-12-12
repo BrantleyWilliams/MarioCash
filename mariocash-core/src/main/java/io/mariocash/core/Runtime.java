@@ -1,7 +1,6 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.contract.CoinContract;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 

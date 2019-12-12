@@ -19,8 +19,6 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.event.PeerEventListener;
-import dev.zhihexireng.core.husk.BlockHusk;
-import dev.zhihexireng.core.husk.TransactionHusk;
 
 import java.util.List;
 import java.util.Set;

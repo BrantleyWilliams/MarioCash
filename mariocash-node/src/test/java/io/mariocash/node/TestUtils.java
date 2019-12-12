@@ -20,10 +20,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
+import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
-import dev.zhihexireng.core.husk.BlockHusk;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.proto.Proto;
 
 import java.util.List;

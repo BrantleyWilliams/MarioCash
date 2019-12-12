@@ -1,6 +1,6 @@
 package dev.zhihexireng.trie;
 
-import dev.zhihexireng.core.husk.TransactionHusk;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.crypto.HashUtil;
 
 import java.security.MessageDigest;

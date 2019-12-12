@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.husk.BlockHusk;
 import dev.zhihexireng.util.FileUtil;
 import org.spongycastle.crypto.InvalidCipherTextException;
 

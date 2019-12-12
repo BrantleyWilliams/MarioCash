@@ -17,7 +17,6 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.core.husk.BlockHusk;
 import dev.zhihexireng.proto.Proto;
 import org.junit.Before;
 import org.junit.Test;

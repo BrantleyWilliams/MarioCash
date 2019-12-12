@@ -1,10 +1,10 @@
 package dev.zhihexireng.node.api;
 
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
+import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.core.husk.BlockHusk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

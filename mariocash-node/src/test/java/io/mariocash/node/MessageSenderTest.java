@@ -17,10 +17,10 @@
 package dev.zhihexireng.node;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.event.PeerEventListener;
-import dev.zhihexireng.core.husk.BlockHusk;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.node.mock.ChannelMock;
 import org.junit.Before;

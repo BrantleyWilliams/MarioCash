@@ -3,7 +3,6 @@ package dev.zhihexireng.core;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.proto.Proto;
 import org.junit.Before;
 import org.junit.Test;

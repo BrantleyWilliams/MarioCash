@@ -16,7 +16,7 @@
 
 package dev.zhihexireng.node.controller;
 
-import dev.zhihexireng.core.husk.BlockHusk;
+import dev.zhihexireng.core.BlockHusk;
 
 public class BlockDto {
     private long index;

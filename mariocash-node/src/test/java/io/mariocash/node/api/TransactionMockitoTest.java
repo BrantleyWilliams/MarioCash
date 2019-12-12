@@ -1,10 +1,10 @@
 package dev.zhihexireng.node.api;
 
+import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.NodeManager;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.husk.BlockHusk;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.node.TestUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;

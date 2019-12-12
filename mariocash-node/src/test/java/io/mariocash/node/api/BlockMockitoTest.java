@@ -1,7 +1,7 @@
 package dev.zhihexireng.node.api;
 
+import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.husk.BlockHusk;
 import dev.zhihexireng.node.TestUtils;
 import org.junit.Before;
 import org.junit.Test;

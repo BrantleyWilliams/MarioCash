@@ -18,10 +18,10 @@ package dev.zhihexireng;
 
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
+import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.core.husk.BlockHusk;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.TimeUtils;

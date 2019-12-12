@@ -18,8 +18,8 @@ package dev.zhihexireng.core.store;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import org.ehcache.Cache;
 import org.ehcache.config.builders.CacheConfigurationBuilder;

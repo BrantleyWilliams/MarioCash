@@ -16,8 +16,8 @@
 
 package dev.zhihexireng.node.controller;
 
+import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.husk.BlockHusk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

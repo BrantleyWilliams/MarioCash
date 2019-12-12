@@ -17,6 +17,7 @@
 package dev.zhihexireng.core.husk;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;

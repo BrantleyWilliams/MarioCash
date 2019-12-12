@@ -18,7 +18,7 @@ package dev.zhihexireng.core.store;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.core.husk.BlockHusk;
+import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.FileUtil;

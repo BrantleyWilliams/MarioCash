@@ -17,7 +17,7 @@
 package dev.zhihexireng.node.controller;
 
 import com.google.protobuf.ByteString;
-import dev.zhihexireng.core.husk.TransactionHusk;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.proto.Proto;
 
 public class TransactionDto {

@@ -4,8 +4,6 @@ import com.google.gson.JsonObject;
 import dev.zhihexireng.config.Constants;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.core.husk.BlockHusk;
-import dev.zhihexireng.core.husk.TransactionHusk;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.util.FileUtil;
