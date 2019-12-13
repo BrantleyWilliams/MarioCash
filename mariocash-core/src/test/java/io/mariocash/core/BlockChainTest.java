@@ -1,9 +1,8 @@
 package dev.zhihexireng.core;
 
-import com.google.gson.JsonObject;
+import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.config.Constants;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.util.FileUtil;
@@ -11,9 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
 
@@ -61,14 +58,12 @@ public class BlockChainTest {
     }
 
     @Test
-    public void TransactionGenTest() throws NotValidateException, IOException,
-            InvalidCipherTextException {
+    public void TransactionGenTest() {
         // 모든 테스트는 독립적으로 동작 해야 합니다
         BlockChain blockchain = instantBlockchain();
         int testBlock = 100;
-        Wallet wallet = new Wallet();
 
-        TransactionHusk tx = new TransactionHusk(new JsonObject()).sign(wallet);
+        TransactionHusk tx = TestUtils.createTxHusk();
         for (int i = 0; i < testBlock; i++) {
             BlockHusk block = BlockHusk.build(wallet, Collections.singletonList(tx),
                     blockchain.getPrevBlock());
@@ -83,7 +78,8 @@ public class BlockChainTest {
     @Test
     public void shouldBeLoadedStoredBlocks() {
         BlockChain blockChain = new BlockChain(chainId);
-        TransactionHusk tx = new TransactionHusk(new JsonObject()).sign(wallet);
+        TransactionHusk tx = TestUtils.createTxHusk();
+
         BlockHusk testBlock = BlockHusk.build(wallet, Collections.singletonList(tx),
                 blockChain.getPrevBlock());
         blockChain.addBlock(testBlock);
@@ -105,14 +101,16 @@ public class BlockChainTest {
     private BlockChain instantBlockchain() {
         BlockStore blockStore = new BlockStore(new HashMapDbSource());
         BlockChain blockChain = new BlockChain(blockStore);
-        TransactionHusk tx = new TransactionHusk(new JsonObject()).sign(wallet);
+        TransactionHusk tx = TestUtils.createTxHusk();
+
         BlockHusk block = BlockHusk.build(wallet, Collections.singletonList(tx),
                 blockChain.getPrevBlock());
-
         blockChain.addBlock(block);
+
         BlockHusk newBlock =
                 BlockHusk.build(wallet, Collections.singletonList(tx), blockChain.getPrevBlock());
         blockChain.addBlock(newBlock);
+
         newBlock =
                 BlockHusk.build(wallet, Collections.singletonList(tx), blockChain.getPrevBlock());
         blockChain.addBlock(newBlock);
