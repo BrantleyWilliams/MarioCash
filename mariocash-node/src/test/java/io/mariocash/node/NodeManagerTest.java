@@ -20,6 +20,8 @@ import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.exception.FailedOperationException;
+import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.BlockStore;
@@ -82,6 +84,22 @@ public class NodeManagerTest {
         nodeManager.addTransaction(tx);
         TransactionHusk pooledTx = nodeManager.getTxByHash(tx.getHash());
         assert pooledTx.getHash().equals(tx.getHash());
+    }
+
+    @Test
+    public void unsignedTxTest() {
+        assert nodeManager.addTransaction(TestUtils.createUnsignedTxHusk()) == null;
+    }
+
+    @Test(expected = FailedOperationException.class)
+    public void addTransactionExceptionTest() {
+        nodeManager.setMessageSender(null);
+        nodeManager.addTransaction(tx);
+    }
+
+    @Test(expected = InvalidSignatureException.class)
+    public void failedOperationExceptionTest() {
+        nodeManager.addTransaction(TestUtils.createInvalidTxHusk());
     }
 
     @Test

@@ -2,6 +2,8 @@ package dev.zhihexireng.node.api;
 
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.NodeManager;
+import dev.zhihexireng.core.exception.InternalErrorException;
+import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.node.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +17,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class BlockMockitoTest {
@@ -43,6 +44,12 @@ public class BlockMockitoTest {
         assertThat(blockApiImpl.blockNumber()).isEqualTo(blockList.size());
     }
 
+    @Test(expected = InternalErrorException.class)
+    public void blockNumberExceptionTest() {
+        when(nodeManagerMock.getBlocks()).thenThrow(new RuntimeException());
+        assertThat(blockApiImpl.blockNumber()).isEqualTo(blockList.size());
+    }
+
     @Test
     public void getAllBlockTest() {
         when(nodeManagerMock.getBlocks()).thenReturn(blockList);
@@ -64,6 +71,12 @@ public class BlockMockitoTest {
         BlockHusk res = blockApiImpl.getBlockByNumber(numOfblock, true);
         assertThat(res).isNotNull();
         assertEquals(res.getHash().toString(), hashOfBlock);
+    }
+
+    @Test(expected = NonExistObjectException.class)
+    public void getBlockByNumberExceptionTest() {
+        when(nodeManagerMock.getBlockByIndexOrHash(numOfblock)).thenThrow(new RuntimeException());
+        blockApiImpl.getBlockByNumber(numOfblock, true);
     }
 
     @Test
