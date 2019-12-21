@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.SignatureException;
 
-@Deprecated
 public class TransactionHeader implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionHeader.class);

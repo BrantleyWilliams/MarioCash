@@ -4,7 +4,7 @@ import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
-import dev.zhihexireng.core.exception.NonExistObjectException;
+import dev.zhihexireng.node.exception.NonExistObjectException;
 
 import java.util.ArrayList;
 

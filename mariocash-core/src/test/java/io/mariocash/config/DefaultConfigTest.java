@@ -3,7 +3,6 @@ package dev.zhihexireng.config;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,21 +16,13 @@ public class DefaultConfigTest {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultConfigTest.class);
 
-    DefaultConfig defaultConfig;
-
-    @Before
-    public void setUp() {
-        this.defaultConfig = new DefaultConfig();
-    }
-
     /**
      * This is the default config test code.
      * get system config, spring config, mariocash.conf config.
      */
     @Test
     public void defaultConfigTest() {
-        log.debug(defaultConfig.toString());
-
+        DefaultConfig defaultConfig = new DefaultConfig();
         for (Map.Entry<String, ConfigValue> entry : defaultConfig.getConfig().entrySet()) {
             log.debug("Name:  " + entry.getKey());
             log.debug(entry.toString());
@@ -56,6 +47,8 @@ public class DefaultConfigTest {
      */
     @Test
     public void javaVersionConfigTest() {
+        DefaultConfig defaultConfig = new DefaultConfig();
+
         assertThat(defaultConfig.getConfig().getString("java.version"), containsString("1.8"));
 
         log.debug("DefaultConfig java.version: "
@@ -68,6 +61,8 @@ public class DefaultConfigTest {
      */
     @Test
     public void mariocashConfConfigTest() {
+        DefaultConfig defaultConfig = new DefaultConfig();
+
         assertThat(defaultConfig.getConfig().getString("node.name"), containsString("mariocash"));
 
         log.debug("mariocash.conf node.name: "
@@ -96,12 +91,9 @@ public class DefaultConfigTest {
      * This is the test for printing Class.
      */
     @Test
-    public void testNodeInfo() {
-        assert defaultConfig.getNetworkP2PVersion().equals("0.0.1");
-        assert defaultConfig.getNetwork() == DefaultConfig.Network.TESTNET;
-        assert defaultConfig.getNodeName().equals("mariocash");
-        assert defaultConfig.getNodeVersion().equals("0.0.2");
+    public void testToString() {
+        DefaultConfig defaultConfig = new DefaultConfig();
 
+        log.debug(defaultConfig.toString());
     }
-
 }

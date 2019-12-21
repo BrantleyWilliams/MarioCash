@@ -4,12 +4,14 @@ import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
-import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionReceipt;
-import dev.zhihexireng.core.exception.FailedOperationException;
-import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.core.exception.RejectedAccessException;
-import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.node.exception.FailedOperationException;
+import dev.zhihexireng.node.exception.NonExistObjectException;
+import dev.zhihexireng.node.exception.RejectedAccessException;
+
+import java.io.IOException;
+import java.security.SignatureException;
 
 @JsonRpcService("/api/transaction")
 public interface TransactionApi {
@@ -83,7 +85,7 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    TransactionHusk getTransactionByHash(
+    Transaction getTransactionByHash(
             @JsonRpcParam(value = "hashOfTx") String hashOfTx);
 
     /**
@@ -95,9 +97,9 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    TransactionHusk getTransactionByBlockHashAndIndex(
+    Transaction getTransactionByBlockHashAndIndex(
             @JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
-            @JsonRpcParam(value = "txIndexPosition") int txIndexPosition);
+            @JsonRpcParam(value = "txIndexPosition") int txIndexPosition) throws IOException;
 
     /**
      * Returns information about a transaction by block number and transaction index position.
@@ -108,9 +110,9 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    TransactionHusk getTransactionByBlockNumberAndIndex(
+    Transaction getTransactionByBlockNumberAndIndex(
             @JsonRpcParam(value = "blockNumber") int blockNumber,
-            @JsonRpcParam(value = "txIndexPosition") int txIndexPosition);
+            @JsonRpcParam(value = "txIndexPosition") int txIndexPosition) throws IOException;
 
     /**
      * Returns information about a transaction by block number and transaction index position.
@@ -121,9 +123,9 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    TransactionHusk getTransactionByBlockNumberAndIndex(
+    Transaction getTransactionByBlockNumberAndIndex(
             @JsonRpcParam(value = "tag") String tag,
-            @JsonRpcParam(value = "txIndexPosition") int txIndexPosition);
+            @JsonRpcParam(value = "txIndexPosition") int txIndexPosition) throws IOException;
 
     /**
      * Returns the receipt of a transaction by transaction hash.
@@ -142,13 +144,13 @@ public interface TransactionApi {
      * Creates new message call transaction or a contract creation,
      * if the data field contains code.
      *
-     * @param tx The transaction
+     * @param tx The transaction object
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = FailedOperationException.class,
                     code = FailedOperationException.code)})
     String sendTransaction(
-            @JsonRpcParam(value = "tx") Proto.Transaction tx);
+            @JsonRpcParam(value = "tx") Transaction tx) throws IOException, SignatureException;
 
     /**
      * Creates new message call transaction or a contract creation for signed transactions.
@@ -159,7 +161,7 @@ public interface TransactionApi {
             @JsonRpcError(exception = FailedOperationException.class,
                     code = FailedOperationException.code)})
     byte[] sendRawTransaction(
-            @JsonRpcParam(value = "rawTx") byte[] rawTx);
+            @JsonRpcParam(value = "rawTx") byte[] rawTx) throws IOException, SignatureException;
 
     /**
      * Creates a filter in the node, to notify when new pending transactions arrive.

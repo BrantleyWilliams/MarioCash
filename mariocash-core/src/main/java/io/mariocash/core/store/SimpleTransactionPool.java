@@ -16,7 +16,7 @@
 
 package dev.zhihexireng.core.store;
 
-import dev.zhihexireng.core.husk.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
 import org.ehcache.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,29 +24,28 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Set;
 
-@Deprecated
-public class SimpleTransactionPool implements CachePool<String, TransactionHusk> {
+public class SimpleTransactionPool implements CachePool<String, Transaction> {
     private static final Logger log = LoggerFactory.getLogger(SimpleTransactionPool.class);
 
-    private final Cache<String, TransactionHusk> cache;
+    private final Cache<String, Transaction> cache;
 
-    public SimpleTransactionPool(Cache<String, TransactionHusk> cache) {
+    public SimpleTransactionPool(Cache<String, Transaction> cache) {
         this.cache = cache;
     }
 
     @Override
-    public TransactionHusk get(String key) {
+    public Transaction get(String key) {
         return cache.get(key);
     }
 
     @Override
-    public TransactionHusk put(TransactionHusk tx) {
-        cache.put(tx.getHash().toString(), tx);
+    public Transaction put(Transaction tx) {
+        cache.put(tx.getHashString(), tx);
         return tx;
     }
 
     @Override
-    public Map<String, TransactionHusk> getAll(Set<String> keys) {
+    public Map<String, Transaction> getAll(Set<String> keys) {
         return cache.getAll(keys);
     }
 

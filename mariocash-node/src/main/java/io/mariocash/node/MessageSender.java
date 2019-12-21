@@ -16,14 +16,16 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.event.PeerEventListener;
+import dev.zhihexireng.core.mapper.BlockMapper;
+import dev.zhihexireng.core.mapper.TransactionMapper;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.node.config.NodeProperties;
+import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Pong;
-import dev.zhihexireng.proto.Proto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,23 +81,25 @@ public class MessageSender<T extends PeerClientChannel> {
         }
     }
 
-    public void newTransaction(TransactionHusk tx) {
+    public void newTransaction(Transaction tx) {
         if (peerChannel.isEmpty()) {
             log.warn("Active peer is empty to broadcast transaction");
         }
-        Proto.Transaction[] txns = new Proto.Transaction[] {tx.getInstance()};
+        BlockChainProto.Transaction protoTx
+                = TransactionMapper.transactionToProtoTransaction(tx);
+        BlockChainProto.Transaction[] txns = new BlockChainProto.Transaction[] {protoTx};
 
         for (T client : peerChannel.values()) {
             client.broadcastTransaction(txns);
         }
     }
 
-    public void newBlock(BlockHusk block) {
+    public void newBlock(Block block) {
         if (peerChannel.isEmpty()) {
             log.trace("Active peer is empty to broadcast block");
         }
-        Proto.Block[] blocks
-                = new Proto.Block[] {block.getInstance()};
+        BlockChainProto.Block[] blocks
+                = new BlockChainProto.Block[] {BlockMapper.blockToProtoBlock(block)};
         for (T client : peerChannel.values()) {
             client.broadcastBlock(blocks);
         }
@@ -160,7 +164,7 @@ public class MessageSender<T extends PeerClientChannel> {
      * @param offset the offset
      * @return the block list
      */
-    public List<BlockHusk> syncBlock(long offset) {
+    public List<Block> syncBlock(long offset) {
         if (peerChannel.isEmpty()) {
             log.warn("Active peer is empty to sync block");
             return Collections.emptyList();
@@ -168,11 +172,11 @@ public class MessageSender<T extends PeerClientChannel> {
         // TODO sync peer selection policy
         String key = (String) peerChannel.keySet().toArray()[0];
         T client = peerChannel.get(key);
-        List<Proto.Block> blockList = client.syncBlock(offset);
+        List<BlockChainProto.Block> blockList = client.syncBlock(offset);
         log.debug("Synchronize block received=" + blockList.size());
-        List<BlockHusk> syncList = new ArrayList<>(blockList.size());
-        for (Proto.Block block : blockList) {
-            syncList.add(new BlockHusk(block));
+        List<Block> syncList = new ArrayList<>(blockList.size());
+        for (BlockChainProto.Block block : blockList) {
+            syncList.add(BlockMapper.protoBlockToBlock(block));
         }
         return syncList;
     }
@@ -182,7 +186,7 @@ public class MessageSender<T extends PeerClientChannel> {
      *
      * @return the transaction list
      */
-    public List<TransactionHusk> syncTransaction() {
+    public List<Transaction> syncTransaction() {
         if (peerChannel.isEmpty()) {
             log.warn("Active peer is empty to sync transaction");
             return Collections.emptyList();
@@ -190,11 +194,11 @@ public class MessageSender<T extends PeerClientChannel> {
         // TODO sync peer selection policy
         String key = (String) peerChannel.keySet().toArray()[0];
         T client = peerChannel.get(key);
-        List<Proto.Transaction> txList = client.syncTransaction();
+        List<BlockChainProto.Transaction> txList = client.syncTransaction();
         log.debug("Synchronize transaction received=" + txList.size());
-        List<TransactionHusk> syncList = new ArrayList<>(txList.size());
-        for (Proto.Transaction tx : txList) {
-            syncList.add(new TransactionHusk(tx));
+        List<Transaction> syncList = new ArrayList<>(txList.size());
+        for (BlockChainProto.Transaction tx : txList) {
+            syncList.add(TransactionMapper.protoTransactionToTransaction(tx));
         }
         return syncList;
     }

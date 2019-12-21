@@ -231,6 +231,7 @@ public class ECIESCoder {
                 new SHA256Digest(),
                 new BufferedBlockCipher(new SICBlockCipher(aesFastEngine)));
 
+
         byte[] d = new byte[] {};
         byte[] e = new byte[] {};
 
@@ -239,5 +240,10 @@ public class ECIESCoder {
 
         iesEngine.init(isEncrypt, new ECPrivateKeyParameters(prv, CURVE), new ECPublicKeyParameters(pub, CURVE), parametersWithIV);
         return iesEngine;
+    }
+
+    public static int getOverhead() {
+        // 256 bit EC public key, IV, 256 bit MAC
+        return 65 + KEY_SIZE / 8 + 32;
     }
 }

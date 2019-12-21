@@ -16,8 +16,6 @@
 
 package dev.zhihexireng.core.store.datasource;
 
-import dev.zhihexireng.core.exception.NotValidateException;
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import java.util.ArrayList;
@@ -51,21 +49,12 @@ public class HashMapDbSource implements DbSource<byte[], byte[]> {
 
     @Override
     public List<byte[]> getAllKey() {
-        List<byte[]> keyList = new ArrayList<>(db.size());
+        List<byte[]> keyList = new ArrayList<>();
         Iterator<String> iterator = db.keySet().iterator();
-        try {
-            while (iterator.hasNext()) {
-                keyList.add(Hex.decodeHex(iterator.next().toCharArray()));
-            }
-        } catch (DecoderException e) {
-            throw new NotValidateException(e);
+        while (iterator.hasNext()) {
+            keyList.add(db.get(iterator.next()));
         }
         return keyList;
-    }
-
-    @Override
-    public List<byte[]> getAll() {
-        return new ArrayList<>(db.values());
     }
 
     @Override

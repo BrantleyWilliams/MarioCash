@@ -23,10 +23,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.common.Sha3Hash;
+import com.google.gson.JsonObject;
 import dev.zhihexireng.core.Account;
-import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.crypto.ECKey.ECDSASignature;
 import dev.zhihexireng.crypto.jce.SpongyCastleProvider;
@@ -241,6 +240,26 @@ public class ECKeyTest {
         assertTrue(key.verify(rawHash, sig));
     }
 
+    @Test
+    public void testVerifySignature3() throws SignatureException {
+
+        // create account with set privateKey
+        // create tx data(test)
+        JsonObject data = new JsonObject();
+        data.addProperty("balance", "10");
+
+        // create tx
+        Transaction tx = new Transaction(wallet, data);
+
+        // get the sig & key(pub)
+        byte[] messageHash = tx.getHeader().getDataHashForSigning();
+        byte[] signature = tx.getHeader().getSignature();
+        ECDSASignature sig = new ECDSASignature(signature);
+        ECKey key = ECKey.signatureToKey(messageHash, sig);
+
+        assertTrue(key.verify(messageHash, sig));
+    }
+
     @Test // result is a point at infinity
     public void testVerifySignature4() throws SignatureException {
 
@@ -288,16 +307,18 @@ public class ECKeyTest {
         assertTrue(keyFromSig.verify(messageHash, signature));
     }
 
+
     @Test
     public void testVerifySignature7() throws SignatureException {
 
         // create tx
-        TransactionHusk tx = TestUtils.createTxHusk(wallet);
+        JsonObject data = new JsonObject();
+        data.addProperty("balance", "10");
+        Transaction tx = new Transaction(wallet, data);
 
         // get the sig & key(pub)
-        byte[] rawMessage = tx.getInstance().getHeader().getRawData().toByteArray();
-        byte[] messageHash = new Sha3Hash(rawMessage).getBytes();
-        byte[] signature = tx.getInstance().getHeader().getSignature().toByteArray();
+        byte[] messageHash = tx.getHeader().getDataHashForSigning();
+        byte[] signature = tx.getHeader().getSignature();
         ECDSASignature sig = new ECDSASignature(signature);
         ECKey keyFromSig = ECKey.signatureToKey(messageHash, sig);
 
@@ -305,10 +326,11 @@ public class ECKeyTest {
         assertTrue(keyFromSig.verify(messageHash, sig));
 
         // check signature
-        assertArrayEquals(sig.toBinary(), signature);
+        assertArrayEquals(sig.toBinary(), tx.getHeader().getSignature());
 
         // check public key
         assertArrayEquals(keyFromSig.getPubKey(), wallet.getPubicKey());
+
     }
 
     @Test
@@ -324,15 +346,21 @@ public class ECKeyTest {
         assertArrayEquals(wallet.getPubicKey(), key.getPubKey());
 
         // create tx
-        TransactionHusk tx = TestUtils.createTxHusk(wallet);
+        JsonObject data = new JsonObject();
+        data.addProperty("balance", "10");
 
-        assertArrayEquals(key.getAddress(), tx.getAddress().getBytes());
+        Transaction tx = new Transaction(wallet, data);
+
+        log.debug("tx: " + tx.toString());
+
+        assertArrayEquals(key.getAddress(), tx.getHeader().getAddress());
+
 
         // get the sig & key(pub)
-        byte[] rawMessage = tx.getInstance().getHeader().getRawData().toByteArray();
-        byte[] messageHash = new Sha3Hash(rawMessage).getBytes();
-        byte[] signature = tx.getInstance().getHeader().getSignature().toByteArray();
+        byte[] messageHash = tx.getHeader().getDataHashForSigning();
+        byte[] signature = tx.getHeader().getSignature();
         ECDSASignature sig = new ECDSASignature(signature);
+
         ECKey keyFromSig = ECKey.signatureToKey(messageHash, sig);
         log.debug("keyFromSig: " + keyFromSig.toString());
 
@@ -342,10 +370,11 @@ public class ECKeyTest {
         assertTrue(keyFromSig.verify(messageHash, sig));
 
         // check signature
-        assertArrayEquals(sig.toBinary(), signature);
+        assertArrayEquals(sig.toBinary(), tx.getHeader().getSignature());
 
         // check public key
         assertArrayEquals(keyFromSig.getPubKey(), wallet.getPubicKey());
+
     }
 
     @Test

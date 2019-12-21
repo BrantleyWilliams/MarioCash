@@ -1,59 +1,77 @@
 package dev.zhihexireng.node.api;
 
-import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockBody;
+import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.node.TestUtils;
+import dev.zhihexireng.node.mock.TransactionMock;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-
 @RunWith(MockitoJUnitRunner.class)
 public class TransactionMockitoTest {
-
     @Mock
     private NodeManager nodeManagerMock;
-    private TransactionHusk tx;
-    private BlockHusk block;
+    private Transaction tx;
+    private Block block;
     private Wallet wallet;
 
     private TransactionApiImpl txApiImpl;
     private String hashOfTx;
     private String hashOfBlock;
+    private String address;
 
     @Before
     public void setup() throws Exception {
+        MockitoAnnotations.initMocks(this);
+
         wallet = new Wallet();
+        address = Hex.encodeHexString(wallet.getAddress());
         txApiImpl = new TransactionApiImpl(nodeManagerMock);
 
-        tx = TestUtils.createTxHusk(wallet);
-        hashOfTx = tx.getHash().toString();
-        List<TransactionHusk> txList = new ArrayList<>();
+        TransactionMock txMock = new TransactionMock();
+        tx = txMock.retTxMock(wallet);
+        hashOfTx = tx.getHashString();
+        List<Transaction> txList = new ArrayList<>();
         txList.add(tx);
         txList.add(tx);
         txList.add(tx);
-        block = TestUtils.createBlockHuskByTxList(wallet, txList);
-        hashOfBlock = block.getHash().toString();
+
+        BlockBody sampleBody = new BlockBody(txList);
+        BlockHeader genesisBlockHeader = new BlockHeader.Builder()
+                .blockBody(sampleBody)
+                .prevBlock(null)
+                .build(wallet);
+
+        BlockHeader blockHeader = new BlockHeader.Builder()
+                .blockBody(sampleBody)
+                .prevBlock(new Block(genesisBlockHeader, sampleBody)) // genesis block
+                .build(wallet);
+        block = new Block(blockHeader, sampleBody);
+        hashOfBlock = block.getBlockHash();
     }
 
     private static final Logger log = LoggerFactory.getLogger(TransactionApi.class);
@@ -61,43 +79,47 @@ public class TransactionMockitoTest {
     @Test
     public void getTransactionCountTest() {
         when(nodeManagerMock.getBlockByIndexOrHash(any())).thenReturn(block);
-        Integer res = txApiImpl.getTransactionCount(wallet.getHexAddress(), 1);
-        Integer res2 = txApiImpl.getTransactionCount(wallet.getHexAddress(), "latest");
+        Integer res = txApiImpl.getTransactionCount(address, 1);
+        Integer res2 = txApiImpl.getTransactionCount(address, "latest");
         Integer sizeOfTxList = 3;
         assertThat(res).isEqualTo(sizeOfTxList);
         assertThat(res2).isEqualTo(res);
     }
 
     @Test
-    public void hexEncodeAndDecodeByteArray() throws Exception {
-        byte[] origin = tx.getAddress().getBytes();
-        String encoded = Hex.encodeHexString(origin);
-        byte[] decoded = Hex.decodeHex(encoded);
+    public void hexEndcodeAndDecodeByteArray() throws Exception {
+        String str = Hex.encodeHexString(tx.getHeader().getAddress());
+        byte[] arr = Hex.decodeHex(str);
+        byte[] origin = tx.getHeader().getAddress();
 
-        assertArrayEquals(decoded, origin);
+        if (Arrays.equals(arr, origin)) {
+            log.debug("\n\ntrue");
+        } else {
+            log.debug("\n\nfalse");
+        }
     }
 
     @Test
     public void getTransactionByHash() {
         when(nodeManagerMock.getTxByHash(hashOfTx)).thenReturn(tx);
-        TransactionHusk res = txApiImpl.getTransactionByHash(hashOfTx);
+        Transaction res = txApiImpl.getTransactionByHash(hashOfTx);
         assertThat(res).isNotNull();
-        assertEquals(res.getHash().toString(), hashOfTx);
+        assertEquals(res.getHashString(), hashOfTx);
     }
 
     @Test
-    public void getTransactionByBlockHashAndIndexTest() {
+    public void getTransactionByBlockHashAndIndexTest() throws IOException {
         when(nodeManagerMock.getBlockByIndexOrHash(hashOfBlock)).thenReturn(block);
-        TransactionHusk res = txApiImpl.getTransactionByBlockHashAndIndex(hashOfBlock, 0);
-        assertEquals(res.getHash().toString(), hashOfTx);
+        Transaction res = txApiImpl.getTransactionByBlockHashAndIndex(hashOfBlock, 0);
+        assertEquals(res.getHashString(), hashOfTx);
     }
 
     @Test
-    public void getTransactionByBlockNumberAndIndexTest() {
+    public void getTransactionByBlockNumberAndIndexTest() throws IOException {
         when(nodeManagerMock.getBlockByIndexOrHash(anyString())).thenReturn(block);
-        TransactionHusk res = txApiImpl.getTransactionByBlockNumberAndIndex(0, 0);
-        TransactionHusk res2 = txApiImpl.getTransactionByBlockNumberAndIndex("latest", 0);
-        assertEquals(res.getHash(), res2.getHash());
+        Transaction res = txApiImpl.getTransactionByBlockNumberAndIndex(0, 0);
+        Transaction res2 = txApiImpl.getTransactionByBlockNumberAndIndex("latest", 0);
+        assertEquals(res.getHashString(), res2.getHashString());
     }
 
     @Test
@@ -111,15 +133,15 @@ public class TransactionMockitoTest {
     }
 
     @Test
-    public void sendTransactionTest() {
+    public void sendTransactionTest() throws Exception {
         when(nodeManagerMock.addTransaction(tx)).thenReturn(tx);
-        String res = txApiImpl.sendTransaction(tx.getInstance());
+        String res = txApiImpl.sendTransaction(tx);
         assertEquals(res, hashOfTx);
     }
 
     @Test
     public void sendRawTransaction() throws Exception {
-        when(nodeManagerMock.addTransaction(any(TransactionHusk.class))).thenReturn(tx);
+        when(nodeManagerMock.addTransaction(any(Transaction.class))).thenReturn(tx);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = new ObjectOutputStream(bos);
         out.writeObject(tx);

@@ -16,33 +16,32 @@
 
 package dev.zhihexireng.core.store;
 
-import dev.zhihexireng.core.husk.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Deprecated
-public class HashMapTransactionPool implements CachePool<String, TransactionHusk> {
-    private final Map<String, TransactionHusk> txs = new ConcurrentHashMap<>();
+public class HashMapTransactionPool implements CachePool<String, Transaction> {
+    private final Map<String, Transaction> txs = new ConcurrentHashMap<>();
 
     @Override
-    public TransactionHusk get(String key) {
+    public Transaction get(String key) {
         return txs.get(key);
     }
 
     @Override
-    public TransactionHusk put(TransactionHusk tx) {
-        txs.put(tx.getHash().toString(), tx);
+    public Transaction put(Transaction tx) {
+        txs.put(tx.getHashString(), tx);
         return tx;
     }
 
     @Override
-    public Map<String, TransactionHusk> getAll(Set<String> keys) {
-        Map<String, TransactionHusk> result = new HashMap<>();
+    public Map<String, Transaction> getAll(Set<String> keys) {
+        Map<String, Transaction> result = new HashMap<>();
         for (String key : keys) {
-            TransactionHusk foundTx = txs.get(key);
+            Transaction foundTx = txs.get(key);
             if (foundTx != null) {
                 result.put(key, foundTx);
             }

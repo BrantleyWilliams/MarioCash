@@ -17,7 +17,7 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.store.BlockStore;
+import dev.zhihexireng.core.BlockChain;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -32,15 +32,15 @@ public class NodeHealthIndicator implements HealthIndicator {
 
     private final DefaultConfig defaultConfig;
 
-    private final BlockStore blockStore;
+    private final BlockChain blockChain;
 
     private final MessageSender messageSender;
 
     @Autowired
-    public NodeHealthIndicator(DefaultConfig defaultConfig, BlockStore blockStore,
+    public NodeHealthIndicator(DefaultConfig defaultConfig, BlockChain blockChain,
                                MessageSender messageSender) {
         this.defaultConfig = defaultConfig;
-        this.blockStore = blockStore;
+        this.blockChain = blockChain;
         this.messageSender = messageSender;
     }
 
@@ -64,7 +64,7 @@ public class NodeHealthIndicator implements HealthIndicator {
         builder.withDetail("version", defaultConfig.getNodeVersion());
         builder.withDetail("p2pVersion", defaultConfig.getNetworkP2PVersion());
         builder.withDetail("network", defaultConfig.getNetwork());
-        builder.withDetail("height", blockStore.size());
+        builder.withDetail("height", blockChain.getLastIndex());
         builder.withDetail("activePeers", messageSender.getActivePeerList().size());
         health.set(builder.build());
     }

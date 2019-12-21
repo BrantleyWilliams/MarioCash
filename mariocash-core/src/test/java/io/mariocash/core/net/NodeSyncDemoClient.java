@@ -16,8 +16,6 @@
 
 package dev.zhihexireng.core.net;
 
-import dev.zhihexireng.TestUtils;
-
 /**
  * The type Node sync demo client.
  */
@@ -31,7 +29,7 @@ public class NodeSyncDemoClient {
         GrpcClientChannel client =
                 new GrpcClientChannel(Peer.valueOf("ynode://75bff16c@127.0.0.1:9090"));
         client.ping("Ping");
-        client.broadcastTransaction(TestUtils.getTransactionFixtures());
+        client.broadcastTransaction(NodeTestData.transactions());
         client.blockUtilShutdown();
     }
 }

@@ -4,9 +4,9 @@ import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
-import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.exception.InternalErrorException;
-import dev.zhihexireng.core.exception.NonExistObjectException;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.node.exception.InternalErrorException;
+import dev.zhihexireng.node.exception.NonExistObjectException;
 
 import java.util.Set;
 
@@ -26,7 +26,7 @@ public interface BlockApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = InternalErrorException.class,
                           code = InternalErrorException.code)})
-    Set<BlockHusk> getAllBlock();
+    Set<Block> getAllBlock();
 
     /**
      * Returns information about a block by hash.
@@ -38,7 +38,7 @@ public interface BlockApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    BlockHusk getBlockByHash(@JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
+    Block getBlockByHash(@JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
                          @JsonRpcParam(value = "bool") Boolean bool);
 
     /**
@@ -51,7 +51,7 @@ public interface BlockApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    BlockHusk getBlockByNumber(@JsonRpcParam(value = "numOfBlock") String numOfBlock,
+    Block getBlockByNumber(@JsonRpcParam(value = "numOfBlock") String numOfBlock,
                            @JsonRpcParam(value = "bool") Boolean bool);
 
     /**

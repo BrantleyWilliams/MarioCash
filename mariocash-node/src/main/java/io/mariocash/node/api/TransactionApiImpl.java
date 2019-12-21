@@ -1,21 +1,25 @@
 package dev.zhihexireng.node.api;
 
 import com.google.common.primitives.Longs;
-import com.google.protobuf.ByteString;
+import com.google.gson.JsonObject;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
-import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.TransactionHeader;
 import dev.zhihexireng.core.TransactionReceipt;
-import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.node.exception.NonExistObjectException;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.io.IOException;
+import java.security.SignatureException;
 
 @Service
 @AutoJsonRpcServiceImpl
@@ -30,11 +34,15 @@ public class TransactionApiImpl implements TransactionApi {
         this.nodeManager = nodeManager;
     }
 
-    public int getCount(String address, List<TransactionHusk> txList) {
-        int cnt = 0;
-        for (TransactionHusk tx : txList) {
-            if (address.equals(tx.getAddress().toString())) {
-                cnt += 1;
+    public int getCount(String address, BlockBody blockBody) {
+        Integer cnt = 0;
+        for (Transaction tx : blockBody.getTransactionList()) {
+            try {
+                if (Arrays.areEqual(Hex.decodeHex(address), tx.getHeader().getAddress())) {
+                    cnt += 1;
+                }
+            } catch (DecoderException e) {
+                log.error(e.getMessage());
             }
         }
         return cnt;
@@ -43,45 +51,49 @@ public class TransactionApiImpl implements TransactionApi {
     /* get */
     @Override
     public int getTransactionCount(String address, String tag) {
-        int blockNumber;
+        Integer blockNumber;
         if ("latest".equals(tag)) {
             blockNumber = 1;
         } else {
             blockNumber = -1;
         }
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-        return getCount(address, block.getBody());
+        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        return getCount(address, block.getData());
     }
 
     @Override
     public int getTransactionCount(String address, int blockNumber) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-        return getCount(address, block.getBody());
+        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        return getCount(address, block.getData());
     }
 
     @Override
     public int getBlockTransactionCountByHash(String hashOfBlock) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
-        return block.getBody().size();
+        Block block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
+        BlockBody txList = block.getData();
+        return txList.getTransactionList().size();
     }
 
     @Override
     public int getBlockTransactionCountByNumber(int blockNumber) {
-        return getBlockTransactionCountByHash(String.valueOf(blockNumber));
+        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockBody txList = block.getData();
+        return txList.getTransactionList().size();
     }
 
     @Override
     public int getBlockTransactionCountByNumber(String tag) {
         if ("latest".equals(tag)) {
-            return getBlockTransactionCountByNumber(0);
-        } else {
-            return 0;
+            Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(0));
+            BlockBody txList = block.getData();
+            return txList.getTransactionList().size();
         }
+        return 0;
     }
 
     @Override
-    public TransactionHusk getTransactionByHash(String hashOfTx) {
-        TransactionHusk tx = nodeManager.getTxByHash(hashOfTx);
+    public Transaction getTransactionByHash(String hashOfTx) {
+        Transaction tx = nodeManager.getTxByHash(hashOfTx);
         if (tx == null) {
             throw new NonExistObjectException("Transaction");
         }
@@ -89,26 +101,31 @@ public class TransactionApiImpl implements TransactionApi {
     }
 
     @Override
-    public TransactionHusk getTransactionByBlockHashAndIndex(
-            String hashOfBlock, int txIndexPosition) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
-        return block.getBody().get(txIndexPosition);
+    public Transaction getTransactionByBlockHashAndIndex(
+            String hashOfBlock, int txIndexPosition) throws IOException {
+        Block block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
+        BlockBody txList = block.getData();
+        return txList.getTransactionList().get(txIndexPosition);
     }
 
     @Override
-    public TransactionHusk getTransactionByBlockNumberAndIndex(
-            int blockNumber, int txIndexPosition) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
-        return block.getBody().get(txIndexPosition);
+    public Transaction getTransactionByBlockNumberAndIndex(
+            int blockNumber, int txIndexPosition) throws IOException {
+        Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockBody txList = block.getData();
+        return txList.getTransactionList().get(txIndexPosition);
     }
 
     @Override
-    public TransactionHusk getTransactionByBlockNumberAndIndex(String tag, int txIndexPosition) {
+    public Transaction getTransactionByBlockNumberAndIndex(String tag, int txIndexPosition)
+            throws IOException {
         if ("latest".equals(tag)) {
-            return getTransactionByBlockNumberAndIndex(0, txIndexPosition);
-        } else {
-            return null;
+            int blockNumber = 0;
+            Block block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+            BlockBody txList = block.getData();
+            return txList.getTransactionList().get(txIndexPosition);
         }
+        return null;
     }
 
     @Override
@@ -118,17 +135,16 @@ public class TransactionApiImpl implements TransactionApi {
 
     /* send */
     @Override
-    public String sendTransaction(Proto.Transaction tx) {
-        TransactionHusk txHusk = new TransactionHusk(tx);
-        TransactionHusk addedTx = nodeManager.addTransaction(txHusk);
-        return addedTx.getHash().toString();
+    public String sendTransaction(Transaction tx) {
+        Transaction addedTx = nodeManager.addTransaction(tx);
+        return addedTx.getHashString();
     }
 
     @Override
     public byte[] sendRawTransaction(byte[] bytes) {
-        TransactionHusk tx = convert(bytes);
-        TransactionHusk addedTx = nodeManager.addTransaction(tx);
-        return addedTx.getHash().getBytes();
+        Transaction tx = convert(bytes);
+        Transaction addedTx = nodeManager.addTransaction(tx);
+        return addedTx.getHash();
     }
 
     /* filter */
@@ -137,7 +153,7 @@ public class TransactionApiImpl implements TransactionApi {
         return 6;
     }
 
-    private TransactionHusk convert(byte[] bytes) {
+    private Transaction convert(byte[] bytes) {
 
         int sum = 0;
         byte[] type = new byte[4];
@@ -146,34 +162,35 @@ public class TransactionApiImpl implements TransactionApi {
         version = Arrays.copyOfRange(bytes, sum, sum += version.length);
         byte[] dataHash = new byte[32];
         dataHash = Arrays.copyOfRange(bytes, sum, sum += dataHash.length);
-        byte[] timestampByte = new byte[8];
-        timestampByte = Arrays.copyOfRange(bytes, sum, sum += timestampByte.length);
-        byte[] dataSizeByte = new byte[8];
-        dataSizeByte = Arrays.copyOfRange(bytes, sum, sum += dataSizeByte.length);
+        byte[] timestamp = new byte[8];
+        timestamp = Arrays.copyOfRange(bytes, sum, sum += timestamp.length);
+        byte[] dataSize = new byte[8];
+        dataSize = Arrays.copyOfRange(bytes, sum, sum += dataSize.length);
         byte[] signature = new byte[65];
         signature = Arrays.copyOfRange(bytes, sum, sum += signature.length);
-        byte[] dataByte = Arrays.copyOfRange(bytes, sum, bytes.length);
+        byte[] data = Arrays.copyOfRange(bytes, sum, bytes.length);
 
-        long timestamp = Longs.fromByteArray(timestampByte);
-        long dataSize = Longs.fromByteArray(dataSizeByte);
-        String data = new String(dataByte);
 
-        Proto.Transaction.Header transactionHeader = Proto.Transaction.Header.newBuilder()
-                .setRawData(Proto.Transaction.Header.Raw.newBuilder()
-                        .setType(ByteString.copyFrom(type))
-                        .setVersion(ByteString.copyFrom(version))
-                        .setDataHash(ByteString.copyFrom(dataHash))
-                        .setDataSize(dataSize)
-                        .setTimestamp(timestamp)
-                        .build())
-                .setSignature(ByteString.copyFrom(signature))
-                .build();
+        long timestampStr = Longs.fromByteArray(timestamp);
+        long dataSizeStr = Longs.fromByteArray(dataSize);
+        String dataStr = new String(data);
 
-        Proto.Transaction tx = Proto.Transaction.newBuilder()
-                .setHeader(transactionHeader)
-                .setBody(data)
-                .build();
+        TransactionHeader txHeader;
+        txHeader = new TransactionHeader(
+                type, version, dataHash, timestampStr, dataSizeStr, signature);
 
-        return new TransactionHusk(tx);
+        return new Transaction(txHeader, dataStr);
+    }
+
+    private Transaction retTxMock() {
+
+        // Create transaction
+        JsonObject txObj = new JsonObject();
+
+        txObj.addProperty("operator", "transfer");
+        txObj.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
+        txObj.addProperty("value", 100);
+
+        return new Transaction(nodeManager.getWallet(), txObj);
     }
 }

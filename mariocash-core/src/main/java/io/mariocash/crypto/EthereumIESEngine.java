@@ -92,6 +92,7 @@ public class EthereumIESEngine {
         this.cipher = cipher;
     }
 
+
     public void setHashMacKey(boolean hashK2) {
         this.hashK2 = hashK2;
     }
@@ -117,7 +118,7 @@ public class EthereumIESEngine {
         extractParams(params);
     }
 
-    /**
+
     /**
      * Initialise the encryptor.
      *
@@ -158,6 +159,14 @@ public class EthereumIESEngine {
         }
     }
 
+    public BufferedBlockCipher getCipher() {
+        return cipher;
+    }
+
+    public Mac getMac() {
+        return mac;
+    }
+
     private byte[] encryptBlock(
             byte[] in,
             int inOff,
@@ -175,8 +184,16 @@ public class EthereumIESEngine {
 
             kdf.generateBytes(K, 0, K.length);
 
-            System.arraycopy(K, 0, K1, 0, K1.length);
-            System.arraycopy(K, inLen, K2, 0, K2.length);
+//            if (V.length != 0)
+//            {
+//                System.arraycopy(K, 0, K2, 0, K2.length);
+//                System.arraycopy(K, K2.length, K1, 0, K1.length);
+//            }
+//            else
+            {
+                System.arraycopy(K, 0, K1, 0, K1.length);
+                System.arraycopy(K, inLen, K2, 0, K2.length);
+            }
 
             C = new byte[inLen];
 
@@ -205,6 +222,7 @@ public class EthereumIESEngine {
             len = cipher.processBytes(in, inOff, inLen, C, 0);
             len += cipher.doFinal(C, len);
         }
+
 
         // Convert the length of the encoding vector into a byte array.
         byte[] P2 = param.getEncodingV();
@@ -268,8 +286,17 @@ public class EthereumIESEngine {
             K = new byte[K1.length + K2.length];
 
             kdf.generateBytes(K, 0, K.length);
-            System.arraycopy(K, 0, K1, 0, K1.length);
-            System.arraycopy(K, K1.length, K2, 0, K2.length);
+
+//            if (V.length != 0)
+//            {
+//                System.arraycopy(K, 0, K2, 0, K2.length);
+//                System.arraycopy(K, K2.length, K1, 0, K1.length);
+//            }
+//            else
+            {
+                System.arraycopy(K, 0, K1, 0, K1.length);
+                System.arraycopy(K, K1.length, K2, 0, K2.length);
+            }
 
             M = new byte[K1.length];
 
@@ -342,6 +369,7 @@ public class EthereumIESEngine {
             throw new InvalidCipherTextException("Invalid MAC.");
         }
 
+
         // Output the message.
         return Arrays.copyOfRange(M, 0, len);
     }
@@ -381,9 +409,20 @@ public class EthereumIESEngine {
         // Compute the common value and convert to byte array.
         agree.init(privParam);
         BigInteger z = agree.calculateAgreement(pubParam);
+        byte[] Z = BigIntegers.asUnsignedByteArray(agree.getFieldSize(), z);
 
         // Create input to KDF.
-        byte[] VZ = BigIntegers.asUnsignedByteArray(agree.getFieldSize(), z);
+        byte[] VZ;
+//        if (V.length != 0)
+//        {
+//            VZ = new byte[V.length + Z.length];
+//            System.arraycopy(V, 0, VZ, 0, V.length);
+//            System.arraycopy(Z, 0, VZ, V.length, Z.length);
+//        }
+//        else
+        {
+            VZ = Z;
+        }
 
         // Initialise the KDF.
         DerivationParameters kdfParam;

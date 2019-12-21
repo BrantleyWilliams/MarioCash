@@ -17,7 +17,7 @@
 package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,14 +41,14 @@ public class TransactionController {
 
     @PostMapping
     public ResponseEntity add(@RequestBody TransactionDto request) {
-        TransactionHusk tx = TransactionDto.of(request);
-        TransactionHusk addedTx = nodeManager.addTransaction(tx);
+        Transaction tx = TransactionDto.of(nodeManager.getWallet(), request);
+        Transaction addedTx = nodeManager.addTransaction(tx);
         return ResponseEntity.ok(TransactionDto.createBy(addedTx));
     }
 
     @GetMapping("{id}")
     public ResponseEntity get(@PathVariable String id) {
-        TransactionHusk tx = nodeManager.getTxByHash(id);
+        Transaction tx = nodeManager.getTxByHash(id);
 
         if (tx == null) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);

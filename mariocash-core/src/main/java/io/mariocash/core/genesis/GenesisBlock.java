@@ -4,22 +4,26 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockBody;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.util.FileUtil;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class GenesisBlock {
 
     private final DefaultConfig defaultConfig = new DefaultConfig();
-    private BlockHusk genesisBlock;
+    private Block genesisBlock;
 
     public GenesisBlock() throws IOException, InvalidCipherTextException {
-        Wallet wallet = new Wallet(defaultConfig);
+        Wallet wallet = new Wallet();
 
         String transactionFileName = defaultConfig.getConfig().getString("genesis.config");
         JsonObject genesisObject = getJsonObjectFromFile(transactionFileName);
@@ -32,11 +36,15 @@ public class GenesisBlock {
         JsonObject nodeListObject = getJsonObjectFromFile(nodeListFileName);
         genesisObject.add("nodeList", nodeListObject.get("nodeList"));
 
-        genesisBlock = BlockHusk.genesis(wallet, genesisObject);
+        Transaction tx = new Transaction(wallet, genesisObject);
+        List<Transaction> txs = new ArrayList<>();
+        txs.add(tx);
+
+        genesisBlock = new Block(wallet, null, new BlockBody(txs));
     }
 
     private JsonObject getJsonObjectFromFile(String fileName) throws IOException {
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder("");
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource(fileName).getFile());
 
@@ -52,7 +60,7 @@ public class GenesisBlock {
         return new Gson().fromJson(result.toString(), JsonObject.class);
     }
 
-    public BlockHusk getGenesisBlock() {
+    public Block getGenesisBlock() {
         return genesisBlock;
     }
 

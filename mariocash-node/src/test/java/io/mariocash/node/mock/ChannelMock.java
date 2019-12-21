@@ -2,8 +2,8 @@ package dev.zhihexireng.node.mock;
 
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
+import dev.zhihexireng.proto.BlockChainProto;
 import dev.zhihexireng.proto.Pong;
-import dev.zhihexireng.proto.Proto;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,21 +34,21 @@ public class ChannelMock implements PeerClientChannel {
     }
 
     @Override
-    public List<Proto.Block> syncBlock(long offset) {
-        return Collections.singletonList(Proto.Block.getDefaultInstance());
+    public List<BlockChainProto.Block> syncBlock(long offset) {
+        return Collections.singletonList(BlockChainProto.Block.getDefaultInstance());
     }
 
     @Override
-    public List<Proto.Transaction> syncTransaction() {
-        return Collections.singletonList(Proto.Transaction.getDefaultInstance());
+    public List<BlockChainProto.Transaction> syncTransaction() {
+        return Collections.singletonList(BlockChainProto.Transaction.getDefaultInstance());
     }
 
     @Override
-    public void broadcastTransaction(Proto.Transaction[] txs) {
+    public void broadcastTransaction(BlockChainProto.Transaction[] txs) {
     }
 
     @Override
-    public void broadcastBlock(Proto.Block[] blocks) {
+    public void broadcastBlock(BlockChainProto.Block[] blocks) {
     }
 
     @Override

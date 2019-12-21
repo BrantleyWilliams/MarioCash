@@ -17,7 +17,7 @@
 package dev.zhihexireng.core.store.datasource;
 
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Transaction;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EhCacheSourceTest {
     private static final Logger log = LoggerFactory.getLogger(EhCacheSourceTest.class);
 
-    Cache<String, TransactionHusk> cache;
+    Cache<String, Transaction> cache;
 
     @Before
     public void setUp() {
@@ -41,22 +41,22 @@ public class EhCacheSourceTest {
         CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build(true);
         this.cache = cacheManager.createCache("txCache",
                 CacheConfigurationBuilder
-                        .newCacheConfigurationBuilder(String.class, TransactionHusk.class,
+                        .newCacheConfigurationBuilder(String.class, Transaction.class,
                                 ResourcePoolsBuilder.heap(10)));
     }
 
     @Test
     public void shouldGetTx() {
-        TransactionHusk dummyTx = TestUtils.createTxHusk();
-        cache.put(dummyTx.getHash().toString(), dummyTx);
-        TransactionHusk foundTx = cache.get(dummyTx.getHash().toString());
+        Transaction dummyTx = TestUtils.createDummyTx();
+        cache.put(dummyTx.getHashString(), dummyTx);
+        Transaction foundTx = cache.get(dummyTx.getHashString());
         assertThat(foundTx).isEqualTo(dummyTx);
     }
 
     @Test
     public void shouldPutTx() {
-        TransactionHusk dummyTx = TestUtils.createTxHusk();
-        cache.put(dummyTx.getHash().toString(), dummyTx);
+        Transaction dummyTx = TestUtils.createDummyTx();
+        cache.put(dummyTx.getHashString(), dummyTx);
     }
 
     @Test

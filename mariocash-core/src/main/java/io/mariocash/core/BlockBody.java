@@ -1,11 +1,13 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonArray;
+import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.trie.Trie;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
-@Deprecated
 public class BlockBody implements Serializable {
 
     private List<Transaction> transactionList;
@@ -26,7 +28,6 @@ public class BlockBody implements Serializable {
         return transactionList;
     }
 
-    /*
     public byte[] getMerkleRoot() {
         try {
             return Trie.getMerkleRoot(this.transactionList);
@@ -34,7 +35,6 @@ public class BlockBody implements Serializable {
             throw new NotValidateException(e);
         }
     }
-    */
 
     public long getSize() {
         return this.transactionList.size(); // check byte

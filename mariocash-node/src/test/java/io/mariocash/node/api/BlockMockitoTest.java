@@ -1,16 +1,22 @@
 package dev.zhihexireng.node.api;
 
-import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockBody;
+import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.exception.InternalErrorException;
-import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.node.TestUtils;
+import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.node.mock.TransactionMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,35 +24,49 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+
 @RunWith(MockitoJUnitRunner.class)
 public class BlockMockitoTest {
     @Mock
     private NodeManager nodeManagerMock;
-    private BlockHusk block;
+    private Block block;
 
     private BlockApiImpl blockApiImpl;
     private String hashOfBlock;
     private String numOfblock;
-    private Set<BlockHusk> blockList = new HashSet<>();
+    private Set<Block> blockList = new HashSet<>();
+    private Wallet wallet;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+        wallet = new Wallet();
         blockApiImpl = new BlockApiImpl(nodeManagerMock);
-        block = TestUtils.createGenesisBlockHusk();
-        hashOfBlock = block.getHash().toString();
+
+        TransactionMock txMock = new TransactionMock();
+        Transaction tx = txMock.retTxMock(wallet);
+
+        BlockBody sampleBody = new BlockBody(Collections.singletonList(tx));
+        BlockHeader genesisBlockHeader = new BlockHeader.Builder()
+                .blockBody(sampleBody)
+                .prevBlock(null)
+                .build(wallet);
+
+        BlockHeader blockHeader = new BlockHeader.Builder()
+                .blockBody(sampleBody)
+                .prevBlock(new Block(genesisBlockHeader, sampleBody)) // genesis block
+                .build(wallet);
+        block = new Block(blockHeader, sampleBody);
+        hashOfBlock = block.getBlockHash();
         blockList.add(block);
         numOfblock = "1";
     }
 
+    private static final Logger log = LoggerFactory.getLogger(BlockApi.class);
+
     @Test
     public void blockNumberTest() {
         when(nodeManagerMock.getBlocks()).thenReturn(blockList);
-        assertThat(blockApiImpl.blockNumber()).isEqualTo(blockList.size());
-    }
-
-    @Test(expected = InternalErrorException.class)
-    public void blockNumberExceptionTest() {
-        when(nodeManagerMock.getBlocks()).thenThrow(new RuntimeException());
         assertThat(blockApiImpl.blockNumber()).isEqualTo(blockList.size());
     }
 
@@ -60,23 +80,17 @@ public class BlockMockitoTest {
     @Test
     public void getBlockByHashTest() {
         when(nodeManagerMock.getBlockByIndexOrHash(hashOfBlock)).thenReturn(block);
-        BlockHusk res = blockApiImpl.getBlockByHash(hashOfBlock, true);
+        Block res = blockApiImpl.getBlockByHash(hashOfBlock, true);
         assertThat(res).isNotNull();
-        assertEquals(res.getHash().toString(), hashOfBlock);
+        assertEquals(res.getBlockHash(),hashOfBlock);
     }
 
     @Test
     public void getBlockByNumberTest() {
         when(nodeManagerMock.getBlockByIndexOrHash(numOfblock)).thenReturn(block);
-        BlockHusk res = blockApiImpl.getBlockByNumber(numOfblock, true);
+        Block res = blockApiImpl.getBlockByNumber(numOfblock, true);
         assertThat(res).isNotNull();
-        assertEquals(res.getHash().toString(), hashOfBlock);
-    }
-
-    @Test(expected = NonExistObjectException.class)
-    public void getBlockByNumberExceptionTest() {
-        when(nodeManagerMock.getBlockByIndexOrHash(numOfblock)).thenThrow(new RuntimeException());
-        blockApiImpl.getBlockByNumber(numOfblock, true);
+        assertEquals(res.getBlockHash(),hashOfBlock);
     }
 
     @Test

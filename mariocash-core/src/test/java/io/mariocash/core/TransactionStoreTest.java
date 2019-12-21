@@ -17,8 +17,10 @@
 package dev.zhihexireng.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.common.Sha3Hash;
+import dev.zhihexireng.core.husk.TransactionHusk;
+import dev.zhihexireng.core.store.CachePool;
+import dev.zhihexireng.core.store.HashMapTransactionPool;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
@@ -34,15 +36,17 @@ public class TransactionStoreTest {
     @Before
     public void setUp() {
         DbSource db = new HashMapDbSource();
-        ts = new TransactionStore(db);
+        CachePool pool = new HashMapTransactionPool();
+        ts = new TransactionStore(db, pool);
         ts.flush();
     }
 
     @Test
     public void shouldGetFromDb() throws InvalidProtocolBufferException {
-        TransactionHusk tx = TestUtils.createTxHusk();
+        String body = "1";
+        TransactionHusk tx = new TransactionHusk(body);
         Sha3Hash key = tx.getHash();
-        ts.put(tx);
+        ts.put(key, tx);
 
         ts.batchAll();
         TransactionHusk transactionHusk = ts.get(key);
@@ -51,8 +55,10 @@ public class TransactionStoreTest {
 
     @Test
     public void shouldBeBatched() {
-        TransactionHusk tx = TestUtils.createTxHusk();
-        ts.put(tx);
+        String body = "1";
+        TransactionHusk tx = new TransactionHusk(body);
+        Sha3Hash key = tx.getHash();
+        ts.put(key, tx);
 
         ts.batchAll();
         assertThat(ts.countFromCache()).isZero();
@@ -61,20 +67,20 @@ public class TransactionStoreTest {
 
     @Test
     public void shouldBeGotTxFromCache() throws InvalidProtocolBufferException {
-        TransactionHusk tx = TestUtils.createTxHusk();
-
+        String body = "1";
+        TransactionHusk tx = new TransactionHusk(body);
         Sha3Hash key = tx.getHash();
-        ts.put(tx);
+        ts.put(key, tx);
 
         TransactionHusk foundTx = ts.get(key);
         assertThat(foundTx).isNotNull();
-        assertThat(foundTx.getBody()).contains("transfer");
+        assertThat(foundTx.getBody()).isEqualTo(body);
     }
 
     @Test
     public void shouldBePutTx() {
-        TransactionHusk tx = TestUtils.createTxHusk();
-        ts.put(tx);
+        TransactionHusk tx = new TransactionHusk("1");
+        ts.put(tx.getHash(), tx);
     }
 
     @Test
