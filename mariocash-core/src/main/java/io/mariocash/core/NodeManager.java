@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core;
 
+import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.event.PeerEventListener;
 
@@ -26,19 +27,21 @@ public interface NodeManager extends PeerEventListener {
 
     void init();
 
-    Transaction addTransaction(Transaction tx);
+    TransactionHusk addTransaction(TransactionHusk tx);
 
-    List<Transaction> getTransactionList();
+    List<TransactionHusk> getTransactionList();
 
-    Transaction getTxByHash(String id);
+    TransactionHusk getTxByHash(Sha3Hash hash);
 
-    Block generateBlock();
+    TransactionHusk getTxByHash(String id);
 
-    Block addBlock(Block block);
+    BlockHusk generateBlock();
 
-    Set<Block> getBlocks();
+    BlockHusk addBlock(BlockHusk block);
 
-    Block getBlockByIndexOrHash(String indexOrHash);
+    Set<BlockHusk> getBlocks();
+
+    BlockHusk getBlockByIndexOrHash(String indexOrHash);
 
     String getNodeUri();
 

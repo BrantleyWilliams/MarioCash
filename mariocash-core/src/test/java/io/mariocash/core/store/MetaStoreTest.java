@@ -18,7 +18,7 @@ package dev.zhihexireng.core.store;
 
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.core.husk.BlockHusk;
+import dev.zhihexireng.core.BlockHusk;
 import org.junit.Test;
 
 public class MetaStoreTest {

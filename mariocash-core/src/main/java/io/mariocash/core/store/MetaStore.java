@@ -20,6 +20,8 @@ import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 
+import java.util.Set;
+
 public class MetaStore implements Store<MetaStore.MetaInfo, Sha3Hash> {
     private DbSource<byte[], byte[]> db;
 
@@ -35,6 +37,16 @@ public class MetaStore implements Store<MetaStore.MetaInfo, Sha3Hash> {
     @Override
     public Sha3Hash get(MetaInfo key) {
         return new Sha3Hash(db.get(key.name().getBytes()));
+    }
+
+    @Override
+    public Set<Sha3Hash> getAll() {
+        return null;
+    }
+
+    @Override
+    public boolean contains(MetaInfo key) {
+        return false;
     }
 
     public enum MetaInfo {
