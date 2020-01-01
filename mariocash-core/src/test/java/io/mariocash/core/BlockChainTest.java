@@ -8,7 +8,6 @@ import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +92,7 @@ public class BlockChainTest {
     @Test
     public void shouldBeCreatedNewBlockChain() {
         BlockChain blockChain = new BlockChain(sampleBranchInfo);
+        assertThat(blockChain.size()).isEqualTo(1L);
     }
 
     private BlockChain instantBlockchain() {
