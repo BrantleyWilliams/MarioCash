@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.node;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.contract.StateStore;
@@ -26,6 +27,7 @@ import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.FailedOperationException;
+import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.net.GrpcClientChannel;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
@@ -147,7 +149,11 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public TransactionHusk getTxByHash(Sha3Hash hash) {
-        return transactionStore.get(hash);
+        try {
+            return transactionStore.get(hash);
+        } catch (InvalidProtocolBufferException e) {
+            throw new NotValidateException(e);
+        }
     }
 
     @Override
@@ -157,7 +163,7 @@ public class NodeManagerImpl implements NodeManager {
         }
 
         try {
-            transactionStore.put(tx.getHash(), tx);
+            transactionStore.put(tx);
             messageSender.newTransaction(tx);
             return tx;
         } catch (Exception e) {
@@ -304,7 +310,7 @@ public class NodeManagerImpl implements NodeManager {
             }
             List<TransactionHusk> txList = messageSender.syncTransaction();
             for (TransactionHusk tx : txList) {
-                transactionStore.put(tx.getHash(), tx);
+                transactionStore.put(tx);
             }
         } catch (Exception e) {
             log.warn(e.getMessage(), e);

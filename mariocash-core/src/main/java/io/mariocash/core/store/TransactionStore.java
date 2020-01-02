@@ -74,19 +74,15 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     }
 
     @Override
-    public void put(Sha3Hash key, TransactionHusk tx) {
-        huskTxPool.put(key, tx);
-        unconfirmedTxs.add(key);
+    public void put(TransactionHusk tx) {
+        huskTxPool.put(tx.getHash(), tx);
+        unconfirmedTxs.add(tx.getHash());
     }
 
     @Override
-    public TransactionHusk get(Sha3Hash key) {
+    public TransactionHusk get(Sha3Hash key) throws InvalidProtocolBufferException {
         TransactionHusk item = huskTxPool.get(key);
-        try {
-            return item != null ? item : new TransactionHusk(db.get(key.getBytes()));
-        } catch (InvalidProtocolBufferException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return item != null ? item : new TransactionHusk(db.get(key.getBytes()));
     }
 
     public void batchAll() {

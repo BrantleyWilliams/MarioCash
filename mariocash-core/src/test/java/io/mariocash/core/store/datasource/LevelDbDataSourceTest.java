@@ -39,13 +39,6 @@ public class LevelDbDataSourceTest {
 
 
     @Test
-    public void name() {
-        LevelDbDataSource ds = new LevelDbDataSource(dbPath, "batch-test").init();
-        byte[] bytes = ds.get(new byte[0]);
-        System.out.println(bytes);
-    }
-
-    @Test
     public void shouldBeUpdateByBatch() {
         LevelDbDataSource ds = new LevelDbDataSource(dbPath, "batch-test");
         ds.init();
