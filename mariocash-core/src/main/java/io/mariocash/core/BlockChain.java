@@ -1,16 +1,14 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
-import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.store.BlockStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
@@ -20,38 +18,33 @@ public class BlockChain {
     private static final Logger log = LoggerFactory.getLogger(BlockChain.class);
 
     // <Variable>
-    private BlockHusk genesisBlock;
+    private final BlockHusk genesisBlock;
     private BlockHusk prevBlock;
-    private JsonObject packageInfo;
     private BlockStore blockStore;
 
-    public BlockChain(String chainId) {
-        this(new BlockStore(chainId));
-    }
-
-    public BlockChain(BlockStore blockStore) {
-        this(new JsonObject(), blockStore);
-    }
-
-    private BlockChain(JsonObject packageInfo, BlockStore blockStore) {
-        this.blockStore = blockStore;
-        this.packageInfo = packageInfo;
+    public BlockChain(File infoFile) {
         try {
-            this.genesisBlock = new GenesisBlock().getGenesisBlock();
+            this.genesisBlock = new BlockChainLoader(infoFile).getGenesis();
+            this.blockStore = new BlockStore(getChainId());
+            loadBlockChain();
         } catch (IOException e) {
-            throw new NotValidateException("IOException");
-        } catch (InvalidCipherTextException e) {
-            throw new NotValidateException("InvalidCipherTextException");
+            throw new NotValidateException(e);
         }
-        this.addBlock(this.genesisBlock);
     }
 
-    public JsonObject getPackageInfo() {
-        return packageInfo;
+    private void loadBlockChain() {
+        try {
+            blockStore.get(genesisBlock.getHash());
+        } catch (NonExistObjectException e) {
+            blockStore.put(genesisBlock.getHash(), genesisBlock);
+        }
     }
 
-    // <Get_Set Method>
-    BlockHusk getGenesisBlock() {
+    public ChainId getChainId() {
+        return new ChainId(genesisBlock.getHash());
+    }
+
+    public BlockHusk getGenesisBlock() {
         return this.genesisBlock;
     }
 
@@ -87,7 +80,7 @@ public class BlockChain {
         }
         log.debug("Added block index=[{}], blockHash={}", nextBlock.getIndex(),
                 nextBlock.getHash());
-        this.blockStore.put(nextBlock);
+        this.blockStore.put(nextBlock.getHash(), nextBlock);
         this.prevBlock = nextBlock;
     }
 
@@ -140,7 +133,7 @@ public class BlockChain {
     }
 
     public BlockHusk getBlockByIndex(long index) {
-        for (BlockHusk block: this.getBlocks()) {
+        for (BlockHusk block : this.getBlocks()) {
             if (block.getIndex() == index) {
                 return block;
             }
@@ -165,11 +158,7 @@ public class BlockChain {
      * @return the block by hash
      */
     public BlockHusk getBlockByHash(Sha3Hash hash) {
-        try {
-            return blockStore.get(hash);
-        } catch (InvalidProtocolBufferException e) {
-            throw new NotValidateException(e);
-        }
+        return blockStore.get(hash);
     }
 
     /**
@@ -187,7 +176,6 @@ public class BlockChain {
                 + "genesisBlock=" + genesisBlock
                 + ", prevBlock=" + prevBlock
                 + ", height=" + this.getLastIndex()
-                + ", packageInfo=" + packageInfo
                 + '}';
     }
 
@@ -208,20 +196,16 @@ public class BlockChain {
             prevBlockHash = "";
         }
 
-        try {
-            do {
-                builder.append("<-- " + "[")
-                        .append(blockStore.get(new Sha3Hash(prevBlockHash)).getIndex())
-                        .append("]").append(prevBlockHash).append("\n");
+        do {
+            builder.append("<-- " + "[")
+                    .append(blockStore.get(new Sha3Hash(prevBlockHash)).getIndex())
+                    .append("]").append(prevBlockHash).append("\n");
 
-                prevBlockHash = blockStore.get(new Sha3Hash(prevBlockHash)).getPrevBlockHash();
+            prevBlockHash = blockStore.get(new Sha3Hash(prevBlockHash)).getPrevBlockHash();
 
-            } while (prevBlockHash != null
-                    && !prevBlockHash.equals(
-                        "0000000000000000000000000000000000000000000000000000000000000000"));
-        } catch (InvalidProtocolBufferException e) {
-            throw new NotValidateException(e);
-        }
+        } while (prevBlockHash != null
+                && !prevBlockHash.equals(
+                    "0000000000000000000000000000000000000000000000000000000000000000"));
 
         return builder.toString();
 
