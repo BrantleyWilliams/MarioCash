@@ -9,7 +9,7 @@ import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.RejectedAccessException;
-import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.node.controller.TransactionDto;
 
 @JsonRpcService("/api/transaction")
 public interface TransactionApi {
@@ -148,7 +148,7 @@ public interface TransactionApi {
             @JsonRpcError(exception = FailedOperationException.class,
                     code = FailedOperationException.code)})
     String sendTransaction(
-            @JsonRpcParam(value = "tx") Proto.Transaction tx);
+            @JsonRpcParam(value = "tx") TransactionDto tx);
 
     /**
      * Creates new message call transaction or a contract creation for signed transactions.

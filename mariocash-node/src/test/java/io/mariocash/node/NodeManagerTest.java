@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.node;
 
+import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.TransactionHusk;
@@ -69,6 +70,7 @@ public class NodeManagerTest {
         BlockStore blockStore = new BlockStore(new HashMapDbSource());
         nodeManager.setTransactionStore(transactionStore);
 
+        nodeManager.setStateStore(new StateStore());
         nodeManager.setBlockChain(new BlockChain(new File("")));
         nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));
         nodeManager.init();

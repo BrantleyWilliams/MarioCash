@@ -8,6 +8,7 @@ import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.exception.NonExistObjectException;
+import dev.zhihexireng.node.controller.TransactionDto;
 import dev.zhihexireng.proto.Proto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,9 +119,8 @@ public class TransactionApiImpl implements TransactionApi {
 
     /* send */
     @Override
-    public String sendTransaction(Proto.Transaction tx) {
-        TransactionHusk txHusk = new TransactionHusk(tx);
-        TransactionHusk addedTx = nodeManager.addTransaction(txHusk);
+    public String sendTransaction(TransactionDto tx) {
+        TransactionHusk addedTx = nodeManager.addTransaction(TransactionDto.of(tx));
         return addedTx.getHash().toString();
     }
 
