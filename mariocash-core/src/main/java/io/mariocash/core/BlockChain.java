@@ -1,14 +1,18 @@
 package dev.zhihexireng.core;
 
+import com.google.gson.JsonObject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.store.BlockStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.InvalidCipherTextException;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
 
 public class BlockChain {
@@ -16,34 +20,38 @@ public class BlockChain {
     private static final Logger log = LoggerFactory.getLogger(BlockChain.class);
 
     // <Variable>
-    private final BlockHusk genesisBlock;
+    private BlockHusk genesisBlock;
     private BlockHusk prevBlock;
+    private JsonObject packageInfo;
     private BlockStore blockStore;
 
-    public BlockChain(File infoFile) {
+    public BlockChain(String chainId) {
+        this(new BlockStore(chainId));
+    }
+
+    public BlockChain(BlockStore blockStore) {
+        this(new JsonObject(), blockStore);
+    }
+
+    private BlockChain(JsonObject packageInfo, BlockStore blockStore) {
+        this.blockStore = blockStore;
+        this.packageInfo = packageInfo;
         try {
-            this.genesisBlock = new BlockChainLoader(infoFile).getGenesis();
-            this.prevBlock = this.genesisBlock;
-            this.blockStore = new BlockStore(getChainId());
-            loadBlockChain();
+            this.genesisBlock = new GenesisBlock().getGenesisBlock();
         } catch (IOException e) {
-            throw new NotValidateException(e);
+            throw new NotValidateException("IOException");
+        } catch (InvalidCipherTextException e) {
+            throw new NotValidateException("InvalidCipherTextException");
         }
+        this.addBlock(this.genesisBlock);
     }
 
-    private void loadBlockChain() {
-        try {
-            prevBlock = blockStore.get(genesisBlock.getHash());
-        } catch (NonExistObjectException e) {
-            blockStore.put(genesisBlock.getHash(), genesisBlock);
-        }
+    public JsonObject getPackageInfo() {
+        return packageInfo;
     }
 
-    public ChainId getChainId() {
-        return new ChainId(genesisBlock.getHash());
-    }
-
-    public BlockHusk getGenesisBlock() {
+    // <Get_Set Method>
+    BlockHusk getGenesisBlock() {
         return this.genesisBlock;
     }
 
@@ -79,7 +87,7 @@ public class BlockChain {
         }
         log.debug("Added block index=[{}], blockHash={}", nextBlock.getIndex(),
                 nextBlock.getHash());
-        this.blockStore.put(nextBlock.getHash(), nextBlock);
+        this.blockStore.put(nextBlock);
         this.prevBlock = nextBlock;
     }
 
@@ -93,7 +101,7 @@ public class BlockChain {
         if (prevBlock.getIndex() + 1 != nextBlock.getIndex()) {
             log.warn("invalid index: prev:{} / new:{}", prevBlock.getIndex(), nextBlock.getIndex());
             return false;
-        } else if (!prevBlock.equals(nextBlock)) {
+        } else if (!Arrays.equals(prevBlock.getHash().getBytes(), nextBlock.getPrevHash())) {
             log.warn("invalid previous hash");
             return false;
         }
@@ -124,7 +132,7 @@ public class BlockChain {
         if (blockChain.getPrevBlock() != null) {
             BlockHusk block = blockChain.getPrevBlock(); // Get Last Block
             while (block.getIndex() != 0L) {
-                block = blockChain.getBlockByHash(block.getPrevHash());
+                block = blockChain.getBlockByHash(block.getPrevBlockHash());
             }
             return block.getIndex() == 0L;
         }
@@ -132,7 +140,7 @@ public class BlockChain {
     }
 
     public BlockHusk getBlockByIndex(long index) {
-        for (BlockHusk block : this.getBlocks()) {
+        for (BlockHusk block: this.getBlocks()) {
             if (block.getIndex() == index) {
                 return block;
             }
@@ -157,7 +165,11 @@ public class BlockChain {
      * @return the block by hash
      */
     public BlockHusk getBlockByHash(Sha3Hash hash) {
-        return blockStore.get(hash);
+        try {
+            return blockStore.get(hash);
+        } catch (InvalidProtocolBufferException e) {
+            throw new NotValidateException(e);
+        }
     }
 
     /**
@@ -175,6 +187,7 @@ public class BlockChain {
                 + "genesisBlock=" + genesisBlock
                 + ", prevBlock=" + prevBlock
                 + ", height=" + this.getLastIndex()
+                + ", packageInfo=" + packageInfo
                 + '}';
     }
 
@@ -190,21 +203,25 @@ public class BlockChain {
                 .append(genesisBlock.getHash()).append("\n").append("currentBlock=" + "[")
                 .append(prevBlock.getIndex()).append("]").append(prevBlock.getHash()).append("\n");
 
-        String prevBlockHash = this.prevBlock.getPrevHash().toString();
+        String prevBlockHash = this.prevBlock.getPrevBlockHash();
         if (prevBlockHash == null) {
             prevBlockHash = "";
         }
 
-        do {
-            builder.append("<-- " + "[")
-                    .append(blockStore.get(new Sha3Hash(prevBlockHash)).getIndex())
-                    .append("]").append(prevBlockHash).append("\n");
+        try {
+            do {
+                builder.append("<-- " + "[")
+                        .append(blockStore.get(new Sha3Hash(prevBlockHash)).getIndex())
+                        .append("]").append(prevBlockHash).append("\n");
 
-            prevBlockHash = blockStore.get(new Sha3Hash(prevBlockHash)).getPrevHash().toString();
+                prevBlockHash = blockStore.get(new Sha3Hash(prevBlockHash)).getPrevBlockHash();
 
-        } while (prevBlockHash != null
-                && !prevBlockHash.equals(
-                    "0000000000000000000000000000000000000000000000000000000000000000"));
+            } while (prevBlockHash != null
+                    && !prevBlockHash.equals(
+                        "0000000000000000000000000000000000000000000000000000000000000000"));
+        } catch (InvalidProtocolBufferException e) {
+            throw new NotValidateException(e);
+        }
 
         return builder.toString();
 

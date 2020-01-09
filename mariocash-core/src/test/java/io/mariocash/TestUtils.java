@@ -18,7 +18,6 @@ package dev.zhihexireng;
 
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
-import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
@@ -26,17 +25,16 @@ import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.TimeUtils;
-import dev.zhihexireng.util.FileUtil;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.nio.file.Paths;
 import java.util.Random;
 
 public class TestUtils {
     private static Wallet wallet;
-    public static final String YGG_HOME = "testOutput";
-    private TestUtils() {}
+
+    private TestUtils() {
+    }
 
     static {
         try {
@@ -44,10 +42,6 @@ public class TestUtils {
         } catch (Exception e) {
             throw new NotValidateException(e);
         }
-    }
-
-    public static void clearOutput() {
-        FileUtil.recursiveDelete(Paths.get(YGG_HOME));
     }
 
     public static Proto.Transaction getTransactionFixture() {
@@ -70,15 +64,6 @@ public class TestUtils {
     }
 
     public static Proto.Block getBlockFixture() {
-        return getBlockFixture(999L);
-    }
-
-    public static Proto.Block getBlockFixture(Long index) {
-        return getBlockFixture(index,
-                new Sha3Hash("9358888ca1ccd444ad11fb0ea1b5d03483f87664183c6e91ddab1b577cce2c06"));
-    }
-
-    public static Proto.Block getBlockFixture(Long index, Sha3Hash prevHash) {
         return Proto.Block.newBuilder()
                 .setHeader(
                         Proto.Block.Header.newBuilder()
@@ -87,10 +72,6 @@ public class TestUtils {
                                                 ByteBuffer.allocate(4).putInt(1).array()))
                                         .setVersion(ByteString.copyFrom(
                                                 ByteBuffer.allocate(4).putInt(1).array()))
-                                        .setIndex(index)
-                                        .setPrevBlockHash(ByteString.copyFrom(
-                                                prevHash.getBytes()
-                                        ))
                                         .build()
                                 ).build()
                 )

@@ -21,7 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Set;
 
 public interface Store<K, V> {
-    void put(K key, V value);
+    void put(V value);
 
     V get(K key) throws InvalidProtocolBufferException;
 

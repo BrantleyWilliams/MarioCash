@@ -29,7 +29,6 @@ import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -75,14 +74,12 @@ public class BlockControllerTest {
                 .andReturn().getResponse();
 
         String contentAsString = postResponse.getContentAsString();
-        String blockHash = json.parseObject(contentAsString).getHash();
+        String hash = json.parseObject(contentAsString).getHash();
 
-        mockMvc.perform(get("/blocks/" + blockHash))
+        mockMvc.perform(get("/blocks/" + hash))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn().getResponse();
-
-        assertThat(postResponse.getContentAsString()).contains(blockHash);
+                .andExpect(content().json(contentAsString));
     }
 
     @Test

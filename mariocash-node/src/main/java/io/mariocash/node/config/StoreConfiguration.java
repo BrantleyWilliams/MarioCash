@@ -16,7 +16,6 @@
 
 package dev.zhihexireng.node.config;
 
-import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.TransactionStore;
@@ -30,8 +29,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
-import java.io.File;
-
 @Configuration
 public class StoreConfiguration {
 
@@ -44,7 +41,7 @@ public class StoreConfiguration {
 
     @Bean
     BlockChain blockChain(BlockStore blockStore) {
-        return new BlockChain(new File(getClass().getClassLoader().getResource("branch-sample.json").getFile()));
+        return new BlockChain(blockStore);
     }
 
     @Bean
@@ -79,10 +76,5 @@ public class StoreConfiguration {
     @Bean(name = "txDbSource")
     DbSource txDbSource() {
         return new HashMapDbSource();
-    }
-
-    @Bean
-    StateStore stateStore() {
-        return new StateStore();
     }
 }
