@@ -52,4 +52,8 @@ public interface NodeManager extends PeerEventListener {
     List<String> getPeerUriList();
 
     Wallet getWallet();
+
+    StateStore getStateStore();
+
+    Long getBalanceOf(String address);
 }

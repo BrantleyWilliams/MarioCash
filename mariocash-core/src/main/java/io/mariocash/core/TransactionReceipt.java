@@ -39,10 +39,6 @@ public class TransactionReceipt {
         this.status = status;
     }
 
-    public void setTransactionHash(String transactionHash) {
-        this.transactionHash = transactionHash;
-    }
-
     @Override
     public String toString() {
         return "TransactionReceipt{"

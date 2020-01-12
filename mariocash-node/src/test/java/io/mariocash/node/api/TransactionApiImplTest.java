@@ -2,15 +2,12 @@ package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Longs;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.node.NodeManagerImpl;
 import dev.zhihexireng.node.TestUtils;
 import dev.zhihexireng.node.controller.TransactionDto;
-import dev.zhihexireng.proto.Proto;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -31,8 +28,7 @@ public class TransactionApiImplTest {
     private static final BlockApi blockApi = new JsonRpcConfig().blockApi();
     private static final TransactionApi txApi = new JsonRpcConfig().transactionApi();
 
-    private final TransactionApiImpl txApiImpl = new TransactionApiImpl(new NodeManagerImpl(),
-            new TransactionReceiptStore());
+    private final TransactionApiImpl txApiImpl = new TransactionApiImpl(new NodeManagerImpl());
     private final String address = "0x407d73d8a49eeb85d32cf465507dd71d507100c1";
     private final String tag = "latest";
     private final String hashOfTx =
@@ -88,9 +84,9 @@ public class TransactionApiImplTest {
     @Test
     public void getTransactionByHashTest() {
         try {
-            Proto.Transaction tx = TestUtils.createDummyTx();
+            TransactionHusk tx = TestUtils.createTxHusk();
 
-            txApi.sendTransaction(tx);
+            txApi.sendTransaction(TransactionDto.createBy(tx));
             assertThat(txApi.getTransactionByHash(hashOfTx)).isNotNull();
         } catch (Exception exception) {
             log.debug("\n\ngetTransactionByHashTest :: exception => " + exception);
@@ -101,7 +97,7 @@ public class TransactionApiImplTest {
     public void getTransactionByBlockHashAndIndexTest() {
         try {
             TransactionHusk tx = new TransactionHusk(getJson()).sign(wallet);
-            if (txApi.sendTransaction(tx.getInstance()) != null) {
+            if (txApi.sendTransaction(TransactionDto.createBy(tx)) != null) {
                 Thread.sleep(10000);
                 String hashOfBlock = blockApi.getBlockByHash("1", true).getHash().toString();
                 assertThat(hashOfBlock).isNotEmpty();
@@ -125,6 +121,15 @@ public class TransactionApiImplTest {
     }
 
     @Test
+    public void getTransactionReceiptTest() {
+        try {
+            assertThat(txApi.getTransactionReceipt(hashOfTx)).isNotNull();
+        } catch (Exception exception) {
+            log.debug("\n\ngetTransactionReceiptTest :: exception => " + exception);
+        }
+    }
+
+    @Test
     public void checkTransactionJsonFormat() throws IOException {
         TransactionHusk tx = TestUtils.createTxHusk();
         ObjectMapper objectMapper = TestUtils.getMapper();
@@ -135,11 +140,17 @@ public class TransactionApiImplTest {
     @Test
     public void sendTransactionTest() {
         // Get Transaction of JsonString as Param
-        TransactionHusk tx = new TransactionHusk(getJson()).sign(wallet);
+        JsonObject txObj = new JsonObject();
+        // curl -H "Content-Type:application/json" -d '{"id":"417871823","jsonrpc":"2.0","method":"sendTransaction","params":{"tx":{"type":"AAAAAQ==","version":"AAAAAQ==","data":"{\"operator\":\"transfer\",\"to\":\"aaa2aaab0fb041c5cb2a60a12291cbc3097352bb\",\"amount\":\"5000\"}","dataHash":"pSVVRYkZoZ/vwloCiMYOOvVetfjH/v2H72cCQQPxcCQ=","dataSize":87,"timestamp":37359937272746,"signature":"HKFdNaoBNeUEd1sLLBm1/Wy3x/GvJFP1PA86x8OTbxV5FypW/GZ2t4tFwp+giBnU/6BUZni8QTJFyNqRznl7ZmY=","address":"6f19c769c78513a3a60a3618c6a11eb9a886086a","hash":"078ecf76b29485b6cfd4b929e944efc5f290e7428f8179c86a9acf8c22b9907e"}}}' localhost:8080/api/transaction
+        txObj.addProperty("operator", "transfer");
+        txObj.addProperty("to", "aaa2aaab0fb041c5cb2a60a12291cbc3097352bb");
+        txObj.addProperty("amount", "5000");
+
+        TransactionHusk tx = new TransactionHusk(txObj).sign(wallet);
 
         // Request Transaction with jsonStr
         try {
-            assertThat(txApi.sendTransaction(tx.getInstance())).isNotEmpty();
+            assertThat(txApi.sendTransaction(TransactionDto.createBy(tx))).isNotEmpty();
         } catch (Exception exception) {
             log.debug("\n\njsonStringToTxTest :: exception => " + exception);
         }
@@ -195,10 +206,6 @@ public class TransactionApiImplTest {
     }
 
     @Test
-    public void getAllTransactionReceiptTest() {
-    }
-
-    @Test
     public void transactionApiImplTest() {
         try {
             assertThat(1).isEqualTo(txApiImpl.getTransactionCount(address, tag));
@@ -228,18 +235,10 @@ public class TransactionApiImplTest {
     }
 
     private JsonObject getJson() {
-        JsonArray params = new JsonArray();
-        JsonObject param1 = new JsonObject();
-        param1.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
-        JsonObject param2 = new JsonObject();
-        param2.addProperty("amount", 100);
-        params.add(param1);
-        params.add(param2);
-
-        JsonObject txObj = new JsonObject();
-        txObj.addProperty("method", "transfer");
-        txObj.add("params", params);
-
-        return txObj;
+        JsonObject json = new JsonObject();
+        json.addProperty("id", "0");
+        json.addProperty("name", "Rachael");
+        json.addProperty("age", "27");
+        return json;
     }
 }

@@ -1,60 +1,36 @@
 package dev.zhihexireng.core;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.contract.CoinContract;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
+import dev.zhihexireng.contract.StateStore;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class RuntimeTest {
-    private final TransactionReceiptStore txReceiptStore = new TransactionReceiptStore();
-    private final CoinContract coinContract = new CoinContract();
-    private Runtime runtime;
+    private final Runtime runtime = new Runtime();
     private Wallet wallet;
+    private StateStore stateStore;
 
     @Before
     public void setUp() throws IOException, InvalidCipherTextException {
-        runtime = new Runtime(txReceiptStore);
         wallet = new Wallet();
+        this.stateStore = new StateStore();
     }
 
     @Test
-    public void invokeTest() throws Exception {
-        JsonArray params = new JsonArray();
-        JsonObject param1 = new JsonObject();
-        param1.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
-        JsonObject param2 = new JsonObject();
-        param2.addProperty("amount", 100);
-        params.add(param1);
-        params.add(param2);
+    public void executeTest() throws Exception {
 
         JsonObject txObj = new JsonObject();
-        txObj.addProperty("method", "transfer");
-        txObj.add("params", params);
+        txObj.addProperty("operator", "transfer");
+        txObj.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
+        txObj.addProperty("amount", 100);
 
         TransactionHusk tx = new TransactionHusk(txObj).sign(wallet);
-        runtime.invoke(coinContract, tx);
-    }
+        CoinContract coinContract = new CoinContract(stateStore);
 
-    @Test
-    public void queryTest() throws Exception {
-        JsonArray params = new JsonArray();
-        JsonObject param = new JsonObject();
-        param.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
-        params.add(param);
-
-        JsonObject query = new JsonObject();
-        query.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
-        query.addProperty("method", "balanceOf");
-        query.add("params", params);
-
-        JsonObject result = runtime.query(coinContract, query);
-        assertThat(result).isNotNull();
+        runtime.execute(coinContract, tx);
     }
 }

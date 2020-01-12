@@ -16,13 +16,9 @@
 
 package dev.zhihexireng.core.store;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import org.ehcache.Cache;
@@ -31,7 +27,6 @@ import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -59,33 +54,6 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
                                 ResourcePoolsBuilder.heap(10)));
     }
 
-    /* method for test (start) */
-    protected Wallet wallet;
-
-    public void putDummyTx(String x) {
-        try {
-            wallet = new Wallet(new DefaultConfig());
-        } catch (IOException | InvalidCipherTextException e) {
-            throw new RuntimeException(e);
-        }
-
-        JsonArray params = new JsonArray();
-        JsonObject param1 = new JsonObject();
-        param1.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
-        JsonObject param2 = new JsonObject();
-        param2.addProperty("amount", x);
-        params.add(param1);
-        params.add(param2);
-
-        JsonObject txObj = new JsonObject();
-        txObj.addProperty("method", "transfer");
-        txObj.add("params", params);
-
-        TransactionHusk tx = new TransactionHusk(txObj).sign(wallet);
-        put(tx);
-    }
-    /* method for test (end) */
-
     @Override
     public Set<TransactionHusk> getAll() {
         try {
@@ -106,15 +74,19 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     }
 
     @Override
-    public void put(TransactionHusk tx) {
-        huskTxPool.put(tx.getHash(), tx);
-        unconfirmedTxs.add(tx.getHash());
+    public void put(Sha3Hash key, TransactionHusk tx) {
+        huskTxPool.put(key, tx);
+        unconfirmedTxs.add(key);
     }
 
     @Override
-    public TransactionHusk get(Sha3Hash key) throws InvalidProtocolBufferException {
+    public TransactionHusk get(Sha3Hash key) {
         TransactionHusk item = huskTxPool.get(key);
-        return item != null ? item : new TransactionHusk(db.get(key.getBytes()));
+        try {
+            return item != null ? item : new TransactionHusk(db.get(key.getBytes()));
+        } catch (InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     public void batchAll() {
