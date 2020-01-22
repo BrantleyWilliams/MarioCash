@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core.store;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
@@ -29,18 +30,19 @@ import java.nio.file.Paths;
 
 public class BlockStoreTest {
     private BlockStore blockStore;
+    private static final String dbPath = "testOutput";
 
     @AfterClass
     public static void destroy() {
-        FileUtil.recursiveDelete(Paths.get(TestUtils.YGG_HOME));
+        FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 
     @Test
-    public void shouldBeGotBlock() {
+    public void shouldBeGotBlock() throws InvalidProtocolBufferException {
         blockStore = new BlockStore(
-                new LevelDbDataSource(getPath(), "get-test"));
+                new LevelDbDataSource(dbPath, "get-test"));
         BlockHusk blockHuskFixture = getBlockHuskFixture();
-        blockStore.put(blockHuskFixture.getHash(), blockHuskFixture);
+        blockStore.put(blockHuskFixture);
         BlockHusk foundBlockHusk = blockStore.get(blockHuskFixture.getHash());
         Assertions.assertThat(foundBlockHusk).isEqualTo(blockHuskFixture);
     }
@@ -48,17 +50,13 @@ public class BlockStoreTest {
     @Test
     public void shouldBePutBlock() {
         blockStore = new BlockStore(
-                new LevelDbDataSource(getPath(), "put-test"));
+                new LevelDbDataSource(dbPath, "put-test"));
         BlockHusk blockHusk = getBlockHuskFixture();
-        blockStore.put(blockHusk.getHash(), blockHusk);
+        blockStore.put(blockHusk);
     }
 
     private BlockHusk getBlockHuskFixture() {
         Proto.Block blockFixture = TestUtils.getBlockFixture();
         return new BlockHusk(blockFixture);
-    }
-
-    private String getPath() {
-        return Paths.get(TestUtils.YGG_HOME, "store").toString();
     }
 }

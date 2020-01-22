@@ -37,6 +37,7 @@ public class LevelDbDataSourceTest {
         FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 
+
     @Test
     public void shouldBeUpdateByBatch() {
         LevelDbDataSource ds = new LevelDbDataSource(dbPath, "batch-test");
