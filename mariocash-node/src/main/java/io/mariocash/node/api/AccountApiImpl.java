@@ -1,12 +1,8 @@
 package dev.zhihexireng.node.api;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
-import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.core.Account;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,16 +14,12 @@ import java.util.ArrayList;
 public class AccountApiImpl implements AccountApi {
 
     private final ArrayList<String> addresses = new ArrayList<>();
-    private final int balance = 100000;
+    private final long balance = 100000;
     private final NodeManager nodeManager;
-    private final Runtime runtime;
-    private CoinContract coinContract;
 
     @Autowired
-    public AccountApiImpl(NodeManager nodeManager, Runtime runtime) {
+    public AccountApiImpl(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
-        this.runtime = runtime;
-        this.coinContract = new CoinContract();
     }
 
     @Override
@@ -58,14 +50,12 @@ public class AccountApiImpl implements AccountApi {
     }
 
     @Override
-    public String balanceOf(String data) throws Exception {
-        JsonParser jsonParser = new JsonParser();
-        JsonObject query = (JsonObject) jsonParser.parse(data);
-        return runtime.query(coinContract, query).toString();
+    public long balanceOf(String address) {
+        return nodeManager.getBalanceOf(address);
     }
 
     @Override
-    public int getBalance(String address, int blockNumber) {
+    public long getBalance(String address, int blockNumber) {
         try {
             return balance;
         } catch (Exception exception) {
@@ -74,7 +64,7 @@ public class AccountApiImpl implements AccountApi {
     }
 
     @Override
-    public int getBalance(String address, String tag) {
+    public long getBalance(String address, String tag) {
         try {
             return balance;
         } catch (Exception exception) {

@@ -1,6 +1,5 @@
 package dev.zhihexireng.node.api;
 
-import com.google.gson.JsonObject;
 import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
@@ -31,12 +30,12 @@ public interface AccountApi {
     /**
      * Returns the balance of the account of given address.
      *
-     * @param data account address
+     * @param address account address
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String balanceOf(@JsonRpcParam(value = "data") String data) throws Exception;
+    long balanceOf(@JsonRpcParam(value = "address") String address);
 
     /**
      * Returns the balance of the account of given address.
@@ -47,7 +46,7 @@ public interface AccountApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    int getBalance(@JsonRpcParam(value = "address") String address,
+    long getBalance(@JsonRpcParam(value = "address") String address,
                    @JsonRpcParam(value = "blockNumber") int blockNumber);
 
     /**
@@ -59,6 +58,6 @@ public interface AccountApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    int getBalance(@JsonRpcParam(value = "address") String address,
+    long getBalance(@JsonRpcParam(value = "address") String address,
                    @JsonRpcParam(value = "tag") String tag);
 }
