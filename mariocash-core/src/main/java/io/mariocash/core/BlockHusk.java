@@ -24,15 +24,16 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.crypto.ECKey;
+import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.trie.Trie;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.TimeUtils;
+import org.apache.commons.codec.binary.Hex;
 
 import java.nio.ByteBuffer;
 import java.security.SignatureException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -52,9 +53,9 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
 
     public BlockHusk sign(Wallet wallet) {
         Proto.Block.Header.Raw updatedRawData = Proto.Block.Header.Raw
-                .newBuilder(getHeader().getRawData())
+                .newBuilder(block.getHeader().getRawData())
                 .setTimestamp(TimeUtils.time()).build();
-        byte[] signature = wallet.sign(updatedRawData.toByteArray());
+        byte[] signature = wallet.sign(HashUtil.sha3(updatedRawData.toByteArray()));
         this.block = Proto.Block.newBuilder(block)
                 .setHeader(
                         Proto.Block.Header.newBuilder()
@@ -73,8 +74,8 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         return new Address(ecKey().getAddress());
     }
 
-    public Sha3Hash getPrevHash() {
-        return Sha3Hash.createByHashed(getHeader().getRawData().getPrevBlockHash().toByteArray());
+    public byte[] getPrevHash() {
+        return block.getHeader().getRawData().getPrevBlockHash().toByteArray();
     }
 
     public long getIndex() {
@@ -103,6 +104,11 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         return this.block;
     }
 
+    public String getPrevBlockHash() {
+        byte[] prevHash = block.getHeader().getRawData().getPrevBlockHash().toByteArray();
+        return prevHash == null ? "" : Hex.encodeHexString(prevHash);
+    }
+
     /**
      * Get ECKey(include pubKey) using sig & signData.
      *
@@ -127,7 +133,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
             return false;
         }
         BlockHusk blockHusk = (BlockHusk) o;
-        return Arrays.equals(getHash().getBytes(), blockHusk.getPrevHash().getBytes());
+        return Objects.equals(block, blockHusk.block);
     }
 
     @Override
@@ -176,13 +182,16 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
 
     public static BlockHusk build(Wallet wallet, Proto.Block.Header blockHeader,
                                   List<TransactionHusk> body) {
-        Proto.Block.Builder builder = Proto.Block.newBuilder()
-                .setHeader(blockHeader);
+        List<Proto.Transaction> txList = new ArrayList<>(body.size());
         for (TransactionHusk tx : body) {
-            builder.addBody(tx.getInstance());
+            txList.add(tx.getInstance());
         }
 
-        return new BlockHusk(builder.build()).sign(wallet);
+        Proto.Block block = Proto.Block.newBuilder()
+                .setHeader(blockHeader)
+                .addAllBody(txList)
+                .build();
+        return new BlockHusk(block).sign(wallet);
     }
 
     public static BlockHusk build(Wallet wallet, List<TransactionHusk> body, BlockHusk prevBlock) {

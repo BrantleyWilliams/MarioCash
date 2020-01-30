@@ -195,7 +195,7 @@ public class TransactionHusk implements ProtoHusk<Proto.Transaction>, Comparable
 
     @Override
     public int compareTo(TransactionHusk o) {
-        return Long.compare(transaction.getHeader().getRawData().getTimestamp()
-                ,o.getInstance().getHeader().getRawData().getTimestamp());
+        return Long.compare(transaction.getHeader().getRawData().getTimestamp(),
+                o.getInstance().getHeader().getRawData().getTimestamp());
     }
 }

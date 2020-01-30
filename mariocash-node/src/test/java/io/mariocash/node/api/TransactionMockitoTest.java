@@ -5,6 +5,7 @@ import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.node.TestUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
@@ -19,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +35,8 @@ public class TransactionMockitoTest {
 
     @Mock
     private NodeManager nodeManagerMock;
+    @Mock
+    private TransactionReceiptStore txReceiptStoreMock;
     private TransactionHusk tx;
     private BlockHusk block;
     private Wallet wallet;
@@ -40,11 +44,15 @@ public class TransactionMockitoTest {
     private TransactionApiImpl txApiImpl;
     private String hashOfTx;
     private String hashOfBlock;
+    private TransactionReceipt txRecipt;
+
+    private HashMap<String, TransactionReceipt> txReceiptStore;
 
     @Before
     public void setup() throws Exception {
+        txReceiptStore = new HashMap<>();
         wallet = new Wallet();
-        txApiImpl = new TransactionApiImpl(nodeManagerMock);
+        txApiImpl = new TransactionApiImpl(nodeManagerMock, txReceiptStoreMock);
 
         tx = TestUtils.createTxHusk(wallet);
         hashOfTx = tx.getHash().toString();
@@ -52,6 +60,9 @@ public class TransactionMockitoTest {
         txList.add(tx);
         txList.add(tx);
         txList.add(tx);
+        txRecipt = new TransactionReceipt();
+        txRecipt.setTransactionHash(tx.getHash().toString());
+        txReceiptStore.put(tx.getHash().toString(), txRecipt);
         block = TestUtils.createBlockHuskByTxList(wallet, txList);
         hashOfBlock = block.getHash().toString();
     }
@@ -102,18 +113,22 @@ public class TransactionMockitoTest {
 
     @Test
     public void getTransactionReceiptTest() {
-        String transactionHash =
-                "0xb903239f8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238";
-        String blockHash =
-                "0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b";
-        TransactionReceipt txRecipt = txApiImpl.getTransactionReceipt(transactionHash);
-        assertEquals(txRecipt.blockHash, blockHash);
+        when(txReceiptStoreMock.get(hashOfTx)).thenReturn(txRecipt);
+        TransactionReceipt res = txApiImpl.getTransactionReceipt(hashOfTx);
+        assertEquals(res.transactionHash, hashOfTx);
+    }
+
+    @Test
+    public void getAllTransactionReceiptTest() {
+        when(txReceiptStoreMock.getTxReciptStore()).thenReturn(txReceiptStore);
+        HashMap<String, TransactionReceipt> res = txApiImpl.getAllTransactionReceipt();
+        assertThat(res.containsKey(hashOfTx)).isTrue();
     }
 
     @Test
     public void sendTransactionTest() {
         when(nodeManagerMock.addTransaction(tx)).thenReturn(tx);
-        String res = txApiImpl.sendTransaction(TransactionDto.createBy(tx));
+        String res = txApiImpl.sendTransaction(tx.getInstance());
         assertEquals(res, hashOfTx);
     }
 

@@ -17,38 +17,20 @@
 package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.proto.Proto;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class BlockDto {
-    private byte[] type;
-    private byte[] version;
     private long index;
-    private long timestamp;
-    private byte[] prevBlockHash;
-    private String author;
-    private byte[] merkleRoot;
-    private long dataSize;
-    private byte[] signature;
-    private List<TransactionDto> body;
     private String hash;
+    private String previousHash;
+    private long timestamp;
 
-    public byte[] getType() {
-        return type;
-    }
-
-    public void setType(byte[] type) {
-        this.type = type;
-    }
-
-    public byte[] getVersion() {
-        return version;
-    }
-
-    public void setVersion(byte[] version) {
-        this.version = version;
+    public static BlockDto createBy(BlockHusk block) {
+        BlockDto blockDto = new BlockDto();
+        blockDto.setIndex(block.getIndex());
+        blockDto.setHash(block.getHash().toString());
+        blockDto.setPreviousHash(block.getPrevBlockHash());
+        blockDto.setTimestamp(block.getInstance().getHeader().getRawData().getTimestamp());
+        return blockDto;
     }
 
     public long getIndex() {
@@ -59,62 +41,6 @@ public class BlockDto {
         this.index = index;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public byte[] getPrevBlockHash() {
-        return prevBlockHash;
-    }
-
-    public void setPrevBlockHash(byte[] prevBlockHash) {
-        this.prevBlockHash = prevBlockHash;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public byte[] getMerkleRoot() {
-        return merkleRoot;
-    }
-
-    public void setMerkleRoot(byte[] merkleRoot) {
-        this.merkleRoot = merkleRoot;
-    }
-
-    public long getDataSize() {
-        return dataSize;
-    }
-
-    public void setDataSize(long dataSize) {
-        this.dataSize = dataSize;
-    }
-
-    public byte[] getSignature() {
-        return signature;
-    }
-
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
-    }
-
-    public List<TransactionDto> getBody() {
-        return body;
-    }
-
-    public void setBody(List<TransactionDto> body) {
-        this.body = body;
-    }
-
     public String getHash() {
         return hash;
     }
@@ -123,22 +49,19 @@ public class BlockDto {
         this.hash = hash;
     }
 
-    public static BlockDto createBy(BlockHusk block) {
-        BlockDto blockDto = new BlockDto();
-        Proto.Block.Header.Raw raw = block.getInstance().getHeader().getRawData();
-        blockDto.setType(raw.getType().toByteArray());
-        blockDto.setVersion(raw.getVersion().toByteArray());
-        blockDto.setIndex(block.getIndex());
-        blockDto.setTimestamp(raw.getTimestamp());
-        blockDto.setPrevBlockHash(block.getPrevHash().getBytes());
-        blockDto.setAuthor(block.getAddress().toString());
-        blockDto.setMerkleRoot(raw.getMerkleRoot().toByteArray());
-        blockDto.setDataSize(raw.getDataSize());
-        blockDto.setSignature(block.getInstance().getHeader().getSignature().toByteArray());
-        blockDto.setBody(block.getBody().stream().map(TransactionDto::createBy)
-                .collect(Collectors.toList()));
-        blockDto.setHash(block.getHash().toString());
-        return blockDto;
+    public String getPreviousHash() {
+        return previousHash;
     }
 
+    public void setPreviousHash(String previousHash) {
+        this.previousHash = previousHash;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
 }

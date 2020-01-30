@@ -6,8 +6,4 @@ public class FailedOperationException extends IllegalStateException {
     public FailedOperationException(String msg) {
         super(msg + " not created");
     }
-
-    public FailedOperationException(Throwable e) {
-        super(e);
-    }
 }
