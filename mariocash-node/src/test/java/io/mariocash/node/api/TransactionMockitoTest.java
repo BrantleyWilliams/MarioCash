@@ -6,6 +6,7 @@ import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.node.TestUtils;
+import dev.zhihexireng.node.controller.TransactionDto;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
 import org.junit.Test;
