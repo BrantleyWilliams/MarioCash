@@ -16,8 +16,8 @@
 
 package dev.zhihexireng.node.controller;
 
+import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.Account;
-import dev.zhihexireng.core.Runtime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,9 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("accounts")
 public class AccountController {
-
     @Autowired
-    Runtime runtime;
+    StateStore stateStore;
 
     @PostMapping
     public ResponseEntity create() {
@@ -41,6 +40,6 @@ public class AccountController {
 
     @GetMapping
     public ResponseEntity getAll() {
-        return ResponseEntity.ok(runtime.getStateStore().getState());
+        return ResponseEntity.ok(stateStore.getState());
     }
 }

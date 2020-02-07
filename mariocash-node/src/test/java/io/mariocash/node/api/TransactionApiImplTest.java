@@ -19,6 +19,7 @@ import org.spongycastle.util.encoders.Base64;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.SignatureException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -132,20 +133,7 @@ public class TransactionApiImplTest {
 
     @Test
     public void sendTransactionTest() {
-        // curl -H "Content-Type:application/json" -d 'replaceme' localhost:8080/api/transaction
-        // Get Transaction of JsonString as Param
-        JsonArray params = new JsonArray();
-        JsonObject param1 = new JsonObject();
-        param1.addProperty("address", "aaa2aaab0fb041c5cb2a60a12291cbc3097352bb");
-        JsonObject param2 = new JsonObject();
-        param2.addProperty("amount", 5000);
-        params.add(param1);
-        params.add(param2);
-        JsonObject txObj = new JsonObject();
-        txObj.addProperty("method", "transfer");
-        txObj.add("params", params);
-
-        TransactionHusk tx = new TransactionHusk(txObj).sign(wallet);
+        TransactionHusk tx = new TransactionHusk(TestUtils.getTransfer()).sign(wallet);
 
         // Request Transaction with jsonStr
         try {
@@ -223,7 +211,7 @@ public class TransactionApiImplTest {
     }
 
     @Test
-    public void txSigValidateTest() throws IOException {
+    public void txSigValidateTest() throws IOException,SignatureException {
         // Create Transaction
         TransactionHusk tx = new TransactionHusk(getJson()).sign(wallet);
 

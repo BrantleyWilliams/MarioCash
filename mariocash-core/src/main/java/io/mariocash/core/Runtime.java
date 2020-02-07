@@ -7,7 +7,7 @@ import dev.zhihexireng.core.store.TransactionReceiptStore;
 
 public class Runtime {
 
-    private final StateStore stateStore = new StateStore();
+    private StateStore stateStore = new StateStore();
     private final TransactionReceiptStore txReceiptStore;
 
     public Runtime(TransactionReceiptStore txReceiptStore) {

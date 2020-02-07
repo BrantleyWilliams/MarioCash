@@ -5,9 +5,9 @@ import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 
 public interface Contract {
-    void init(StateStore stateStore, TransactionReceiptStore txReciptStore);
+    public void init(StateStore stateStore, TransactionReceiptStore txReciptStore);
 
-    boolean invoke(TransactionHusk tx) throws Exception;
+    public boolean invoke(TransactionHusk tx) throws Exception;
 
-    JsonObject query(JsonObject qurey) throws Exception;
+    public JsonObject query(JsonObject qurey) throws Exception;
 }
