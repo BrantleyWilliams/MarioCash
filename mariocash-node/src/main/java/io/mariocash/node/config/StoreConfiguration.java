@@ -18,12 +18,13 @@ package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.BlockChain;
+import dev.zhihexireng.core.BlockChainLoader;
+import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,21 +32,14 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 import java.io.File;
+import java.io.IOException;
 
 @Configuration
 public class StoreConfiguration {
 
-    private final NodeProperties nodeProperties;
-
-    @Autowired
-    StoreConfiguration(NodeProperties nodeProperties) {
-        this.nodeProperties = nodeProperties;
-    }
-
     @Bean
-    BlockChain blockChain(BlockStore blockStore) {
-        return new BlockChain(new File(getClass().getClassLoader()
-                .getResource("branch-sample.json").getFile()));
+    BlockChain blockChain(@Qualifier("genesis")BlockHusk genesisBlock, BlockStore blockStore) {
+        return new BlockChain(genesisBlock, blockStore);
     }
 
     @Bean
@@ -58,18 +52,24 @@ public class StoreConfiguration {
         return new TransactionStore(source);
     }
 
+    @Bean(name = "genesis")
+    BlockHusk genesisBlock() throws IOException {
+        return new BlockChainLoader(new File(getClass().getClassLoader()
+                .getResource("branch-sample.json").getFile())).getGenesis();
+    }
+
     @Profile("prod")
     @Primary
     @Bean(name = "blockDbSource")
-    DbSource blockLevelDbSource() {
-        return new LevelDbDataSource(nodeProperties.getChainId() + "/blocks");
+    DbSource blockLevelDbSource(@Qualifier("genesis")BlockHusk genesisBlock) {
+        return new LevelDbDataSource(genesisBlock.getHash() + "/blocks");
     }
 
     @Profile("prod")
     @Primary
     @Bean(name = "txDbSource")
-    DbSource txLevelDbSource() {
-        return new LevelDbDataSource(nodeProperties.getChainId() + "/txs");
+    DbSource txLevelDbSource(@Qualifier("genesis")BlockHusk genesisBlock) {
+        return new LevelDbDataSource(genesisBlock.getHash() + "/txs");
     }
 
     @Bean(name = "blockDbSource")
