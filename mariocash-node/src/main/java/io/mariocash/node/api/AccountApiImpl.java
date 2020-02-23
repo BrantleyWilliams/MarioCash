@@ -1,11 +1,8 @@
 package dev.zhihexireng.node.api;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
-import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.core.Account;
-import dev.zhihexireng.core.Runtime;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,11 +15,11 @@ public class AccountApiImpl implements AccountApi {
 
     private final ArrayList<String> addresses = new ArrayList<>();
     private final long balance = 100000;
-    private final Runtime runtime;
+    private final NodeManager nodeManager;
 
     @Autowired
-    public AccountApiImpl(Runtime runtime) {
-        this.runtime = runtime;
+    public AccountApiImpl(NodeManager nodeManager) {
+        this.nodeManager = nodeManager;
     }
 
     @Override
@@ -53,10 +50,8 @@ public class AccountApiImpl implements AccountApi {
     }
 
     @Override
-    public String balanceOf(String data) throws Exception {
-        JsonParser jsonParser = new JsonParser();
-        JsonObject query = (JsonObject) jsonParser.parse(data);
-        return runtime.query(new CoinContract(), query).toString();
+    public long balanceOf(String address) {
+        return nodeManager.getBalanceOf(address);
     }
 
     @Override

@@ -18,7 +18,6 @@ package dev.zhihexireng.node;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.BlockHusk;
@@ -100,17 +99,12 @@ public class TestUtils {
         return result;
     }
 
-    public static JsonObject getTransfer() {
-        JsonArray params = new JsonArray();
-        JsonObject param1 = new JsonObject();
-        param1.addProperty("address", "aaa2aaab0fb041c5cb2a60a12291cbc3097352bb");
-        JsonObject param2 = new JsonObject();
-        param2.addProperty("amount", 100);
-        params.add(param1);
-        params.add(param2);
+    private static JsonObject getTransfer() {
         JsonObject txObj = new JsonObject();
-        txObj.addProperty("method", "transfer");
-        txObj.add("params", params);
+
+        txObj.addProperty("operator", "transfer");
+        txObj.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
+        txObj.addProperty("amount", 100);
 
         return txObj;
     }

@@ -30,9 +30,6 @@ public class Peer {
     private int port;
     private String ynodeUri;
 
-    public Peer() {
-    }
-
     private Peer(String ynodeUri) {
         try {
             URI uri = new URI(ynodeUri);

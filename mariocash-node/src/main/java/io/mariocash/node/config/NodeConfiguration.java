@@ -17,12 +17,11 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.NodeSyncServer;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -63,12 +62,7 @@ public class NodeConfiguration {
     }
 
     @Bean
-    TransactionReceiptStore transactionReceiptStore() {
-        return new TransactionReceiptStore();
-    }
-
-    @Bean
-    Runtime runTime(TransactionReceiptStore transactionReceiptStore) {
-        return new Runtime(transactionReceiptStore);
+    StateStore stateStore() {
+        return new StateStore();
     }
 }

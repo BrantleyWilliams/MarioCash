@@ -8,7 +8,6 @@ import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.node.controller.TransactionDto;
 import dev.zhihexireng.proto.Proto;
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ import org.spongycastle.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -27,12 +25,10 @@ public class TransactionApiImpl implements TransactionApi {
     private static final Logger log = LoggerFactory.getLogger(TransactionApiImpl.class);
 
     private final NodeManager nodeManager;
-    private final TransactionReceiptStore txReceiptStore;
 
     @Autowired
-    public TransactionApiImpl(NodeManager nodeManager, TransactionReceiptStore txReceiptStore) {
+    public TransactionApiImpl(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
-        this.txReceiptStore = txReceiptStore;
     }
 
     public int getCount(String address, List<TransactionHusk> txList) {
@@ -116,6 +112,11 @@ public class TransactionApiImpl implements TransactionApi {
         }
     }
 
+    @Override
+    public TransactionReceipt getTransactionReceipt(String hashOfTx) {
+        return new TransactionReceipt();
+    }
+
     /* send */
     @Override
     public String sendTransaction(TransactionDto tx) {
@@ -174,15 +175,5 @@ public class TransactionApiImpl implements TransactionApi {
                 .build();
 
         return new TransactionHusk(tx);
-    }
-
-    @Override
-    public HashMap<String, TransactionReceipt> getAllTransactionReceipt() {
-        return txReceiptStore.getTxReciptStore();
-    }
-
-    @Override
-    public TransactionReceipt getTransactionReceipt(String hashOfTx) {
-        return txReceiptStore.get(hashOfTx);
     }
 }

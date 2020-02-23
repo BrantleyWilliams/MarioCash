@@ -1,113 +1,65 @@
 package dev.zhihexireng.contract;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class CoinContract implements Contract {
+
     private static final Logger log = LoggerFactory.getLogger(CoinContract.class);
+
     private Map<String, Long> state;
-    private TransactionReceiptStore txReceiptStore;
-    private String sender;
 
-    @Override
-    public void init(StateStore stateStore, TransactionReceiptStore txReceiptStore) {
-        this.state = stateStore.getState();
-        this.txReceiptStore = txReceiptStore;
-    }
-
-    @Override
-    public boolean invoke(TransactionHusk txHusk) throws Exception {
-        String data = txHusk.getBody();
-        JsonParser jsonParser = new JsonParser();
-        JsonObject txBody = (JsonObject) jsonParser.parse(data);
-        String method = txBody.get("method").getAsString().toLowerCase();
-        this.sender = txHusk.getAddress().toString();
-        JsonArray params = txBody.get("params").getAsJsonArray();
-
-        if (!method.isEmpty()) {
-            TransactionReceipt txReciept = (TransactionReceipt) this.getClass()
-                    .getMethod(method, JsonArray.class)
-                    .invoke(this, params);
-            txReciept.setTransactionHash(txHusk.getHash().toString());
-            txReceiptStore.put(txHusk.getHash().toString(), txReciept);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public JsonObject query(JsonObject query) throws Exception {
-        this.sender = query.get("address").getAsString();
-        String method = query.get("method").getAsString().toLowerCase();
-        JsonArray params = query.get("params").getAsJsonArray();
-
-        JsonObject result = new JsonObject();
-        if (!method.isEmpty()) {
-            Object res = this.getClass().getMethod(method, JsonArray.class)
-                    .invoke(this, params);
-            result.addProperty("result", res.toString());
-            return result;
-        }
-        return null;
+    public CoinContract(StateStore stateStore) {
+        state = stateStore.getState();
     }
 
     /**
-     * Returns the balance of the account (query)
+     * Returns the balance of the account
      *
-     * @param params   account address
+     * @param address   account address
      */
-    public Long balanceof(JsonArray params) {
-        String address = params.get(0).getAsJsonObject().get("address").getAsString().toLowerCase();
+    public Long balance(String address) {
         if (state.get(address) != null) {
+            log.debug("\nstate :: " + this.state);
             return state.get(address);
         }
         return 0L;
     }
 
     /**
-     * Returns TransactionRecipt (invoke)
+     * Returns TransactionRecipt
+     *
+     * @param from   from address
+     * @param to     to address
+     * @param amount amount of coin
      */
-    public TransactionReceipt transfer(JsonArray params) {
-        log.info("\n transfer :: params => " + params);
-        String to = params.get(0).getAsJsonObject().get("address").getAsString().toLowerCase();
-        long amount = params.get(1).getAsJsonObject().get("amount").getAsInt();
-
+    public TransactionReceipt transfer(String from, String to, String amount) {
         TransactionReceipt txRecipt = new TransactionReceipt();
-        txRecipt.txLog.put("from", sender);
+        txRecipt.txLog.put("from", from);
         txRecipt.txLog.put("to", to);
-        txRecipt.txLog.put("amount", String.valueOf(amount));
+        txRecipt.txLog.put("amount", amount);
 
-        if (state.get(sender) != null) {
-            long balanceOfFrom = state.get(sender);
+        if (state.get(from) != null) {
+            long balanceOfFrom = state.get(from);
 
-            if (balanceOfFrom - amount < 0) {
+            if (balanceOfFrom - Long.parseLong(amount) < 0) {
                 txRecipt.setStatus(0);
-                log.info("\n[ERR] " + sender + " has no enough balance!");
             } else {
-                balanceOfFrom -= amount;
-                state.replace(sender, balanceOfFrom);
+                balanceOfFrom -= Long.parseLong(amount);
+                state.replace(from, balanceOfFrom);
                 if (state.get(to) != null) {
                     long balanceOfTo = state.get(to);
-                    balanceOfTo += amount;
+                    balanceOfTo += Integer.parseInt(amount);
                     state.replace(to, balanceOfTo);
                 } else {
-                    state.put(to, amount);
+                    state.put(to, Long.parseLong(amount));
                 }
-                log.info(
-                        "\nBalance of From : " + state.get(sender)
-                                + "\nBalance of To   : " + state.get(to));
             }
         } else {
             txRecipt.setStatus(0);
-            log.info("\n[ERR] " + sender + " has no balance!");
         }
         return txRecipt;
     }

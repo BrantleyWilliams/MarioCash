@@ -22,6 +22,7 @@ public class BlockChain {
     public BlockChain(File infoFile) {
         try {
             this.genesisBlock = new BlockChainLoader(infoFile).getGenesis();
+            this.prevBlock = this.genesisBlock;
             this.blockStore = new BlockStore(getChainId());
             loadBlockChain();
         } catch (Exception e) {
@@ -29,19 +30,12 @@ public class BlockChain {
         }
     }
 
-    public BlockChain(BlockHusk genesisBlock, BlockStore blockStore) {
-        this.genesisBlock = genesisBlock;
-        this.blockStore = blockStore;
-        loadBlockChain();
-    }
-
     private void loadBlockChain() {
         try {
-            blockStore.get(genesisBlock.getHash());
+            prevBlock = blockStore.get(genesisBlock.getHash());
         } catch (NonExistObjectException e) {
             blockStore.put(genesisBlock.getHash(), genesisBlock);
         }
-        this.prevBlock = this.genesisBlock;
     }
 
     public ChainId getChainId() {

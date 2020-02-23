@@ -16,7 +16,6 @@
 
 package dev.zhihexireng;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.common.Sha3Hash;
@@ -127,20 +126,16 @@ public class TestUtils {
         return result;
     }
 
-    public static JsonObject getTransfer() {
-        JsonArray params = new JsonArray();
-        JsonObject param1 = new JsonObject();
-        param1.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
-        JsonObject param2 = new JsonObject();
-        param2.addProperty("amount", 100);
-        params.add(param1);
-        params.add(param2);
+    private static JsonObject getTransfer() {
         JsonObject txObj = new JsonObject();
-        txObj.addProperty("method", "transfer");
-        txObj.add("params", params);
+
+        txObj.addProperty("operator", "transfer");
+        txObj.addProperty("to", "0x9843DC167956A0e5e01b3239a0CE2725c0631392");
+        txObj.addProperty("amount", 100);
 
         return txObj;
     }
+
     public static Proto.Transaction[] getTransactionFixtures() {
         return new Proto.Transaction[] {getTransactionFixture(), getTransactionFixture()};
     }
