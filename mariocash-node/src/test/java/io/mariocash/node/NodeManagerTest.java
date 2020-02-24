@@ -16,16 +16,16 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.core.store.BlockStore;
+import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.config.NodeProperties;
@@ -70,10 +70,9 @@ public class NodeManagerTest {
         nodeManager.setWallet(new Wallet());
 
         TransactionStore transactionStore = new TransactionStore(new HashMapDbSource());
-        BlockStore blockStore = new BlockStore(new HashMapDbSource());
         nodeManager.setTransactionStore(transactionStore);
-
-        nodeManager.setStateStore(new StateStore());
+        Runtime runtime = new Runtime(new TransactionReceiptStore());
+        nodeManager.setRuntime(runtime);
         nodeManager.setBlockChain(new BlockChain(
                 new File(getClass().getClassLoader()
                         .getResource("branch-sample.json").getFile())));
