@@ -26,17 +26,18 @@ import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.TimeUtils;
 import dev.zhihexireng.util.FileUtil;
+import dev.zhihexireng.util.TimeUtils;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Random;
 
 public class TestUtils {
     private static Wallet wallet;
     public static final String YGG_HOME = "testOutput";
+
     private TestUtils() {}
 
     static {
@@ -141,6 +142,7 @@ public class TestUtils {
 
         return txObj;
     }
+
     public static Proto.Transaction[] getTransactionFixtures() {
         return new Proto.Transaction[] {getTransactionFixture(), getTransactionFixture()};
     }
