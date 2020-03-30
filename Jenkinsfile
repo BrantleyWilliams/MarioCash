@@ -26,7 +26,7 @@ node {
         }
 
         stage('packaging') {
-            sh "./gradlew build -x test -PspringProfiles=prod --no-daemon"
+            sh "./gradlew build -x test -Pprod --no-daemon"
             archiveArtifacts artifacts: '**/build/libs/*.jar', fingerprint: true
         }
 

@@ -63,7 +63,7 @@ You can fully dockerize the mariocash node. For more information refer to [docke
 Docker is one quick way for running an mariocash node:
 
 ```
-docker --rm -p 8080:8080 -p 9090:9090 -h mariocash-node1 --name mariocash-node1 zhihexireng/mariocash-node
+docker --rm -p 8080:8080 -p 9090:9090 --name mariocash-node zhihexireng/mariocash-node
 ```
 
 MarioCash node binds to `localhost` using `8080` for the RESTful API & JSON RPC, and `9090` for the gRPC by default.
