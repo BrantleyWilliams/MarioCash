@@ -38,7 +38,7 @@ import java.io.IOException;
 @Configuration
 public class StoreConfiguration {
 
-    @Value("classpath:/branch-yeed.json")
+    @Value("classpath:/branch-sample.json")
     Resource resource;
 
     @Bean

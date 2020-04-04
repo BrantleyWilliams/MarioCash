@@ -75,7 +75,7 @@ public class NodeManagerTest {
         nodeManager.setRuntime(runtime);
         nodeManager.setBlockChain(new BlockChain(
                 new File(getClass().getClassLoader()
-                        .getResource("branch-yeed.json").getFile())));
+                        .getResource("branch-sample.json").getFile())));
         nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));
         nodeManager.init();
         assert nodeManager.getNodeUri() != null;
@@ -87,7 +87,7 @@ public class NodeManagerTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         //TODO 테스트 설정 파일에서 DB 부분 제거
         FileUtil.recursiveDelete(Paths.get(".mariocash/db"));
     }
