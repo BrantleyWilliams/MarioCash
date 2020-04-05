@@ -29,11 +29,13 @@ public class BlockBody implements Serializable {
     }
 
     public byte[] getMerkleRoot() {
-        try {
-            return Trie.getMerkleRoot(this.transactionList);
-        } catch (IOException e) {
-            throw new NotValidateException(e);
-        }
+//        try {
+//            return Trie.getMerkleRoot(this.transactionList);
+//            return null; // for test
+//        } catch (IOException e) {
+//            throw new NotValidateException(e);
+//        }
+        return null;
     }
 
     public long getSize() {

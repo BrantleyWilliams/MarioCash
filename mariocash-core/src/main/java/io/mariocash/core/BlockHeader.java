@@ -188,7 +188,7 @@ public class BlockHeader implements Serializable {
          * @return the block header
          */
         public BlockHeader build(Wallet wallet) {
-            timestamp = TimeUtils.getCurrenttime();
+            timestamp = TimeUtils.time();
             this.signature = wallet.signHashedData(this.getDataHashForSigning());
             return new BlockHeader(this);
         }

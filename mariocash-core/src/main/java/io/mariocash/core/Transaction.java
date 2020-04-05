@@ -4,18 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.crypto.HashUtil;
-import dev.zhihexireng.util.SerializeUtils;
 
-import java.io.Serializable;
+public class Transaction {
 
-public class Transaction implements Serializable {
-
-    // Header
     private TransactionHeader header;
-
-    // Data
-    // TODO Data Object re modelling
-    private String data;
+    private TransactionSignature signature;
+    private TransactionBody body;
 
     public Transaction() {
     }
@@ -24,11 +18,11 @@ public class Transaction implements Serializable {
      * Transaction Constructor
      *
      * @param header transaction header
-     * @param data   transaction data
+     * @param body   transaction body
      */
-    public Transaction(TransactionHeader header, String data) {
-        this.data = data;
+    public Transaction(TransactionHeader header, TransactionBody body) {
         this.header = header;
+        this.body = body;
     }
 
     /**
@@ -36,13 +30,13 @@ public class Transaction implements Serializable {
      *
      * @param data   transaction data(Json)
      */
-    public Transaction(Wallet wallet, JsonObject data) {
+    public Transaction(Wallet wallet, TransactionBody body) {
 
         // 1. make data
-        this.data = data.toString();
+        this.body = body;
 
         // 2. make header
-        byte[] bin = SerializeUtils.serialize(data);
+        byte[] bin = null; // for test ; SerializeUtils.serialize(data);
         this.header = new TransactionHeader(wallet, HashUtil.sha3(bin), bin.length);
     }
 
@@ -71,8 +65,9 @@ public class Transaction implements Serializable {
      *
      * @return tx data
      */
-    public String getData() {
-        return this.data;
+    public String getBody() {
+//        return this.body;
+        return null;
     }
 
     /**
@@ -88,7 +83,7 @@ public class Transaction implements Serializable {
      * print transaction
      */
     public String toString() {
-        return header.toString() + "transactionData=" + data;
+        return header.toString() + "transactionBody=" + body;
     }
 
     /**
@@ -99,7 +94,7 @@ public class Transaction implements Serializable {
         //todo: change to serialize method
 
         JsonObject jsonObject = this.getHeader().toJsonObject();
-        jsonObject.add("data", new Gson().fromJson(this.data, JsonObject.class));
+//        jsonObject.add("data", new Gson().fromJson(this.body, JsonObject.class)); // for test
 
         return jsonObject;
     }
