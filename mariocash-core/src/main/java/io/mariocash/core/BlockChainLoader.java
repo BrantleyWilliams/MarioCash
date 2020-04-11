@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.exception.FailedOperationException;
@@ -49,18 +50,20 @@ public class BlockChainLoader {
     }
 
     public BlockHusk getGenesis() throws IOException {
-        BranchInfo branchInfo = loadBranchInfo();
-        //TODO 브랜치 정보 파일 컨버팅
-        return convertBlock(branchInfo);
+        return convertJsonToBlock();
     }
 
     public BranchInfo loadBranchInfo() throws IOException {
         return mapper.readValue(branchInfoStream, BranchInfo.class);
     }
 
-    private BlockHusk convertBlock(BranchInfo branchInfo) {
-        ByteString prevBlockHash = ByteString.copyFrom(Hex.decode(branchInfo.prevBlockHash
-                .getBytes()));
+    private BlockHusk convertJsonToBlock() throws IOException {
+        BranchInfo branchInfo = loadBranchInfo();
+        //TODO 브랜치 정보 파일 컨버팅
+        return convertBlock(branchInfo);
+    }
+
+    private BlockHusk convertBlock(BranchInfo branchInfo) throws JsonProcessingException {
         return new BlockHusk(Proto.Block.newBuilder()
                 .setHeader(Proto.Block.Header.newBuilder()
                         .setRawData(Proto.Block.Header.Raw.newBuilder()
@@ -68,7 +71,8 @@ public class BlockChainLoader {
                                 .setVersion(ByteString.copyFrom(Hex.decode(branchInfo.version)))
                                 .setIndex(0)
                                 .setTimestamp(Long.parseLong(branchInfo.timestamp))
-                                .setPrevBlockHash(prevBlockHash)
+                                .setPrevBlockHash(ByteString.copyFrom(branchInfo.prevBlockHash
+                                        .getBytes()))
                                 .setMerkleRoot(ByteString.copyFrom(branchInfo.merkleRoot
                                         .getBytes()))
                                 .setDataSize(Long.parseLong(branchInfo.dataSize))
@@ -81,7 +85,8 @@ public class BlockChainLoader {
                 .build());
     }
 
-    private List<Proto.Transaction> convertTransaction(List<BranchData> branchDataList) {
+    private List<Proto.Transaction> convertTransaction(List<BranchData> branchDataList) throws
+            JsonProcessingException {
         List<Proto.Transaction> list = new ArrayList<>();
         for (BranchData branchData : branchDataList) {
             ByteString byteString = ByteString.copyFrom(Hex.decode(branchData.dataHash));
@@ -98,7 +103,7 @@ public class BlockChainLoader {
                             .setSignature(ByteString.copyFrom(Hex.decode(branchData.signature)))
                             .build()
                     )
-                    .setBody(branchData.data).build()
+                    .setBody(mapper.writeValueAsString(branchData.data)).build()
             );
         }
         return list;

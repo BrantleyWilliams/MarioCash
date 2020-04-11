@@ -37,10 +37,11 @@ public class BlockChain {
 
     private void loadBlockChain() {
         try {
-            this.prevBlock = blockStore.get(genesisBlock.getHash());
+            blockStore.get(genesisBlock.getHash());
         } catch (NonExistObjectException e) {
-            addBlock(genesisBlock);
+            blockStore.put(genesisBlock.getHash(), genesisBlock);
         }
+        this.prevBlock = this.genesisBlock;
     }
 
     public ChainId getChainId() {
