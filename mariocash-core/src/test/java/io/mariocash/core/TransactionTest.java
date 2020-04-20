@@ -1,208 +1,163 @@
 package dev.zhihexireng.core;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import dev.zhihexireng.util.TimeUtils;
+import dev.zhihexireng.TestUtils;
+import dev.zhihexireng.core.exception.InvalidSignatureException;
+import dev.zhihexireng.crypto.ECKey;
+import dev.zhihexireng.proto.Proto;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.IOException;
+import java.security.SignatureException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 public class TransactionTest {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionTest.class);
+    private static Wallet wallet;
 
-    TransactionBody txBody;
-    TransactionHeader txHeader;
-    Wallet wallet;
-    TransactionSignature txSig;
-    Transaction tx;
+    private TransactionHusk tx;
+
+    static {
+        try {
+            wallet = new Wallet();
+        } catch (Exception e) {
+            throw new InvalidSignatureException(e);
+        }
+    }
 
     @Before
-    public void init() {
+    public void setUp() {
+        this.tx = TestUtils.createTxHusk();
 
-        try {
-            JsonObject jsonParams1 = new JsonObject();
-            jsonParams1.addProperty("address", "5db10750e8caff27f906b41c71b3471057dd2000");
-            jsonParams1.addProperty("amount", "10000000");
-
-            JsonObject jsonObject1 = new JsonObject();
-            jsonObject1.addProperty("method", "transfer");
-            jsonObject1.add("params", jsonParams1);
-
-            JsonObject jsonParams2 = new JsonObject();
-            jsonParams2.addProperty("address", "5db10750e8caff27f906b41c71b3471057dd2001");
-            jsonParams2.addProperty("amount", "5000000");
-
-            JsonObject jsonObject2 = new JsonObject();
-            jsonObject2.addProperty("method", "transfer");
-            jsonObject2.add("params", jsonParams2);
-
-            JsonArray jsonArray = new JsonArray();
-            jsonArray.add(jsonObject1);
-            jsonArray.add(jsonObject2);
-
-            txBody = new TransactionBody(jsonArray);
-
-            byte[] chain = new byte[20];
-            byte[] version = new byte[8];
-            byte[] type = new byte[8];
-            long timestamp = TimeUtils.time();
-
-            txHeader = new TransactionHeader(chain, version, type, timestamp, txBody);
-
-            wallet = new Wallet();
-            log.debug("wallet.pubKey=" + Hex.toHexString(wallet.getPubicKey()));
-
-            txHeader.setTimestamp(TimeUtils.time());
-
-            txSig = new TransactionSignature(wallet, txHeader.getHashForSignning());
-        } catch (Exception e) {
-            log.debug(e.getMessage());
-            assert false;
-        }
+        log.debug("Before Transaction: " + tx.toString());
+        log.debug("Before Transaction address: " + tx.getAddress().toString() + "\n");
     }
 
     @Test
-    public void testTransactionConstructor() {
-
-        try {
-            Transaction tx0 = new Transaction(txHeader, txSig, txBody);
-
-            log.debug("tx0=" + tx0.toJsonObject());
-            log.debug("tx0=" + tx0.toString());
-            log.debug("tx0=" + tx0.toStringPretty());
-
-            txHeader.setTimestamp(TimeUtils.time());
-            Transaction tx1 = new Transaction(txHeader, wallet, txBody);
-            log.debug("tx1=" + tx1.toJsonObject());
-            log.debug("tx1=" + tx1.toString());
-            log.debug("tx1=" + tx1.toStringPretty());
-
-            Transaction tx2
-                    = new Transaction(txHeader.clone(), tx1.getSignature().clone(), txBody.clone());
-            log.debug("tx2=" + tx2.toJsonObject());
-            log.debug("tx2=" + tx2.toString());
-            log.debug("tx2=" + tx2.toStringPretty());
-
-            assertEquals(tx1.toJsonObject(), tx2.toJsonObject());
-
-            tx1.getHeader().setTimestamp(TimeUtils.time());
-
-            assertNotEquals(tx1.toJsonObject().toString(), tx2.toJsonObject().toString());
-            log.debug("tx1=" + tx1.toJsonObject());
-            log.debug("tx2=" + tx2.toJsonObject());
-
-        } catch (Exception e) {
-            log.debug(e.getMessage());
-            assert false;
-        }
+    public void transactionTest() {
+        assert tx.getHash() != null;
     }
 
     @Test
-    public void testTransactionClone() {
-        try {
-            Transaction tx1 = new Transaction(txHeader, txSig, txBody);
-            log.debug("tx1=" + tx1.toJsonObject());
-
-            Transaction tx2 = tx1.clone();
-            log.debug("tx2=" + tx2.toJsonObject());
-
-            assertEquals(tx1.toJsonObject(), tx2.toJsonObject());
-
-            tx2.getHeader().setTimestamp(TimeUtils.time());
-            log.debug("tx1=" + tx1.toJsonObject());
-            log.debug("tx2=" + tx2.toJsonObject());
-
-            assertNotEquals(tx1.toJsonObject().toString(), tx2.toJsonObject().toString());
-
-        } catch (Exception e) {
-            log.debug(e.getMessage());
-            assert false;
-        }
-
+    public void deserializeTransactionFromProtoTest() {
+        Proto.Transaction protoTx = tx.getInstance();
+        TransactionHusk deserializeTx = new TransactionHusk(protoTx);
+        assert tx.getHash().equals(deserializeTx.getHash());
     }
 
     @Test
-    public void testTransactionField() {
-        try {
-            Transaction tx1 = new Transaction(txHeader, txSig, txBody);
-            log.debug("tx1=" + tx1.toJsonObject());
+    public void testMakeTransaction() {
+        TransactionHusk tx2 = TestUtils.createTxHusk();
 
-            Transaction tx2 = tx1.clone();
-            log.debug("tx2=" + tx2.toJsonObject());
+        log.debug("Transaction 2: " + tx2.toString());
+        log.debug("Transaction 2 address: " + tx2.getAddress().toString());
 
-            assertEquals(txHeader.toJsonObject().toString(),
-                    tx2.getHeader().toJsonObject().toString());
-            assertArrayEquals(txSig.getSignature(), txSig.getSignature());
-            assertEquals(txBody.getHexString(), tx2.getBody().getHexString());
-
-            tx2.getHeader().setTimestamp(TimeUtils.time());
-            log.debug("tx1=" + tx1.toJsonObject());
-            log.debug("tx2=" + tx2.toJsonObject());
-
-            assertNotEquals(tx1.toJsonObject().toString(), tx2.toJsonObject().toString());
-
-        } catch (Exception e) {
-            log.debug(e.getMessage());
-            assert false;
-        }
-
+        assertEquals(tx.getAddress().toString(), tx2.getAddress().toString());
     }
 
     @Test
-    public void testTransactionGetHash() {
-        try {
-            Transaction tx1 = new Transaction(txHeader, txSig, txBody);
-            log.debug("tx1=" + tx1.toJsonObject());
+    public void testGetAddressWithWallet() {
+        TransactionHusk tx1 = TestUtils.createTxHusk();
+        TransactionHusk tx2 = TestUtils.createTxHusk();
 
-            Transaction tx2 = tx1.clone();
-            log.debug("tx2=" + tx2.toJsonObject());
+        log.debug("Test Transaction1: " + tx1.toString());
+        log.debug("Test Transaction1 Address: " + tx1.getAddress());
 
-            assertEquals(tx1.getHashString(), tx2.getHashString());
+        log.debug("Test Transaction2: " + tx2.toString());
+        log.debug("Test Transaction2 Address: " + tx2.getAddress());
 
-            tx2.getHeader().setTimestamp(TimeUtils.time());
-            log.debug("tx1 hash=" + tx1.getHashString());
-            log.debug("tx2 hash=" + tx2.getHashString());
+        log.debug("Test Transaction1: " + tx1.toString());
+        log.debug("Test Transaction1 Address: " + tx1.getAddress());
 
-            assertNotEquals(tx1.getHashString(), tx2.getHashString());
+        log.debug("Test Transaction2: " + tx2.toString());
+        log.debug("Test Transaction2 Address: " + tx2.getAddress());
 
-        } catch (Exception e) {
-            log.debug(e.getMessage());
-            assert false;
-        }
-
+        assertArrayEquals(wallet.getAddress(), tx1.getAddress().getBytes());
+        assertEquals(tx1.getAddress(), tx2.getAddress());
+        assertArrayEquals(wallet.getAddress(), tx2.getAddress().getBytes());
     }
 
     @Test
-    public void testTransactionKey() {
-        try {
-            Transaction tx1 = new Transaction(txHeader, txSig, txBody);
-            log.debug("tx1 pubKey=" + tx1.getPubKeyHexString());
+    public void testGetAddressWithWalletAccount() throws IOException, InvalidCipherTextException {
+        Account account = new Account();
+        log.debug("Account: " + account.toString());
+        log.debug("Account.address: " + Hex.toHexString(account.getAddress()));
 
-            Transaction tx2 = tx1.clone();
-            log.debug("tx2 pubKey=" + tx2.getPubKeyHexString());
+        Wallet wallet = new Wallet(account.getKey(), "tmp/path", "nodePri.key", "Aa1234567890!");
+        log.debug("Wallet: " + wallet.toString());
+        log.debug("Wallet.address: " + Hex.toHexString(wallet.getAddress()));
 
-            assertEquals(tx1.getPubKeyHexString(), tx2.getPubKeyHexString());
-            assertArrayEquals(tx1.getPubKey(), tx2.getPubKey());
-            assertArrayEquals(tx1.getPubKey(), wallet.getPubicKey());
+        TransactionHusk tx1 = TestUtils.createTxHusk(wallet);
+        TransactionHusk tx2 = TestUtils.createTxHusk(wallet);
 
-            log.debug("tx1 address=" + tx1.getAddressToString());
-            log.debug("tx2 address=" + tx2.getAddressToString());
-            log.debug("wallet address=" + wallet.getHexAddress());
-            assertArrayEquals(tx1.getAddress(), tx2.getAddress());
-            assertArrayEquals(tx1.getAddress(), wallet.getAddress());
+        log.debug("Test Transaction1: " + tx1.toString());
+        log.debug("Test Transaction1 Address: " + tx1.getAddress());
 
-        } catch (Exception e) {
-            log.debug(e.getMessage());
+        log.debug("Test Transaction2: " + tx2.toString());
+        log.debug("Test Transaction2 Address: " + tx2.getAddress());
+
+        log.debug("Test Transaction1: " + tx1.toString());
+        log.debug("Test Transaction1 Address: " + tx1.getAddress());
+
+        log.debug("Test Transaction2: " + tx2.toString());
+        log.debug("Test Transaction2 Address: " + tx2.getAddress());
+
+        assertArrayEquals(wallet.getAddress(), account.getAddress());
+        assertEquals(tx1.getAddress(), tx2.getAddress());
+        assertArrayEquals(account.getAddress(), tx1.getAddress().getBytes());
+    }
+
+    @Test
+    public void testGetAddressWithSig()
+            throws IOException, InvalidCipherTextException, SignatureException {
+        Account account = new Account();
+        log.debug("Account: " + account.toString());
+        log.debug("Account.address: " + Hex.toHexString(account.getAddress()));
+        log.debug("Account.pubKey: " + Hex.toHexString(account.getKey().getPubKey()));
+
+        Wallet wallet = new Wallet(account.getKey(), "tmp/path", "nodePri.key", "Aa1234567890!");
+        log.debug("Wallet: " + wallet.toString());
+        log.debug("Wallet.address: " + Hex.toHexString(wallet.getAddress()));
+        log.debug("Wallet.pubKey: " + Hex.toHexString(wallet.getPubicKey()));
+
+        TransactionHusk tx1 = TestUtils.createTxHusk(wallet);
+        log.debug("Test Transaction1: " + tx1.toString());
+        log.debug("Test Transaction1 Address: " + tx1.getAddress());
+
+        if (tx1.verify()) {
+            log.debug("verify success");
+        } else {
             assert false;
         }
 
+        assertArrayEquals(wallet.getAddress(), account.getAddress());
+        assertArrayEquals(wallet.getAddress(), tx1.getAddress().getBytes());
+
+        byte[] hashedRawData = tx1.getDataHashForSigning();
+        log.debug("hashedRawData: " + Hex.toHexString(hashedRawData));
+
+        byte[] signatureBin = tx1.getInstance().getHeader().getSignature().toByteArray();
+        log.debug("signatureBin: " + Hex.toHexString(signatureBin));
+
+        ECKey.ECDSASignature ecdsaSignature = new ECKey.ECDSASignature(signatureBin);
+        ECKey key = ECKey.signatureToKey(hashedRawData, ecdsaSignature);
+
+        byte [] address = key.getAddress();
+        byte [] pubKey = key.getPubKey();
+
+        log.debug("address: " + Hex.toHexString(address));
+        log.debug("pubKey: " + Hex.toHexString(pubKey));
+
+        assertArrayEquals(account.getAddress(), address);
+        assertArrayEquals(account.getKey().getPubKey(), pubKey);
     }
 
 
