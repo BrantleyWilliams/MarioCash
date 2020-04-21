@@ -31,6 +31,7 @@ import dev.zhihexireng.core.net.GrpcClientChannel;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.node.config.NodeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,8 @@ public class NodeManagerImpl implements NodeManager {
 
     private BlockChain blockChain;
 
+    private TransactionStore transactionStore;
+
     private NodeProperties nodeProperties;
 
     private Wallet wallet;
@@ -68,6 +71,11 @@ public class NodeManagerImpl implements NodeManager {
     @Autowired
     public void setNodeProperties(NodeProperties nodeProperties) {
         this.nodeProperties = nodeProperties;
+    }
+
+    @Autowired
+    public void setTransactionStore(TransactionStore transactionStore) {
+        this.transactionStore = transactionStore;
     }
 
     @Autowired
@@ -134,12 +142,12 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public TransactionHusk getTxByHash(Sha3Hash hash) {
-        return blockChain.getTransactionStore().get(hash);
+        return transactionStore.get(hash);
     }
 
     @Override
     public TransactionHusk addTransaction(TransactionHusk tx) {
-        if (blockChain.getTransactionStore().contains(tx.getHash())) {
+        if (transactionStore.contains(tx.getHash())) {
             throw new FailedOperationException("Duplicated " + tx.getHash().toString()
                     + " Transaction");
         } else if (!tx.verify()) {
@@ -147,7 +155,7 @@ public class NodeManagerImpl implements NodeManager {
         }
 
         try {
-            blockChain.getTransactionStore().put(tx.getHash(), tx);
+            transactionStore.put(tx.getHash(), tx);
             messageSender.newTransaction(tx);
             return tx;
         } catch (Exception e) {
@@ -157,7 +165,7 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public List<TransactionHusk> getTransactionList() {
-        return new ArrayList<>(blockChain.getTransactionStore().getUnconfirmedTxs());
+        return new ArrayList<>(transactionStore.getUnconfirmedTxs());
     }
 
     @Override
@@ -168,8 +176,7 @@ public class NodeManagerImpl implements NodeManager {
     @Override
     public BlockHusk generateBlock() {
         BlockHusk block = BlockHusk.build(wallet,
-                new ArrayList<>(blockChain.getTransactionStore().getUnconfirmedTxs()),
-                blockChain.getPrevBlock());
+                new ArrayList<>(transactionStore.getUnconfirmedTxs()), blockChain.getPrevBlock());
         blockChain.addBlock(block);
         executeAllTx(new TreeSet<>(block.getBody()));
         messageSender.newBlock(block);
@@ -296,7 +303,7 @@ public class NodeManagerImpl implements NodeManager {
             }
             List<TransactionHusk> txList = messageSender.syncTransaction();
             for (TransactionHusk tx : txList) {
-                blockChain.getTransactionStore().put(tx.getHash(), tx);
+                transactionStore.put(tx.getHash(), tx);
             }
         } catch (Exception e) {
             log.warn(e.getMessage(), e);
@@ -312,7 +319,7 @@ public class NodeManagerImpl implements NodeManager {
         for (TransactionHusk tx : block.getBody()) {
             keys.add(tx.getHash());
         }
-        blockChain.getTransactionStore().batch(keys);
+        this.transactionStore.batch(keys);
     }
 
     private boolean isNumeric(String str) {

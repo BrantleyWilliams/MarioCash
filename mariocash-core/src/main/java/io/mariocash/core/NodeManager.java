@@ -17,7 +17,6 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.event.PeerEventListener;
 
 import java.util.List;
