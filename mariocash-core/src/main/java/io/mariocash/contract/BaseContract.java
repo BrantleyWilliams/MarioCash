@@ -6,12 +6,9 @@ import com.google.gson.JsonParser;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.store.StateStore;
-import dev.zhihexireng.core.store.Store;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public abstract class BaseContract<V> implements Contract<V> {
     protected static final Logger log = LoggerFactory.getLogger(BaseContract.class);
