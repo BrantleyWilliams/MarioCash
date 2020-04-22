@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.TransactionReceipt;
 
-public class CoinContract extends BaseContract<Long> {
+public class CoinContract extends ContractAdaptor {
 
     /**
      * Returns the balance of the account (query)
