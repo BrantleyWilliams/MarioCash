@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.NodeManager;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.exception.NonExistObjectException;
@@ -17,8 +18,8 @@ import org.spongycastle.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @AutoJsonRpcServiceImpl
@@ -123,13 +124,6 @@ public class TransactionApiImpl implements TransactionApi {
         return addedTx.getHash().toString();
     }
 
-    @Override
-    public byte[] sendRawTransaction(byte[] bytes) {
-        TransactionHusk tx = convert(bytes);
-        TransactionHusk addedTx = nodeManager.addTransaction(tx);
-        return addedTx.getHash().getBytes();
-    }
-
     /* filter */
     @Override
     public int newPendingTransactionFilter() {
@@ -177,8 +171,8 @@ public class TransactionApiImpl implements TransactionApi {
     }
 
     @Override
-    public Map<String, TransactionReceipt> getAllTransactionReceipt() {
-        return txReceiptStore.getTxReceiptStore();
+    public HashMap<String, TransactionReceipt> getAllTransactionReceipt() {
+        return txReceiptStore.getTxReciptStore();
     }
 
     @Override

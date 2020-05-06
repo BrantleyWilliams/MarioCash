@@ -1,5 +1,6 @@
 package dev.zhihexireng.core;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import dev.zhihexireng.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
@@ -11,6 +12,10 @@ public class TransactionBody implements Cloneable {
     public TransactionBody(JsonArray body) {
 
         this.body = body;
+    }
+
+    public TransactionBody(String body) {
+        this.body = new Gson().fromJson(body, JsonArray.class);
     }
 
     public JsonArray getBody() {
