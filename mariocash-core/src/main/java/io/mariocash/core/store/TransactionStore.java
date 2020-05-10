@@ -95,7 +95,7 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
                 txSet.add(new TransactionHusk(data));
             }
             return txSet;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new NotValidateException(e);
         }
     }
@@ -116,7 +116,7 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
         TransactionHusk item = huskTxPool.get(key);
         try {
             return item != null ? item : new TransactionHusk(db.get(key.getBytes()));
-        } catch (Exception e) {
+        } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException(e);
         }
     }

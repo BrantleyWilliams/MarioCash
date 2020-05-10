@@ -26,8 +26,6 @@ import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
-import dev.zhihexireng.core.store.TransactionStore;
-import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.FileUtil;
@@ -69,13 +67,11 @@ public class NodeManagerTest {
         nodeManager.setMessageSender(messageSender);
         nodeManager.setWallet(new Wallet());
 
-        TransactionStore transactionStore = new TransactionStore(new HashMapDbSource());
-        nodeManager.setTransactionStore(transactionStore);
         Runtime runtime = new Runtime(new TransactionReceiptStore());
         nodeManager.setRuntime(runtime);
         nodeManager.setBlockChain(new BlockChain(
                 new File(getClass().getClassLoader()
-                        .getResource("branch-sample.json").getFile())));
+                        .getResource("branch-yeed.json").getFile())));
         nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));
         nodeManager.init();
         assert nodeManager.getNodeUri() != null;
@@ -87,7 +83,7 @@ public class NodeManagerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         //TODO 테스트 설정 파일에서 DB 부분 제거
         FileUtil.recursiveDelete(Paths.get(".mariocash/db"));
     }
