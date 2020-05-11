@@ -18,6 +18,7 @@ package dev.zhihexireng.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.zhihexireng.common.Sha3Hash;
+import dev.zhihexireng.contract.GenesisFrontierParam;
 
 import java.util.List;
 
@@ -25,12 +26,16 @@ import java.util.List;
 public class BranchInfo {
     public String type;
     public String version;
+    public String index;
     public String timestamp;
     public String prevBlockHash;
     public String merkleRoot;
     public String dataSize;
     public String signature;
     public List<BranchData> data;
+
+    public BranchInfo() {
+    }
 
     public ChainId getChainId() {
         return new ChainId(new Sha3Hash(toString().getBytes()));
@@ -50,6 +55,7 @@ public class BranchInfo {
                 + '}';
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BranchData {
         public String type;
         public String version;
@@ -57,6 +63,6 @@ public class BranchInfo {
         public String timestamp;
         public String dataSize;
         public String signature;
-        public String data;
+        public GenesisFrontierParam data;
     }
 }
