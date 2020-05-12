@@ -3,6 +3,10 @@ version: '3'
 services:
   node1:
     image: zhihexireng/mariocash-node
+    build:
+      context: ./
+      args:
+        JAR_FILE: mariocash-node.jar
     container_name: mariocash-node1
     ports:
     - 8080:8080
