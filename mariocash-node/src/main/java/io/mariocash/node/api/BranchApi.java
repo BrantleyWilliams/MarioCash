@@ -10,6 +10,7 @@ import dev.zhihexireng.core.exception.WrongStructuredException;
 import dev.zhihexireng.node.controller.TransactionDto;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonRpcService("/api/branch")
 public interface BranchApi {
@@ -55,6 +56,15 @@ public interface BranchApi {
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
     String viewBranch(String branchId);
+
+    /**
+     * Get all branch id and name
+     * @return list of branch id and name
+     */
+    @JsonRpcErrors({
+            @JsonRpcError(exception = NonExistObjectException.class,
+                    code = NonExistObjectException.code)})
+    Map<String, String> getAllBranchName();
 
     /**
      * Get the current contract address of the branch by branchId
