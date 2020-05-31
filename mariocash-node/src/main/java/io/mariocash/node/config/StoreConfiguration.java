@@ -16,11 +16,11 @@
 
 package dev.zhihexireng.node.config;
 
+import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockChainLoader;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
