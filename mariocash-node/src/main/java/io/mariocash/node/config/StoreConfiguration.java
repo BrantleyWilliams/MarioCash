@@ -20,7 +20,10 @@ import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockChainLoader;
 import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.store.BlockStore;
+import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
@@ -40,6 +43,23 @@ public class StoreConfiguration {
 
     @Value("classpath:/branch-yeed.json")
     Resource resource;
+
+    @Bean
+    BranchGroup branchGroup(Runtime runtime, BlockChain blockChain) {
+        BranchGroup branchGroup = new BranchGroup(runtime);
+        branchGroup.addBranch(blockChain.getBranchId(), blockChain);
+        return branchGroup;
+    }
+
+    @Bean
+    TransactionReceiptStore transactionReceiptStore() {
+        return new TransactionReceiptStore();
+    }
+
+    @Bean
+    Runtime runTime(TransactionReceiptStore transactionReceiptStore) {
+        return new Runtime(transactionReceiptStore);
+    }
 
     @Bean
     BlockChain blockChain(@Qualifier("genesis")BlockHusk genesisBlock, BlockStore blockStore,
