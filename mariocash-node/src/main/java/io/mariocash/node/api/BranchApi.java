@@ -7,34 +7,31 @@ import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcService;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.WrongStructuredException;
-import dev.zhihexireng.node.controller.TransactionDto;
 
 import java.util.List;
-import java.util.Map;
 
 @JsonRpcService("/api/branch")
 public interface BranchApi {
     /**
      * Create a new branch
-     *
-     * @param tx branch creation transaction
+     * @param branch branch.json
      * @return branch id
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = WrongStructuredException.class,
                     code = WrongStructuredException.code)})
-    String createBranch(TransactionDto tx);
+    String createBranch(JsonObject branch);
 
     /**
      * Update a branch
-     *
-     * @param tx branch update transaction
+     * @param branchId branch id to update
+     * @param branch branch.json
      * @return branch id
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = WrongStructuredException.class,
                     code = WrongStructuredException.code)})
-    String updateBranch(TransactionDto tx);
+    String updateBranch(String branchId, JsonObject branch);
 
     /**
      * Search for branches by key (attribute)
@@ -56,15 +53,6 @@ public interface BranchApi {
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
     String viewBranch(String branchId);
-
-    /**
-     * Get all branch id and name
-     * @return list of branch id and name
-     */
-    @JsonRpcErrors({
-            @JsonRpcError(exception = NonExistObjectException.class,
-                    code = NonExistObjectException.code)})
-    Map<String, String> getAllBranchName();
 
     /**
      * Get the current contract address of the branch by branchId
