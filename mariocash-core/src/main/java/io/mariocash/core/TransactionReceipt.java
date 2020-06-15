@@ -20,19 +20,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TransactionReceipt {
-    private String transactionHash =
+    public String transactionHash =
             "0xb903239f8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238";
-    private int transactionIndex = 1;
-    private String blockHash =
+    public int transactionIndex = 1;
+    public String blockHash =
             "0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b";
-    private int yeedUsed = 30000;
-    private String branchAddress =
+    public int yeedUsed = 30000;
+    public String branchAddress =
             "0xb60e8dd61c5d32be8058bb8eb970870f07233155";
-    private Map<String, Object> txLog = new HashMap<>();
-    private int status = 1;
+    public Map<String,String> txLog = new HashMap<>();
+    public int status = 1;
 
-    public void put(String key, Object value) {
-        txLog.put(key, value);
+    public TransactionReceipt() {
+
     }
 
     public void setStatus(int status) {
@@ -41,10 +41,6 @@ public class TransactionReceipt {
 
     public void setTransactionHash(String transactionHash) {
         this.transactionHash = transactionHash;
-    }
-
-    public String getTransactionHash() {
-        return transactionHash;
     }
 
     @Override

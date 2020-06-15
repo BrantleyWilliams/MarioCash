@@ -2,7 +2,7 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.contract.Contract;
-import dev.zhihexireng.core.store.StateStore;
+import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 
 public class Runtime {

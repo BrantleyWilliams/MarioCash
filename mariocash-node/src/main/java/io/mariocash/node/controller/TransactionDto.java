@@ -16,22 +16,34 @@
 
 package dev.zhihexireng.node.controller;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 public class TransactionDto {
 
-    private byte[] type;
+    private byte[] chain;
     private byte[] version;
-    private byte[] dataHash;
-    private long dataSize;
+    private byte[] type;
     private long timestamp;
+    private byte[] bodyHash;
+    private long bodyLength;
     private byte[] signature;
+    private String body;
     private String author;
-    private String data;
     private String txHash;
+
+    public String getChainHex() {
+        return Hex.toHexString(chain);
+    }
+
+    public void setChain(byte[] chain) {
+        this.chain = chain;
+    }
 
     public String getTypeHex() {
         return Hex.toHexString(type);
@@ -57,24 +69,24 @@ public class TransactionDto {
         this.version = Hex.decode(version);
     }
 
-    public String getDataHashHex() {
-        return Hex.toHexString(dataHash);
+    public String getBodyHashHex() {
+        return Hex.toHexString(bodyHash);
     }
 
-    public void setDataHash(byte[] dataHash) {
-        this.dataHash = dataHash;
+    public void setBodyHash(byte[] bodyHash) {
+        this.bodyHash = bodyHash;
     }
 
-    public void setDataHashHex(String dataHash) {
-        this.dataHash = Hex.decode(dataHash);
+    public void setBodyHashHex(String bodyHash) {
+        this.bodyHash = Hex.decode(bodyHash);
     }
 
-    public long getDataSize() {
-        return dataSize;
+    public long getBodyLength() {
+        return bodyLength;
     }
 
-    public void setDataSize(long dataSize) {
-        this.dataSize = dataSize;
+    public void setBodyLength(long bodyLength) {
+        this.bodyLength = bodyLength;
     }
 
     public long getTimestamp() {
@@ -97,12 +109,12 @@ public class TransactionDto {
         this.signature = Hex.decode(signature);
     }
 
-    public String getData() {
-        return data;
+    public String getBody() {
+        return body;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setBody(String body) {
+        this.body = body;
     }
 
     public String getTxHash() {
@@ -123,33 +135,35 @@ public class TransactionDto {
 
     public static TransactionHusk of(TransactionDto dto) {
         Proto.Transaction.Header header = Proto.Transaction.Header.newBuilder()
-                .setRawData(Proto.Transaction.Header.Raw.newBuilder()
-                        .setType(ByteString.copyFrom(Hex.decode(dto.getTypeHex())))
-                        .setVersion(ByteString.copyFrom(Hex.decode(dto.getTypeHex())))
-                        .setDataHash(ByteString.copyFrom(Hex.decode(dto.getDataHashHex())))
-                        .setDataSize(dto.getDataSize())
-                        .setTimestamp(dto.getTimestamp())
-                        .build())
-                .setSignature(ByteString.copyFrom(Hex.decode(dto.getSignatureHex())))
+                .setChain(ByteString.copyFrom(Hex.decode(dto.getChainHex())))
+                .setVersion(ByteString.copyFrom(Hex.decode(dto.getTypeHex())))
+                .setType(ByteString.copyFrom(Hex.decode(dto.getTypeHex())))
+                .setTimestamp(ByteString.copyFrom(ByteUtil.longToBytes(dto.getTimestamp())))
+                .setBodyHash(ByteString.copyFrom(Hex.decode(dto.getBodyHashHex())))
+                .setBodyLength(ByteString.copyFrom(ByteUtil.longToBytes(dto.getBodyLength())))
                 .build();
+
         Proto.Transaction tx = Proto.Transaction.newBuilder()
                 .setHeader(header)
-                .setBody(dto.getData())
+                .setSignature(ByteString.copyFrom(Hex.decode(dto.getSignatureHex())))
+                .setBody(ByteString.copyFromUtf8(dto.getBody()))
                 .build();
         return new TransactionHusk(tx);
     }
 
     public static TransactionDto createBy(TransactionHusk tx) {
         TransactionDto transactionDto = new TransactionDto();
-        Proto.Transaction.Header.Raw raw = tx.getInstance().getHeader().getRawData();
-        transactionDto.setType(raw.getType().toByteArray());
-        transactionDto.setVersion(raw.getVersion().toByteArray());
-        transactionDto.setDataHash(raw.getDataHash().toByteArray());
-        transactionDto.setDataSize(raw.getDataSize());
-        transactionDto.setTimestamp(raw.getTimestamp());
-        transactionDto.setSignature(tx.getInstance().getHeader().getSignature().toByteArray());
+        Proto.Transaction.Header header = tx.getInstance().getHeader();
+
+        transactionDto.setChain(header.getChain().toByteArray());
+        transactionDto.setVersion(header.getVersion().toByteArray());
+        transactionDto.setType(header.getType().toByteArray());
+        transactionDto.setTimestamp(ByteUtil.byteArrayToLong(header.getTimestamp().toByteArray()));
+        transactionDto.setBodyHash(header.getBodyHash().toByteArray());
+        transactionDto.setBodyLength(ByteUtil.byteArrayToLong(header.getBodyLength().toByteArray()));
+        transactionDto.setSignature(tx.getInstance().getSignature().toByteArray());
+        transactionDto.setBody(tx.getBody());
         transactionDto.setAuthor(tx.getAddress().toString());
-        transactionDto.setData(tx.getBody());
         transactionDto.setTxHash(tx.getHash().toString());
         return transactionDto;
     }

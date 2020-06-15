@@ -5,13 +5,10 @@ import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.node.controller.BlockDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @AutoJsonRpcServiceImpl
@@ -63,11 +60,5 @@ public class BlockApiImpl implements BlockApi {
         } catch (Exception exception) {
             throw new InternalErrorException();
         }
-    }
-
-    @Override
-    public BlockHusk getLastBlock() {
-        return nodeManager.getBlocks().stream().sorted(Comparator.reverseOrder())
-                .collect(Collectors.toList()).get(0);
     }
 }

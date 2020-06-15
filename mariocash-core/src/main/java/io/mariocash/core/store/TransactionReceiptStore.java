@@ -2,22 +2,21 @@ package dev.zhihexireng.core.store;
 
 import dev.zhihexireng.core.TransactionReceipt;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 public class TransactionReceiptStore {
 
-    private final Map<String, TransactionReceipt> txReceiptStore = new ConcurrentHashMap<>();
+    private final HashMap<String, TransactionReceipt> txReciptStore = new HashMap<>();
 
-    public void put(String txHash, TransactionReceipt txReceipt) {
-        txReceiptStore.put(txHash, txReceipt);
+    public void put(String txHash, TransactionReceipt txRecipt) {
+        txReciptStore.put(txHash, txRecipt);
     }
 
     public TransactionReceipt get(String txHash) {
-        return txReceiptStore.get(txHash);
+        return txReciptStore.get(txHash);
     }
 
-    public Map<String, TransactionReceipt> getTxReceiptStore() {
-        return txReceiptStore;
+    public HashMap<String, TransactionReceipt> getTxReciptStore() {
+        return txReciptStore;
     }
 }

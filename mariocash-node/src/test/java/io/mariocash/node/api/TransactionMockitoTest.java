@@ -23,7 +23,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
@@ -117,13 +116,13 @@ public class TransactionMockitoTest {
     public void getTransactionReceiptTest() {
         when(txReceiptStoreMock.get(hashOfTx)).thenReturn(txRecipt);
         TransactionReceipt res = txApiImpl.getTransactionReceipt(hashOfTx);
-        assertEquals(res.getTransactionHash(), hashOfTx);
+        assertEquals(res.transactionHash, hashOfTx);
     }
 
     @Test
     public void getAllTransactionReceiptTest() {
-        when(txReceiptStoreMock.getTxReceiptStore()).thenReturn(txReceiptStore);
-        Map<String, TransactionReceipt> res = txApiImpl.getAllTransactionReceipt();
+        when(txReceiptStoreMock.getTxReciptStore()).thenReturn(txReceiptStore);
+        HashMap<String, TransactionReceipt> res = txApiImpl.getAllTransactionReceipt();
         assertThat(res.containsKey(hashOfTx)).isTrue();
     }
 
