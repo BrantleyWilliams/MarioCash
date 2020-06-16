@@ -23,7 +23,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
-import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.trie.Trie;
@@ -32,7 +31,6 @@ import dev.zhihexireng.util.TimeUtils;
 
 import java.nio.ByteBuffer;
 import java.security.SignatureException;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,48 +40,33 @@ import java.util.Objects;
 public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> {
     private static final byte[] EMPTY_BYTE = new byte[32];
 
-    private Proto.Block protoBlock;
-    private Block coreBlock;
+    private Proto.Block block;
 
-    public BlockHusk(byte[] bytes) {
-        try {
-            this.protoBlock = Proto.Block.parseFrom(bytes);
-            this.coreBlock = Block.toBlock(this.protoBlock);
-        } catch (Exception e) {
-            throw new NotValidateException();
-        }
+    public BlockHusk(byte[] bytes) throws InvalidProtocolBufferException {
+        this.block = Proto.Block.parseFrom(bytes);
     }
 
     public BlockHusk(Proto.Block block) {
-        this.protoBlock = block;
-        try {
-            this.coreBlock = Block.toBlock(this.protoBlock);
-        } catch (Exception e) {
-            throw new NotValidateException();
-        }
+        this.block = block;
     }
 
     public BlockHusk sign(Wallet wallet) {
-        Proto.Block.Header header = Proto.Block.Header
-                .newBuilder(getHeader())
-                .setTimestamp(ByteString.copyFrom(ByteUtil.longToBytes(TimeUtils.time())))
+        Proto.Block.Header.Raw updatedRawData = Proto.Block.Header.Raw
+                .newBuilder(getHeader().getRawData())
+                .setTimestamp(TimeUtils.time()).build();
+        byte[] signature = wallet.sign(updatedRawData.toByteArray());
+        this.block = Proto.Block.newBuilder(block)
+                .setHeader(
+                        Proto.Block.Header.newBuilder()
+                                .setRawData(updatedRawData)
+                                .setSignature(ByteString.copyFrom(signature))
+                                .build())
                 .build();
-        byte[] signature = wallet.sign(header.toByteArray());
-        this.protoBlock = Proto.Block.newBuilder(this.protoBlock)
-                .setHeader(header)
-                .setSignature(ByteString.copyFrom(signature))
-                .build();
-
-        try {
-            this.coreBlock = Block.toBlock(protoBlock);
-        } catch (Exception e) {
-            throw new NotValidateException();
-        }
         return this;
     }
 
     public Sha3Hash getHash() {
-        return new Sha3Hash(protoBlock.getHeader().toByteArray());
+        return new Sha3Hash(block.getHeader().toByteArray());
     }
 
     public Address getAddress() {
@@ -91,11 +74,11 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
     }
 
     public Sha3Hash getPrevHash() {
-        return Sha3Hash.createByHashed(getHeader().getPrevBlockHash().toByteArray());
+        return Sha3Hash.createByHashed(getHeader().getRawData().getPrevBlockHash().toByteArray());
     }
 
     public long getIndex() {
-        return ByteUtil.byteArrayToLong(this.protoBlock.getHeader().getIndex().toByteArray());
+        return this.block.getHeader().getRawData().getIndex();
     }
 
     public long nextIndex() {
@@ -104,7 +87,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
 
     public List<TransactionHusk> getBody() {
         List<TransactionHusk> result = new ArrayList<>();
-        for (Proto.Transaction tx : protoBlock.getBody().getTransactionsList()) {
+        for (Proto.Transaction tx : block.getBodyList()) {
             result.add(new TransactionHusk(tx));
         }
         return result;
@@ -112,12 +95,12 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
 
     @Override
     public byte[] getData() {
-        return protoBlock.toByteArray();
+        return block.toByteArray();
     }
 
     @Override
     public Proto.Block getInstance() {
-        return this.protoBlock;
+        return this.block;
     }
 
     /**
@@ -127,8 +110,8 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
      */
     private ECKey ecKey() {
         try {
-            byte[] hashedRawData = new Sha3Hash(getHeader().toByteArray()).getBytes();
-            byte[] signatureBin = this.protoBlock.getSignature().toByteArray();
+            byte[] hashedRawData = new Sha3Hash(getHeader().getRawData().toByteArray()).getBytes();
+            byte[] signatureBin = getHeader().getSignature().toByteArray();
             return ECKey.signatureToKey(hashedRawData, signatureBin);
         } catch (SignatureException e) {
             throw new InvalidSignatureException(e);
@@ -149,7 +132,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
 
     @Override
     public int hashCode() {
-        return Objects.hash(protoBlock);
+        return Objects.hash(block);
     }
 
     /**
@@ -157,111 +140,88 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
      * @return block as JsonObject
      */
     public JsonObject toJsonObject() {
-        return this.coreBlock.toJsonObject();
+        //todo: change to serialize method
+
+        JsonObject jsonObject = new JsonObject();
+        Proto.Block.Header.Raw raw = this.block.getHeader().getRawData();
+        jsonObject.addProperty("type",
+                org.spongycastle.util.encoders.Hex.toHexString(raw.getType().toByteArray()));
+        jsonObject.addProperty("version",
+                org.spongycastle.util.encoders.Hex.toHexString(raw.getVersion().toByteArray()));
+        jsonObject.addProperty("prevBlockHash",
+                org.spongycastle.util.encoders.Hex.toHexString(
+                        raw.getPrevBlockHash().toByteArray()));
+        jsonObject.addProperty("merkleRoot",
+                org.spongycastle.util.encoders.Hex.toHexString(raw.getMerkleRoot().toByteArray()));
+        jsonObject.addProperty("timestamp",
+                org.spongycastle.util.encoders.Hex.toHexString(
+                    ByteUtil.longToBytes(raw.getTimestamp())));
+        jsonObject.addProperty("dataSize",
+                org.spongycastle.util.encoders.Hex.toHexString(
+                        ByteUtil.longToBytes(raw.getDataSize())));
+        jsonObject.addProperty("signature",
+                org.spongycastle.util.encoders.Hex.toHexString(
+                        this.block.getHeader().getSignature().toByteArray()));
+
+        JsonArray jsonArray = new JsonArray();
+
+        for (TransactionHusk tx : this.getBody()) {
+            jsonArray.add(tx.toJsonObject());
+        }
+
+        jsonObject.add("data", jsonArray);
+
+        return jsonObject;
     }
 
     public static BlockHusk build(Wallet wallet, Proto.Block.Header blockHeader,
-                                  List<TransactionHusk> body) throws SignatureException {
-
+                                  List<TransactionHusk> body) {
         Proto.Block.Builder builder = Proto.Block.newBuilder()
                 .setHeader(blockHeader);
-
         for (TransactionHusk tx : body) {
-            builder.getBody().getTransactionsList().add(tx.getInstance());
+            builder.addBody(tx.getInstance());
         }
 
         return new BlockHusk(builder.build()).sign(wallet);
     }
 
     public static BlockHusk build(Wallet wallet, List<TransactionHusk> body, BlockHusk prevBlock) {
-        byte[] merkleRoot = Trie.getMerkleRootHusk(body);
+        byte[] merkleRoot = Trie.getMerkleRoot(body);
         if (merkleRoot == null) {
             merkleRoot = EMPTY_BYTE;
         }
-
-        long length = 0;
-
-        for(TransactionHusk txHusk: body) {
-            length += txHusk.getCoreTransaction().getBody().length();
-        }
-
-        Proto.Block.Header blockHeader  = getHeader(
-                new byte[20],
-                new byte[8],
-                new byte[8],
-                EMPTY_BYTE,
-                0,
-                TimeUtils.time(),
-                merkleRoot,
-                length);
-        try {
-            return build(wallet, blockHeader, body);
-        } catch (SignatureException e) {
-            throw new NotValidateException();
-        }
-
+        Proto.Block.Header blockHeader = getHeader(wallet.getAddress(), merkleRoot,
+                prevBlock.nextIndex(), prevBlock.getHash().getBytes(), getBodySize(body));
+        return build(wallet, blockHeader, body);
     }
 
     @VisibleForTesting
     public static BlockHusk genesis(Wallet wallet, JsonObject jsonObject) {
-        try {
-            JsonArray jsonArrayTxBody = new JsonArray();
-            jsonArrayTxBody.add(jsonObject);
 
-            TransactionBody txBody = new TransactionBody(jsonArrayTxBody);
-            TransactionHeader txHeader = new TransactionHeader(
-                    new byte[20],
-                    new byte[8],
-                    new byte[8],
-                    TimeUtils.time(),
-                    txBody);
-
-            Transaction tx = new Transaction(txHeader, wallet, txBody);
-            List<Transaction> txList = new ArrayList<>();
-            txList.add(tx);
-
-            BlockBody blockBody = new BlockBody(txList);
-            BlockHeader blockHeader = new BlockHeader(
-                    new byte[20],
-                    new byte[8],
-                    new byte[8],
-                    new byte[32],
-                    0L,
-                    TimeUtils.time(),
-                    blockBody.getMerkleRoot(),
-                    blockBody.length());
-
-            Block coreBlock = new Block(blockHeader, wallet, blockBody);
-
-            return new BlockHusk(Block.toProtoBlock(coreBlock));
-        } catch (Exception e) {
-            throw new NotValidateException();
-        }
+        TransactionHusk tx = new TransactionHusk(jsonObject).sign(wallet);
+        long dataSize = jsonObject.toString().getBytes().length;
+        Proto.Block.Header blockHeader = getHeader(wallet.getAddress(),
+                    Trie.getMerkleRoot(Collections.singletonList(tx)), 0, EMPTY_BYTE, dataSize);
+        return build(wallet, blockHeader, Collections.singletonList(tx));
     }
 
     private Proto.Block.Header getHeader() {
-        return this.protoBlock.getHeader();
+        return this.block.getHeader();
     }
 
-    private static Proto.Block.Header getHeader(
-            byte[] chain,
-            byte[] version,
-            byte[] type,
-            byte[] prevBlockHash,
-            long index,
-            long timestamp,
-            byte[] merkleRoot,
-            long bodyLength) {
+    private static Proto.Block.Header getHeader(byte[] address, byte[] merkleRoot, long index,
+                                         byte[] prevBlockHash, long dataSize) {
 
         return Proto.Block.Header.newBuilder()
-                .setChain(ByteString.copyFrom(chain))
-                .setVersion(ByteString.copyFrom(version))
-                .setType(ByteString.copyFrom(type))
-                .setPrevBlockHash(ByteString.copyFrom(prevBlockHash))
-                .setIndex(ByteString.copyFrom(ByteUtil.longToBytes(index)))
-                .setTimestamp(ByteString.copyFrom(ByteUtil.longToBytes(timestamp)))
-                .setMerkleRoot(ByteString.copyFrom(merkleRoot))
-                .setBodyLength(ByteString.copyFrom(ByteUtil.longToBytes(bodyLength)))
+                .setRawData(Proto.Block.Header.Raw.newBuilder()
+                        .setType(ByteString.copyFrom(ByteBuffer.allocate(4).putInt(1).array()))
+                        .setVersion(ByteString.copyFrom(ByteBuffer.allocate(4).putInt(1).array()))
+                        .setPrevBlockHash(ByteString.copyFrom(prevBlockHash))
+                        .setMerkleRoot(ByteString.copyFrom(merkleRoot))
+                        .setIndex(index)
+                        .setAuthor(ByteString.copyFrom(address))
+                        .setDataSize(dataSize)
+                        .build())
                 .build();
     }
 

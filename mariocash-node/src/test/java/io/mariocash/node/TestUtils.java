@@ -25,12 +25,8 @@ import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
-import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
-import dev.zhihexireng.util.TimeUtils;
 
-import java.sql.Time;
 import java.util.List;
 import java.util.Random;
 
@@ -48,18 +44,19 @@ public class TestUtils {
     }
 
     public static Proto.Transaction createDummyTx() {
-        String body = "[\"dummy\"]";
+        String body = "dummy";
         return Proto.Transaction.newBuilder()
                 .setHeader(Proto.Transaction.Header.newBuilder()
-                                .setChain(ByteString.copyFrom(randomBytes(20)))
-                                .setVersion(ByteString.copyFrom(randomBytes(8)))
-                                .setType(ByteString.copyFrom(randomBytes(8)))
-                                .setTimestamp(ByteString.copyFrom(ByteUtil.longToBytes(TimeUtils.time())))
-                                .setBodyHash(ByteString.copyFrom(HashUtil.sha3(body.getBytes())))
-                                .setBodyLength(ByteString.copyFrom(randomBytes(8)))
+                        .setRawData(Proto.Transaction.Header.Raw.newBuilder()
+                                .setType(ByteString.copyFrom(randomBytes(4)))
+                                .setVersion(ByteString.copyFrom(randomBytes(4)))
+                                .setDataHash(ByteString.copyFrom(randomBytes(32)))
+                                .setDataSize(1)
+                                .setTimestamp(System.currentTimeMillis())
+                        )
+                        .setSignature(ByteString.copyFrom(randomBytes(32)))
                 )
-                .setSignature(ByteString.copyFrom(wallet.sign(body.getBytes())))
-                .setBody(ByteString.copyFrom(body.getBytes()))
+                .setBody(body)
                 .build();
     }
 

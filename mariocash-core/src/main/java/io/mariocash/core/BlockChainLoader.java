@@ -16,13 +16,10 @@
 
 package dev.zhihexireng.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.exception.FailedOperationException;
-import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
@@ -30,7 +27,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,61 +48,60 @@ public class BlockChainLoader {
         }
     }
 
-    public BlockHusk getGenesis() {
-        return convertJsonToBlock();
+    public BlockHusk getGenesis() throws IOException {
+        BranchInfo branchInfo = loadBranchInfo();
+        //TODO 브랜치 정보 파일 컨버팅
+        return convertBlock(branchInfo);
     }
 
     public BranchInfo loadBranchInfo() throws IOException {
         return mapper.readValue(branchInfoStream, BranchInfo.class);
     }
 
-    private BlockHusk convertJsonToBlock() {
-        //TODO 브랜치 정보 파일 컨버팅
-        try {
-            BranchInfo branchInfo = loadBranchInfo();
-
-            return convertBlock(branchInfo);
-        } catch (Exception e) {
-            throw new NotValidateException();
-        }
-    }
-
-    private BlockHusk convertBlock(BranchInfo branchInfo) throws JsonProcessingException {
+    private BlockHusk convertBlock(BranchInfo branchInfo) {
+        ByteString prevBlockHash = ByteString.copyFrom(Hex.decode(branchInfo.prevBlockHash
+                .getBytes()));
         return new BlockHusk(Proto.Block.newBuilder()
                 .setHeader(Proto.Block.Header.newBuilder()
-                        .setChain(ByteString.copyFrom(Hex.decode(branchInfo.chain)))
-                        .setVersion(ByteString.copyFrom(Hex.decode(branchInfo.version)))
-                        .setType(ByteString.copyFrom(Hex.decode(branchInfo.type)))
-                        .setPrevBlockHash(ByteString.copyFrom(Hex.decode(branchInfo.prevBlockHash)))
-                        .setIndex(ByteString.copyFrom(ByteUtil.longToBytes(Long.parseLong(branchInfo.index))))
-                        .setTimestamp(ByteString.copyFrom(ByteUtil.longToBytes(Long.parseLong(branchInfo.timestamp))))
-                        .setMerkleRoot(ByteString.copyFrom(branchInfo.merkleRoot.getBytes()))
-                        .setBodyLength(ByteString.copyFrom(ByteUtil.longToBytes(Long.parseLong(branchInfo.bodyLength))))
-                        .build())
-                .setSignature(ByteString.copyFrom(Hex.decode(branchInfo.signature)))
-                .setBody(convertTransaction(branchInfo.body))
+                        .setRawData(Proto.Block.Header.Raw.newBuilder()
+                                .setType(ByteString.copyFrom(Hex.decode(branchInfo.type)))
+                                .setVersion(ByteString.copyFrom(Hex.decode(branchInfo.version)))
+                                .setIndex(0)
+                                .setTimestamp(Long.parseLong(branchInfo.timestamp))
+                                .setPrevBlockHash(prevBlockHash)
+                                .setMerkleRoot(ByteString.copyFrom(branchInfo.merkleRoot
+                                        .getBytes()))
+                                .setDataSize(Long.parseLong(branchInfo.dataSize))
+                                .build()
+                        )
+                        .setSignature(ByteString.copyFrom(Hex.decode(branchInfo.signature)))
+                        .build()
+                )
+                .addAllBody(convertTransaction(branchInfo.data))
                 .build());
     }
 
-    private Proto.TransactionList convertTransaction(List<BranchData> branchDataList) throws
-            JsonProcessingException {
-
-        Proto.TransactionList txList = Proto.TransactionList.newBuilder().build();
-        List<Proto.Transaction> list = txList.getTransactionsList();
-
+    private List<Proto.Transaction> convertTransaction(List<BranchData> branchDataList) {
+        List<Proto.Transaction> list = new ArrayList<>();
         for (BranchData branchData : branchDataList) {
+            ByteString byteString = ByteString.copyFrom(Hex.decode(branchData.dataHash));
             list.add(Proto.Transaction.newBuilder()
                     .setHeader(Proto.Transaction.Header.newBuilder()
-                        .setType(ByteString.copyFrom(Hex.decode(branchData.type)))
-                        .setVersion(ByteString.copyFrom(Hex.decode(branchData.version)))
-                        .setTimestamp(ByteString.copyFrom(ByteUtil.longToBytes(Long.parseLong(branchData.timestamp))))
-                        .setBodyHash(ByteString.copyFrom(Hex.decode(branchData.bodyHash)))
-                        .setBodyLength(ByteString.copyFrom(ByteUtil.longToBytes(Long.parseLong(branchData.bodyLength))))
-                        .build())
-                    .setSignature(ByteString.copyFrom(Hex.decode(branchData.signature)))
-                    .setBody(ByteString.copyFrom(mapper.writeValueAsString(branchData.body).getBytes())).build()
+                            .setRawData(Proto.Transaction.Header.Raw.newBuilder()
+                                    .setType(ByteString.copyFrom(Hex.decode(branchData.type)))
+                                    .setVersion(ByteString.copyFrom(Hex.decode(branchData.version)))
+                                    .setTimestamp(Long.parseLong(branchData.timestamp))
+                                    .setDataHash(byteString)
+                                    .setDataSize(Long.parseLong(branchData.dataSize))
+                                    .build()
+                            )
+                            .setSignature(ByteString.copyFrom(Hex.decode(branchData.signature)))
+                            .build()
+                    )
+                    .setBody(branchData.data).build()
             );
         }
-        return txList;
+        return list;
     }
+
 }
