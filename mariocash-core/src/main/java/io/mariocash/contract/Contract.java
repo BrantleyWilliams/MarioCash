@@ -5,8 +5,8 @@ import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 
-public interface Contract<T> {
-    void init(StateStore<T> store, TransactionReceiptStore txReceiptStore);
+public interface Contract<V> {
+    void init(StateStore<V> store, TransactionReceiptStore txReceiptStore);
 
     boolean invoke(TransactionHusk tx) throws Exception;
 

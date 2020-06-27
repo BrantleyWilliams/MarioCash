@@ -85,82 +85,49 @@ public class StemContractTest {
 
     @Test
     public void searchTest() {
-        JsonArray params = new JsonArray();
-        JsonObject param = new JsonObject();
-        param.addProperty("type", "immunity");
-        params.add(param);
+        String key = "type";
+        String element = "immunity";
+        assertThat(stemContract.search(key, element).size()).isNotZero();
 
-        log.debug(stemContract.search(params).toString());
-        assertThat(stemContract.search(params).size()).isNotZero();
+        key = "name";
+        element = "TEST2";
+        assertThat(stemContract.search(key, element).size()).isNotZero();
 
-        param.remove("type");
-        param.addProperty("name", "TEST2");
+        key = "property";
+        element = "dex";
+        assertThat(stemContract.search(key, element).size()).isNotZero();
 
-        log.debug(stemContract.search(params).toString());
-        assertThat(stemContract.search(params).size()).isNotZero();
+        key = "owner";
+        element = "9e187f5264037ab77c87fcffcecd943702cd72c3";
+        assertThat(stemContract.search(key, element).size()).isNotZero();
 
-        param.remove("name");
-        param.addProperty("property", "dex");
+        key = "symbol";
+        element = "TEST2";
+        assertThat(stemContract.search(key, element).size()).isNotZero();
 
-        log.debug(stemContract.search(params).toString());
-        assertThat(stemContract.search(params).size()).isNotZero();
-
-        param.remove("property");
-        param.addProperty("owner", "9e187f5264037ab77c87fcffcecd943702cd72c3");
-
-        log.debug(stemContract.search(params).toString());
-        assertThat(stemContract.search(params).size()).isNotZero();
-
-        param.remove("owner");
-        param.addProperty("symbol", "TEST2");
-
-        log.debug(stemContract.search(params).toString());
-        assertThat(stemContract.search(params).size()).isNotZero();
-
-        param.remove("symbol");
-        param.addProperty("tag", "0.1");
-
-        log.debug(stemContract.search(params).toString());
-        assertThat(stemContract.search(params).size()).isNotZero();
+        key = "tag";
+        element = "0.1";
+        assertThat(stemContract.search(key, element).size()).isNotZero();
     }
 
     @Test
     public void viewTest() {
-        JsonArray params = new JsonArray();
-        JsonObject param = new JsonObject();
-        param.addProperty("branchId", "e1bbdf827bb44f0ae1d88f34e5f3a360484adbf2cf65a6d34162af3bbd4b9523");
-        params.add(param);
-
-        log.debug(stemContract.getcurrentversion(params));
-        assertThat(stemContract.view(params)).isNotEmpty();
-    }
-
-    @Test
-    public void getAllBranchNameTest() {
         String branchId = "e1bbdf827bb44f0ae1d88f34e5f3a360484adbf2cf65a6d34162af3bbd4b9523";
-        assertThat(stemContract.getallbranchname(new JsonArray())).containsKey(branchId);
+        assertThat(stemContract.view(branchId)).isNotEmpty();
     }
 
     @Test
     public void getCurrentVersionTest() {
-        JsonArray params = new JsonArray();
-        JsonObject param = new JsonObject();
-        param.addProperty("branchId", "e1bbdf827bb44f0ae1d88f34e5f3a360484adbf2cf65a6d34162af3bbd4b9523");
-        params.add(param);
-
-        log.debug(stemContract.getcurrentversion(params));
-        assertThat(stemContract.getcurrentversion(params)).isNotEmpty();
+        String branchId = "e1bbdf827bb44f0ae1d88f34e5f3a360484adbf2cf65a6d34162af3bbd4b9523";
+        log.debug(stemContract.getCurrentVersion(branchId));
+        assertThat(stemContract.getCurrentVersion(branchId)).isNotEmpty();
     }
 
     @Test
     public void getVersionHistoryTest() {
-        JsonArray params = new JsonArray();
-        JsonObject param = new JsonObject();
-        param.addProperty("branchId", "e1bbdf827bb44f0ae1d88f34e5f3a360484adbf2cf65a6d34162af3bbd4b9523");
-        params.add(param);
-
-        log.debug(stemContract.getversionhistory(params).getAsString());
-        assertThat(stemContract.getversionhistory(params).size()).isNotZero();
+        String branchId = "e1bbdf827bb44f0ae1d88f34e5f3a360484adbf2cf65a6d34162af3bbd4b9523";
+        log.debug(stemContract.getVersionHistory(branchId).getAsString());
+        assertThat(stemContract.getVersionHistory(branchId).size()).isNotZero();
     }
 
     private JsonObject createBranch(String name,
