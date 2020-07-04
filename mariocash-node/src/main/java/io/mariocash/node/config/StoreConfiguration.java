@@ -17,8 +17,6 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.core.BlockChain;
-import dev.zhihexireng.core.BlockChainLoader;
-import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.store.BlockStore;
@@ -27,25 +25,15 @@ import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
-import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.Resource;
-
-import java.io.IOException;
 
 @Configuration
 public class StoreConfiguration {
 
-    @Value("classpath:/branch-yeed.json")
-    Resource resource;
-
     @Bean
-    BranchGroup branchGroup(Runtime runtime, BlockChain blockChain) {
+    BranchGroup branchGroup(Runtime runtime, @Qualifier("yeedBranch")BlockChain blockChain) {
         BranchGroup branchGroup = new BranchGroup(runtime);
         branchGroup.addBranch(blockChain.getBranchId(), blockChain);
         return branchGroup;
@@ -62,12 +50,6 @@ public class StoreConfiguration {
     }
 
     @Bean
-    BlockChain blockChain(@Qualifier("genesis")BlockHusk genesisBlock, BlockStore blockStore,
-                          TransactionStore transactionStore) {
-        return new BlockChain(genesisBlock, blockStore, transactionStore);
-    }
-
-    @Bean
     BlockStore blockStore(@Qualifier("blockDbSource") DbSource source) {
         return new BlockStore(source);
     }
@@ -75,25 +57,6 @@ public class StoreConfiguration {
     @Bean
     TransactionStore transactionStore(@Qualifier("txDbSource") DbSource source) {
         return new TransactionStore(source);
-    }
-
-    @Bean(name = "genesis")
-    BlockHusk genesisBlock() throws IOException {
-        return new BlockChainLoader(resource.getInputStream()).getGenesis();
-    }
-
-    @Profile("prod")
-    @Primary
-    @Bean(name = "blockDbSource")
-    DbSource blockLevelDbSource(@Qualifier("genesis")BlockHusk genesisBlock) {
-        return new LevelDbDataSource(genesisBlock.getHash() + "/blocks");
-    }
-
-    @Profile("prod")
-    @Primary
-    @Bean(name = "txDbSource")
-    DbSource txLevelDbSource(@Qualifier("genesis")BlockHusk genesisBlock) {
-        return new LevelDbDataSource(genesisBlock.getHash() + "/txs");
     }
 
     @Bean(name = "blockDbSource")
