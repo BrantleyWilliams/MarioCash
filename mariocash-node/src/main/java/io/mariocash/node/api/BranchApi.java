@@ -4,34 +4,38 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
+import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.WrongStructuredException;
+import dev.zhihexireng.node.controller.TransactionDto;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonRpcService("/api/branch")
 public interface BranchApi {
     /**
      * Create a new branch
-     * @param branch branch.json
+     *
+     * @param tx branch creation transaction
      * @return branch id
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = WrongStructuredException.class,
                     code = WrongStructuredException.code)})
-    String createBranch(JsonObject branch);
+    String createBranch(TransactionDto tx);
 
     /**
      * Update a branch
-     * @param branchId branch id to update
-     * @param branch branch.json
+     *
+     * @param tx branch update transaction
      * @return branch id
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = WrongStructuredException.class,
                     code = WrongStructuredException.code)})
-    String updateBranch(String branchId, JsonObject branch);
+    String updateBranch(TransactionDto tx);
 
     /**
      * Search for branches by key (attribute)

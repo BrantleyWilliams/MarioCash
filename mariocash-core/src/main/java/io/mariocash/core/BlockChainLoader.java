@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
@@ -62,27 +61,24 @@ public class BlockChainLoader {
     private BlockHusk convertBlock(BranchInfo branchInfo) {
         ByteString prevBlockHash = ByteString.copyFrom(Hex.decode(branchInfo.prevBlockHash
                 .getBytes()));
-        Proto.Block.Builder builder = Proto.Block.newBuilder()
+        return new BlockHusk(Proto.Block.newBuilder()
                 .setHeader(Proto.Block.Header.newBuilder()
                         .setRawData(Proto.Block.Header.Raw.newBuilder()
                                 .setType(ByteString.copyFrom(Hex.decode(branchInfo.type)))
                                 .setVersion(ByteString.copyFrom(Hex.decode(branchInfo.version)))
                                 .setIndex(0)
-                                .setTimestamp(ByteUtil.byteArrayToLong(
-                                        Hex.decode(branchInfo.timestamp)))
+                                .setTimestamp(Long.parseLong(branchInfo.timestamp))
                                 .setPrevBlockHash(prevBlockHash)
                                 .setMerkleRoot(ByteString.copyFrom(branchInfo.merkleRoot
                                         .getBytes()))
-                                .setDataSize(ByteUtil.byteArrayToLong(
-                                        Hex.decode(branchInfo.dataSize)))
+                                .setDataSize(Long.parseLong(branchInfo.dataSize))
                                 .build()
                         )
                         .setSignature(ByteString.copyFrom(Hex.decode(branchInfo.signature)))
-                        .build());
-        if (branchInfo.data != null && !branchInfo.data.isEmpty()) {
-            builder.addAllBody(convertTransaction(branchInfo.data));
-        }
-        return new BlockHusk(builder.build());
+                        .build()
+                )
+                .addAllBody(convertTransaction(branchInfo.data))
+                .build());
     }
 
     private List<Proto.Transaction> convertTransaction(List<BranchData> branchDataList) {
@@ -94,11 +90,9 @@ public class BlockChainLoader {
                             .setRawData(Proto.Transaction.Header.Raw.newBuilder()
                                     .setType(ByteString.copyFrom(Hex.decode(branchData.type)))
                                     .setVersion(ByteString.copyFrom(Hex.decode(branchData.version)))
-                                    .setTimestamp(ByteUtil.byteArrayToLong(
-                                            Hex.decode(branchData.timestamp)))
+                                    .setTimestamp(Long.parseLong(branchData.timestamp))
                                     .setDataHash(byteString)
-                                    .setDataSize(ByteUtil.byteArrayToLong(
-                                            Hex.decode(branchData.dataSize)))
+                                    .setDataSize(Long.parseLong(branchData.dataSize))
                                     .build()
                             )
                             .setSignature(ByteString.copyFrom(Hex.decode(branchData.signature)))

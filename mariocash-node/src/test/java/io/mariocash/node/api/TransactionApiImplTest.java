@@ -60,7 +60,7 @@ public class TransactionApiImplTest {
     public void getTransactionCountTest() {
         try {
             assertThat(txApi.getTransactionCount(address, tag)).isNotZero();
-        } catch (Throwable exception) {
+        } catch (Exception exception) {
             log.debug("\n\ngetTransactionCountTest :: exception => " + exception);
         }
     }
@@ -78,7 +78,7 @@ public class TransactionApiImplTest {
     public void getBlockTransactionCountByNumberTest() {
         try {
             assertThat(txApi.getBlockTransactionCountByNumber(blockNumber)).isNotZero();
-        } catch (Throwable exception) {
+        } catch (Exception exception) {
             log.debug("\n\ngetBlockTransactionCountByNumberTest :: exception => " + exception);
         }
     }
