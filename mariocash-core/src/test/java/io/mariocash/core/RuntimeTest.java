@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.contract.StemContract;
+import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +23,7 @@ public class RuntimeTest {
 
     @Before
     public void setUp() throws IOException, InvalidCipherTextException {
-        runtime = new Runtime(txReceiptStore);
+        runtime = new Runtime(new StateStore(), txReceiptStore);
         wallet = new Wallet();
     }
 
