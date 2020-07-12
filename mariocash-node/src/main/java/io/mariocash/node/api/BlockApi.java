@@ -61,13 +61,4 @@ public interface BlockApi {
             @JsonRpcError(exception = InternalErrorException.class,
                     code = InternalErrorException.code)})
     int newBlockFilter();
-
-    /**
-     * Get last block
-     * @return the latest block
-     */
-    @JsonRpcErrors({
-            @JsonRpcError(exception = NonExistObjectException.class,
-                    code = NonExistObjectException.code)})
-    BlockHusk getLastBlock();
 }

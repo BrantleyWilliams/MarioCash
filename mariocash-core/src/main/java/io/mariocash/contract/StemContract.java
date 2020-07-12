@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class StemContract extends BaseContract<JsonObject> {
 
@@ -29,7 +28,6 @@ public class StemContract extends BaseContract<JsonObject> {
 
     /**
      * Returns the id of a registered branch
-     *
      * @param branch   The branch.json to register on the stem
      */
     public String create(JsonObject branch) {
@@ -68,8 +66,12 @@ public class StemContract extends BaseContract<JsonObject> {
         return null;
     }
 
-
-    /*
+    /**
+     * Returns a list of branch.json (query)
+     *
+     * @param key       type, name, property, owner, tag or symbol
+     * @param element   content of the key
+     */
     public List<JsonObject> search(String key, String element) {
         List<JsonObject> branchList = new ArrayList<>();
         for (JsonObject branch : state.getAll()) {
@@ -80,95 +82,32 @@ public class StemContract extends BaseContract<JsonObject> {
         log.info("[StemContract | search] branchList => " + branchList);
         return branchList;
     }
-    */
-
-    /**
-     * Returns a list of branch.json (query)
-     *
-     * param key       type, name, property, owner, tag or symbol
-     * param element   content of the key
-     */
-    public List<JsonObject> search(JsonArray params) {
-        List<JsonObject> branchList = new ArrayList<>();
-        JsonObject param = params.get(0).getAsJsonObject();
-        log.info("[StemContract | search] param =>  : " + param);
-
-        String key = "";
-        String element = "";
-
-        for (Map.Entry<String, JsonElement> entry : param.entrySet()) {
-            key = entry.getKey();
-            element = entry.getValue().getAsString();
-        }
-
-        for (JsonObject branch : state.getAll()) {
-            if (!key.isEmpty() && element.equals(branch.get(key).getAsString())) {
-                branchList.add(branch);
-            }
-        }
-        return branchList;
-    }
 
     /**
      * Returns branch.json as JsonString (query)
      *
-     * @param params   branchId
+     * @param branchId   branchId
      */
-    public String view(JsonArray params) {
-        String branchId = params.get(0).getAsJsonObject().get("branchId")
-                .getAsString().toLowerCase();
-        if (isBranchExist(branchId)) {
-            return getBranch(branchId).toString();
-        }
-        return "";
+    public String view(String branchId) {
+        JsonObject branch = state.get(branchId);
+        return branch.toString();
     }
 
-    /**
-     * Returns current version of branch
-     *
-     * @param params   branchId
-     */
-    public String getcurrentversion(JsonArray params) {
-        String branchId = params.get(0).getAsJsonObject().get("branchId")
-                .getAsString().toLowerCase();
-        if (isBranchExist(branchId)) {
-            JsonArray versionHistory = getBranch(branchId).get("versionHistory").getAsJsonArray();
-            Integer index = versionHistory.size() - 1;
+    public String getCurrentVersion(String branchId) {
+        JsonArray versionHistory = state.get(branchId).get("versionHistory").getAsJsonArray();
+        Integer index = versionHistory.size() - 1;
 
-            return versionHistory.get(index).getAsString();
-        }
-        return "";
+        return versionHistory.get(index).getAsString();
     }
 
-    /**
-     * Returns version history of branch
-     *
-     * @param params   branchId
-     */
-    public JsonArray getversionhistory(JsonArray params) {
-        String branchId = params.get(0).getAsJsonObject().get("branchId")
-                .getAsString().toLowerCase();
-        if (isBranchExist(branchId)) {
-            return getBranch(branchId).get("versionHistory").getAsJsonArray();
-        }
-        return new JsonArray();
+    public JsonArray getVersionHistory(String branchId) {
+        return state.get(branchId).get("versionHistory").getAsJsonArray();
     }
 
     private boolean verify(String refAddress, String type) {
         if (isRefAddressValid(refAddress) && isTypeValid(type)) {
             return true;
         }
-        return false;
-    }
-
-    private boolean isBranchExist(String branchId) {
-        if (state.get(branchId) != null) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isOwnerValid(String owner) {
         return false;
     }
 
@@ -205,10 +144,6 @@ public class StemContract extends BaseContract<JsonObject> {
             return true;
         }
         return false;
-    }
-
-    private JsonObject getBranch(String branchId) {
-        return state.get(branchId);
     }
 
     private String getBranchHashStr(byte[] rawBranchHash) {
