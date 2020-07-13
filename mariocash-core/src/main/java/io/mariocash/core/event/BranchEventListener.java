@@ -14,26 +14,10 @@
  * limitations under the License.
  */
 
-package dev.zhihexireng.core;
+package dev.zhihexireng.core.event;
 
-import dev.zhihexireng.core.event.BranchEventListener;
-import dev.zhihexireng.core.event.PeerEventListener;
+import dev.zhihexireng.core.BlockHusk;
 
-import java.util.List;
-
-public interface NodeManager extends PeerEventListener, BranchEventListener {
-
-    void init();
-
-    String getNodeUri();
-
-    void addPeer(String peer);
-
-    void removePeer(String peer);
-
-    List<String> getPeerUriList();
-
-    Wallet getWallet();
-
-    BranchGroup getBranchGroup();
+public interface BranchEventListener {
+    void chainedBlock(BlockHusk block);
 }
