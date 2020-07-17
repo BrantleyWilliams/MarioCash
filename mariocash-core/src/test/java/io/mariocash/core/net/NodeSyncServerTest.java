@@ -21,7 +21,6 @@ import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcServerRule;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.net.NodeSyncServer.BlockChainImpl;
@@ -56,9 +55,6 @@ public class NodeSyncServerTest {
     public final GrpcServerRule grpcServerRule = new GrpcServerRule().directExecutor();
     @Mock
     private NodeManager nodeManagerMock;
-    @Mock
-    private BranchGroup branchGroupMock;
-
     private TransactionHusk tx;
     private BlockHusk block;
 
@@ -66,12 +62,11 @@ public class NodeSyncServerTest {
     public void setUp() {
         grpcServerRule.getServiceRegistry().addService(new PingPongImpl());
         grpcServerRule.getServiceRegistry().addService(new BlockChainImpl(nodeManagerMock));
-        when(nodeManagerMock.getBranchGroup()).thenReturn(branchGroupMock);
 
         this.tx = TestUtils.createTxHusk();
-        when(branchGroupMock.addTransaction(any())).thenReturn(tx);
+        when(nodeManagerMock.addTransaction(any())).thenReturn(tx);
         this.block = TestUtils.createGenesisBlockHusk();
-        when(branchGroupMock.addBlock(any())).thenReturn(block);
+        when(nodeManagerMock.addBlock(any())).thenReturn(block);
     }
 
     @Test
@@ -103,7 +98,7 @@ public class NodeSyncServerTest {
     public void syncBlock() {
         Set<BlockHusk> blocks = new HashSet<>();
         blocks.add(block);
-        when(branchGroupMock.getBlocks()).thenReturn(blocks);
+        when(nodeManagerMock.getBlocks()).thenReturn(blocks);
 
         BlockChainGrpc.BlockChainBlockingStub blockingStub
                 = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());
@@ -115,7 +110,7 @@ public class NodeSyncServerTest {
 
     @Test
     public void syncTransaction() {
-        when(branchGroupMock.getTransactionList()).thenReturn(Collections.singletonList(tx));
+        when(nodeManagerMock.getTransactionList()).thenReturn(Collections.singletonList(tx));
 
         BlockChainGrpc.BlockChainBlockingStub blockingStub
                 = BlockChainGrpc.newBlockingStub(grpcServerRule.getChannel());

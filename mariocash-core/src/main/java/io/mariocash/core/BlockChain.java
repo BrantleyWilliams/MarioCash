@@ -2,8 +2,8 @@ package dev.zhihexireng.core;
 
 import com.google.common.annotations.VisibleForTesting;
 import dev.zhihexireng.common.Sha3Hash;
+import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.contract.Contract;
-import dev.zhihexireng.contract.NoneContract;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
@@ -30,14 +30,12 @@ public class BlockChain {
     private BlockHusk prevBlock;
     private BlockStore blockStore;
     private TransactionStore transactionStore;
-    private Contract contract;
 
     public BlockChain(File infoFile) {
         try {
             this.genesisBlock = new BlockChainLoader(infoFile).getGenesis();
             this.blockStore = new BlockStore(getBranchId());
             this.transactionStore = new TransactionStore(new HashMapDbSource());
-            this.contract = new NoneContract();
             loadBlockChain();
         } catch (Exception e) {
             throw new NotValidateException(e);
@@ -45,11 +43,10 @@ public class BlockChain {
     }
 
     public BlockChain(BlockHusk genesisBlock, BlockStore blockStore,
-                      TransactionStore transactionStore, Contract contract) {
+                      TransactionStore transactionStore) {
         this.genesisBlock = genesisBlock;
         this.blockStore = blockStore;
         this.transactionStore = transactionStore;
-        this.contract = contract;
         loadBlockChain();
     }
 
@@ -258,6 +255,7 @@ public class BlockChain {
 
 
     private void executeAllTx(Set<TransactionHusk> txList, Runtime runtime) {
+        Contract contract = new CoinContract();
         try {
             for (TransactionHusk tx : txList) {
                 if (!runtime.invoke(contract, tx)) {

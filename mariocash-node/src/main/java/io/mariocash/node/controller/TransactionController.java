@@ -16,7 +16,7 @@
 
 package dev.zhihexireng.node.controller;
 
-import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.TransactionHusk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,23 +32,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("txs")
 public class TransactionController {
 
-    private final BranchGroup branchGroup;
+    private final NodeManager nodeManager;
 
     @Autowired
-    public TransactionController(BranchGroup branchGroup) {
-        this.branchGroup = branchGroup;
+    public TransactionController(NodeManager nodeManager) {
+        this.nodeManager = nodeManager;
     }
 
     @PostMapping
     public ResponseEntity add(@RequestBody TransactionDto request) {
         TransactionHusk tx = TransactionDto.of(request);
-        TransactionHusk addedTx = branchGroup.addTransaction(tx);
+        TransactionHusk addedTx = nodeManager.addTransaction(tx);
         return ResponseEntity.ok(TransactionDto.createBy(addedTx));
     }
 
     @GetMapping("{id}")
     public ResponseEntity get(@PathVariable String id) {
-        TransactionHusk tx = branchGroup.getTxByHash(id);
+        TransactionHusk tx = nodeManager.getTxByHash(id);
 
         if (tx == null) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);

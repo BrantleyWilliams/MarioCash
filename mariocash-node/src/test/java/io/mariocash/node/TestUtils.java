@@ -22,25 +22,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BlockHuskBuilder;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
-import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.TimeUtils;
 
-import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 public class TestUtils {
-    private static Wallet wallet;
-    private static byte[] type =
-            ByteBuffer.allocate(4).putInt(BlockHuskBuilder.DEFAULT_TYPE).array();
-    private static byte[] version =
-            ByteBuffer.allocate(4).putInt(BlockHuskBuilder.DEFAULT_VERSION).array();
+    public static Wallet wallet;
 
     private TestUtils() {}
 
@@ -52,20 +43,29 @@ public class TestUtils {
         }
     }
 
-    public static Proto.Transaction getTransactionFixture() {
-        String body = getTransfer().toString();
+    public static Proto.Transaction createDummyTx() {
+        String body = "dummy";
         return Proto.Transaction.newBuilder()
                 .setHeader(Proto.Transaction.Header.newBuilder()
                         .setRawData(Proto.Transaction.Header.Raw.newBuilder()
                                 .setType(ByteString.copyFrom(randomBytes(4)))
                                 .setVersion(ByteString.copyFrom(randomBytes(4)))
                                 .setDataHash(ByteString.copyFrom(randomBytes(32)))
-                                .setDataSize(body.getBytes().length)
-                                .setTimestamp(TimeUtils.time())
+                                .setDataSize(1)
+                                .setTimestamp(System.currentTimeMillis())
                         )
+                        .setSignature(ByteString.copyFrom(randomBytes(32)))
                 )
                 .setBody(body)
                 .build();
+    }
+
+    public static TransactionHusk createInvalidTxHusk() {
+        return new TransactionHusk(createDummyTx());
+    }
+
+    public static TransactionHusk createUnsignedTxHusk() {
+        return new TransactionHusk(getTransfer());
     }
 
     public static TransactionHusk createTxHusk() {
@@ -73,24 +73,7 @@ public class TestUtils {
     }
 
     public static TransactionHusk createTxHusk(Wallet wallet) {
-        return createTxHuskByJson(getTransfer()).sign(wallet);
-    }
-
-    public static TransactionHusk createTxHuskByJson(JsonObject jsonObject) {
-        String body = jsonObject.toString();
-        Proto.Transaction.Header transactionHeader = Proto.Transaction.Header.newBuilder()
-                .setRawData(Proto.Transaction.Header.Raw.newBuilder()
-                        .setType(ByteString.copyFrom(type))
-                        .setVersion(ByteString.copyFrom(version))
-                        .setDataHash(ByteString.copyFrom(HashUtil.sha3(body.getBytes())))
-                        .setDataSize(body.getBytes().length)
-                        .build())
-                .build();
-        Proto.Transaction tx = Proto.Transaction.newBuilder()
-                .setHeader(transactionHeader)
-                .setBody(body)
-                .build();
-        return new TransactionHusk(tx);
+        return new TransactionHusk(getTransfer()).sign(wallet);
     }
 
     public static BlockHusk createGenesisBlockHusk() {
@@ -98,30 +81,11 @@ public class TestUtils {
     }
 
     public static BlockHusk createGenesisBlockHusk(Wallet wallet) {
-        return genesis(wallet, getTransfer());
+        return BlockHusk.genesis(wallet, getTransfer());
     }
 
     public static BlockHusk createBlockHuskByTxList(Wallet wallet, List<TransactionHusk> txList) {
-        return BlockHuskBuilder.buildUnSigned(wallet, txList, createGenesisBlockHusk());
-    }
-
-    private static BlockHusk genesis(Wallet wallet, JsonObject jsonObject) {
-        TransactionHusk tx = createTxHuskByJson(jsonObject).sign(wallet);
-
-        Proto.Block.Header.Raw raw = crateRaw(wallet.getAddress(),0, BlockHuskBuilder.EMPTY_BYTE);
-        return BlockHuskBuilder.buildUnSigned(wallet, raw, Collections.singletonList(tx));
-    }
-
-    private static Proto.Block.Header.Raw crateRaw(byte[] address, long index,
-                                                   byte[] prevBlockHash) {
-
-        return Proto.Block.Header.Raw.newBuilder()
-                .setType(ByteString.copyFrom(type))
-                .setVersion(ByteString.copyFrom(version))
-                .setPrevBlockHash(ByteString.copyFrom(prevBlockHash))
-                .setIndex(index)
-                .setAuthor(ByteString.copyFrom(address))
-                .build();
+        return BlockHusk.build(wallet, txList, createGenesisBlockHusk());
     }
 
     public static ObjectMapper getMapper() {
@@ -150,5 +114,4 @@ public class TestUtils {
 
         return txObj;
     }
-
 }

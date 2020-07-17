@@ -4,7 +4,7 @@ import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.NodeManager;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.exception.NonExistObjectException;
@@ -26,12 +26,12 @@ public class TransactionApiImpl implements TransactionApi {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionApiImpl.class);
 
-    private final BranchGroup branchGroup;
+    private final NodeManager nodeManager;
     private final TransactionReceiptStore txReceiptStore;
 
     @Autowired
-    public TransactionApiImpl(BranchGroup branchGroup, TransactionReceiptStore txReceiptStore) {
-        this.branchGroup = branchGroup;
+    public TransactionApiImpl(NodeManager nodeManager, TransactionReceiptStore txReceiptStore) {
+        this.nodeManager = nodeManager;
         this.txReceiptStore = txReceiptStore;
     }
 
@@ -54,19 +54,19 @@ public class TransactionApiImpl implements TransactionApi {
         } else {
             blockNumber = -1;
         }
-        BlockHusk block = branchGroup.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
         return getCount(address, block.getBody());
     }
 
     @Override
     public int getTransactionCount(String address, int blockNumber) {
-        BlockHusk block = branchGroup.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
         return getCount(address, block.getBody());
     }
 
     @Override
     public int getBlockTransactionCountByHash(String hashOfBlock) {
-        BlockHusk block = branchGroup.getBlockByIndexOrHash(hashOfBlock);
+        BlockHusk block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
         return block.getBody().size();
     }
 
@@ -86,7 +86,7 @@ public class TransactionApiImpl implements TransactionApi {
 
     @Override
     public TransactionHusk getTransactionByHash(String hashOfTx) {
-        TransactionHusk tx = branchGroup.getTxByHash(hashOfTx);
+        TransactionHusk tx = nodeManager.getTxByHash(hashOfTx);
         if (tx == null) {
             throw new NonExistObjectException("Transaction");
         }
@@ -96,14 +96,14 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public TransactionHusk getTransactionByBlockHashAndIndex(
             String hashOfBlock, int txIndexPosition) {
-        BlockHusk block = branchGroup.getBlockByIndexOrHash(hashOfBlock);
+        BlockHusk block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
         return block.getBody().get(txIndexPosition);
     }
 
     @Override
     public TransactionHusk getTransactionByBlockNumberAndIndex(
             int blockNumber, int txIndexPosition) {
-        BlockHusk block = branchGroup.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
         return block.getBody().get(txIndexPosition);
     }
 
@@ -119,14 +119,14 @@ public class TransactionApiImpl implements TransactionApi {
     /* send */
     @Override
     public String sendTransaction(TransactionDto tx) {
-        TransactionHusk addedTx = branchGroup.addTransaction(TransactionDto.of(tx));
+        TransactionHusk addedTx = nodeManager.addTransaction(TransactionDto.of(tx));
         return addedTx.getHash().toString();
     }
 
     @Override
     public byte[] sendRawTransaction(byte[] bytes) {
         TransactionHusk tx = convert(bytes);
-        TransactionHusk addedTx = branchGroup.addTransaction(tx);
+        TransactionHusk addedTx = nodeManager.addTransaction(tx);
         return addedTx.getHash().getBytes();
     }
 

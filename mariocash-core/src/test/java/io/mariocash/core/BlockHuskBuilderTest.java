@@ -48,24 +48,7 @@ public class BlockHuskBuilderTest {
     }
 
     @Test
-    public void buildEmptyGenesisBlock() {
-        Proto.Block.Header.Raw raw = Proto.Block.Header.Raw.newBuilder()
-                .setType(ByteString.copyFrom(type))
-                .setVersion(ByteString.copyFrom(version))
-                .setPrevBlockHash(ByteString.copyFrom(BlockHuskBuilder.EMPTY_BYTE))
-                .setIndex(0)
-                .build();
-
-        BlockHusk genesisBlock = BlockHuskBuilder.buildUnSigned(wallet, raw,
-                Collections.emptyList()).sign(wallet);
-
-        Proto.Block.Header.Raw newRaw = genesisBlock.getInstance().getHeader().getRawData();
-        assertArrayEquals(wallet.getAddress(), newRaw.getAuthor().toByteArray());
-        log.debug(genesisBlock.toJsonObject().toString());
-    }
-
-    @Test
-    public void buildYeedGenesisBlock() {
+    public void buildGenesisBlock() {
         TransactionHusk signedTx = getYeedGenesisTx().sign(wallet);
 
         Proto.Block.Header.Raw raw = Proto.Block.Header.Raw.newBuilder()
