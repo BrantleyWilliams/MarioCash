@@ -2,6 +2,7 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.contract.StemContract;
 import dev.zhihexireng.core.store.StateStore;
@@ -41,7 +42,7 @@ public class RuntimeTest {
         txObj.addProperty("method", "transfer");
         txObj.add("params", params);
 
-        TransactionHusk tx = new TransactionHusk(txObj).sign(wallet);
+        TransactionHusk tx = TestUtils.createTxHuskByJson(txObj).sign(wallet);
         runtime.invoke(coinContract, tx);
     }
 
