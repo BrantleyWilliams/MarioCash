@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 import org.junit.Before;
@@ -18,7 +19,7 @@ public class CoinContractTest {
 
     @Before
     public void setUp() {
-        StateStore<Long> stateStore = new StateStore<>();
+        StateStore<Long> stateStore = new StateStore<Long>();
         TransactionReceiptStore txReceiptStore = new TransactionReceiptStore();
         coinContract = new CoinContract();
         coinContract.init(stateStore, txReceiptStore);
@@ -42,16 +43,20 @@ public class CoinContractTest {
 
     @Test
     public void transferTest() throws Exception {
-        TransactionHusk tx = TestUtils.createTxHusk();
+        Wallet wallet = new Wallet();
+
+        TransactionHusk tx = new TransactionHusk(TestUtils.getTransfer()).sign(wallet);
         boolean result = coinContract.invoke(tx);
         assertThat(result).isTrue();
     }
 
     private JsonObject query(JsonObject query) throws Exception {
-        return coinContract.query(query);
+        JsonObject res = coinContract.query(query);
+        return res;
     }
 
     private Boolean invoke(TransactionHusk tx) throws Exception {
-        return coinContract.invoke(tx);
+        Boolean res = coinContract.invoke(tx);
+        return res;
     }
 }

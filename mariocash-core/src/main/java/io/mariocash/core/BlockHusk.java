@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
@@ -24,16 +25,20 @@ import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.trie.Trie;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.TimeUtils;
 
+import java.nio.ByteBuffer;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> {
+    private static final byte[] EMPTY_BYTE = new byte[32];
 
     private Proto.Block block;
 
@@ -169,8 +174,68 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         return jsonObject;
     }
 
+    public static BlockHusk build(Wallet wallet, Proto.Block.Header blockHeader,
+                                  List<TransactionHusk> body) {
+        Proto.Block.Builder builder = Proto.Block.newBuilder()
+                .setHeader(blockHeader);
+        for (TransactionHusk tx : body) {
+            builder.addBody(tx.getInstance());
+        }
+
+        return new BlockHusk(builder.build()).sign(wallet);
+    }
+
+    public static BlockHusk build(Wallet wallet, List<TransactionHusk> body, BlockHusk prevBlock) {
+        byte[] merkleRoot = Trie.getMerkleRoot(body);
+        if (merkleRoot == null) {
+            merkleRoot = EMPTY_BYTE;
+        }
+        Proto.Block.Header blockHeader = getHeader(wallet.getAddress(), merkleRoot,
+                prevBlock.nextIndex(), prevBlock.getHash().getBytes(), getBodySize(body));
+        return build(wallet, blockHeader, body);
+    }
+
+    @VisibleForTesting
+    public static BlockHusk genesis(Wallet wallet, JsonObject jsonObject) {
+
+        TransactionHusk tx = new TransactionHusk(jsonObject).sign(wallet);
+        long dataSize = jsonObject.toString().getBytes().length;
+        Proto.Block.Header blockHeader = getHeader(wallet.getAddress(),
+                    Trie.getMerkleRoot(Collections.singletonList(tx)), 0, EMPTY_BYTE, dataSize);
+        return build(wallet, blockHeader, Collections.singletonList(tx));
+    }
+
     private Proto.Block.Header getHeader() {
         return this.block.getHeader();
+    }
+
+    private static Proto.Block.Header getHeader(byte[] address, byte[] merkleRoot, long index,
+                                         byte[] prevBlockHash, long dataSize) {
+
+        return Proto.Block.Header.newBuilder()
+                .setRawData(Proto.Block.Header.Raw.newBuilder()
+                        .setType(ByteString.copyFrom(ByteBuffer.allocate(4).putInt(1).array()))
+                        .setVersion(ByteString.copyFrom(ByteBuffer.allocate(4).putInt(1).array()))
+                        .setPrevBlockHash(ByteString.copyFrom(prevBlockHash))
+                        .setMerkleRoot(ByteString.copyFrom(merkleRoot))
+                        .setIndex(index)
+                        .setAuthor(ByteString.copyFrom(address))
+                        .setDataSize(dataSize)
+                        .build())
+                .build();
+    }
+
+    private static long getBodySize(List<TransactionHusk> body) {
+        long size = 0;
+        if (body == null || body.isEmpty()) {
+            return size;
+        }
+        for (TransactionHusk tx : body) {
+            if (tx.getInstance() != null) {
+                size += tx.getInstance().toByteArray().length;
+            }
+        }
+        return size;
     }
 
     @Override

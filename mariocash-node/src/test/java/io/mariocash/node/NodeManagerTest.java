@@ -18,7 +18,6 @@ package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BlockHuskBuilder;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
@@ -81,10 +80,10 @@ public class NodeManagerTest {
         nodeManager.init();
         assert nodeManager.getNodeUri() != null;
         this.tx = TestUtils.createTxHusk(nodeManager.getWallet());
-        this.firstBlock = BlockHuskBuilder.buildUnSigned(nodeManager.getWallet(),
-                Collections.singletonList(tx), nodeManager.getBlockByIndexOrHash("0"));
-        this.secondBlock = BlockHuskBuilder.buildSigned(nodeManager.getWallet(),
-                Collections.singletonList(tx), firstBlock);
+        this.firstBlock = BlockHusk.build(nodeManager.getWallet(), Collections.singletonList(tx),
+                nodeManager.getBlockByIndexOrHash("0"));
+        this.secondBlock = BlockHusk.build(nodeManager.getWallet(), Collections.singletonList(tx),
+                firstBlock);
     }
 
     @After
@@ -102,7 +101,12 @@ public class NodeManagerTest {
 
     @Test(expected = InvalidSignatureException.class)
     public void unsignedTxTest() {
-        nodeManager.addTransaction(new TransactionHusk(TestUtils.getTransactionFixture()));
+        nodeManager.addTransaction(TestUtils.createUnsignedTxHusk());
+    }
+
+    @Test(expected = InvalidSignatureException.class)
+    public void failedOperationExceptionTest() {
+        nodeManager.addTransaction(TestUtils.createInvalidTxHusk());
     }
 
     @Test
