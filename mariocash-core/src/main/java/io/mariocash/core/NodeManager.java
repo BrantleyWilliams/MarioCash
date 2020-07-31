@@ -16,31 +16,14 @@
 
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.common.Sha3Hash;
+import dev.zhihexireng.core.event.BranchEventListener;
 import dev.zhihexireng.core.event.PeerEventListener;
 
 import java.util.List;
-import java.util.Set;
 
-public interface NodeManager extends PeerEventListener {
+public interface NodeManager extends PeerEventListener, BranchEventListener {
 
     void init();
-
-    TransactionHusk addTransaction(TransactionHusk tx);
-
-    List<TransactionHusk> getTransactionList();
-
-    TransactionHusk getTxByHash(Sha3Hash hash);
-
-    TransactionHusk getTxByHash(String id);
-
-    BlockHusk generateBlock();
-
-    BlockHusk addBlock(BlockHusk block);
-
-    Set<BlockHusk> getBlocks();
-
-    BlockHusk getBlockByIndexOrHash(String indexOrHash);
 
     String getNodeUri();
 
@@ -51,4 +34,6 @@ public interface NodeManager extends PeerEventListener {
     List<String> getPeerUriList();
 
     Wallet getWallet();
+
+    BranchGroup getBranchGroup();
 }
