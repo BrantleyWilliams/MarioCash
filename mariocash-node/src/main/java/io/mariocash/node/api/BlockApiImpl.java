@@ -5,7 +5,6 @@ import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.node.controller.BlockDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -67,7 +66,7 @@ public class BlockApiImpl implements BlockApi {
 
     @Override
     public BlockHusk getLastBlock() {
-        return nodeManager.getBlocks().stream().sorted(Comparator.reverseOrder())
+        return branchGroup.getBlocks().stream().sorted(Comparator.reverseOrder())
                 .collect(Collectors.toList()).get(0);
     }
 }
