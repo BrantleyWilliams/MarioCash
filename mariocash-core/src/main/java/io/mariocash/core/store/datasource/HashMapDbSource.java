@@ -21,17 +21,16 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class HashMapDbSource implements DbSource<byte[], byte[]> {
-    Map<String, byte[]> db;
+    HashMap<String, byte[]> db;
 
     @Override
     public DbSource init() {
-        db = new ConcurrentHashMap<>();
+        db = new HashMap<>();
         return this;
     }
 

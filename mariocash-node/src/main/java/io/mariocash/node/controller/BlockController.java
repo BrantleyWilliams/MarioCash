@@ -17,8 +17,7 @@
 package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BranchGroup;
-import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.NodeManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,24 +35,22 @@ import java.util.stream.Collectors;
 @RequestMapping("blocks")
 class BlockController {
 
-    private final Wallet wallet;
-    private final BranchGroup branchGroup;
+    private final NodeManager nodeManager;
 
     @Autowired
-    public BlockController(Wallet wallet, BranchGroup branchGroup) {
-        this.wallet = wallet;
-        this.branchGroup = branchGroup;
+    public BlockController(NodeManager nodeManager) {
+        this.nodeManager = nodeManager;
     }
 
     @PostMapping
     public ResponseEntity add() {
-        BlockHusk generatedBlock = branchGroup.generateBlock(wallet);
+        BlockHusk generatedBlock = nodeManager.generateBlock();
         return ResponseEntity.ok(BlockDto.createBy(generatedBlock));
     }
 
     @GetMapping("{id}")
     public ResponseEntity get(@PathVariable(name = "id") String id) {
-        BlockHusk foundBlock = branchGroup.getBlockByIndexOrHash(id);
+        BlockHusk foundBlock = nodeManager.getBlockByIndexOrHash(id);
 
         if (foundBlock == null) {
             return ResponseEntity.notFound().build();
@@ -64,7 +61,7 @@ class BlockController {
 
     @GetMapping
     public ResponseEntity getAll() {
-        Set<BlockHusk> blocks = branchGroup.getBlocks();
+        Set<BlockHusk> blocks = nodeManager.getBlocks();
         List<BlockDto> dtoList = blocks.stream().sorted(Comparator.reverseOrder())
                 .map(BlockDto::createBy).collect(Collectors.toList());
         return ResponseEntity.ok(dtoList);

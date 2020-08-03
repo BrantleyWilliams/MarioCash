@@ -51,7 +51,6 @@ public class NodeManagerTest {
     private static final Logger log = LoggerFactory.getLogger(NodeManagerTest.class);
 
     private NodeManagerImpl nodeManager;
-    private BranchGroup branchGroup;
     private NodeProperties nodeProperties;
     private TransactionHusk tx;
     private BlockHusk firstBlock;
@@ -75,7 +74,7 @@ public class NodeManagerTest {
                 new File(getClass().getClassLoader()
                         .getResource("branch-yeed.json").getFile()));
 
-        this.branchGroup = new BranchGroup(runtime);
+        BranchGroup branchGroup = new BranchGroup(runtime);
         branchGroup.addBranch(blockChain.getBranchId(), blockChain);
         nodeManager.setBranchGroup(branchGroup);
         nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));
@@ -83,7 +82,7 @@ public class NodeManagerTest {
         assert nodeManager.getNodeUri() != null;
         this.tx = TestUtils.createTxHusk(nodeManager.getWallet());
         this.firstBlock = BlockHuskBuilder.buildUnSigned(nodeManager.getWallet(),
-                Collections.singletonList(tx), branchGroup.getBlockByIndexOrHash("0"));
+                Collections.singletonList(tx), nodeManager.getBlockByIndexOrHash("0"));
         this.secondBlock = BlockHuskBuilder.buildSigned(nodeManager.getWallet(),
                 Collections.singletonList(tx), firstBlock);
     }
@@ -96,38 +95,38 @@ public class NodeManagerTest {
 
     @Test
     public void addTransactionTest() {
-        branchGroup.addTransaction(tx);
-        TransactionHusk pooledTx = branchGroup.getTxByHash(tx.getHash());
+        nodeManager.addTransaction(tx);
+        TransactionHusk pooledTx = nodeManager.getTxByHash(tx.getHash());
         assert pooledTx.getHash().equals(tx.getHash());
     }
 
     @Test(expected = InvalidSignatureException.class)
     public void unsignedTxTest() {
-        branchGroup.addTransaction(new TransactionHusk(TestUtils.getTransactionFixture()));
+        nodeManager.addTransaction(new TransactionHusk(TestUtils.getTransactionFixture()));
     }
 
     @Test
     public void addBlockTest() {
-        branchGroup.addTransaction(tx);
-        branchGroup.addBlock(firstBlock);
-        branchGroup.addBlock(secondBlock);
-        assert branchGroup.getBlocks().size() == 3;
-        assert branchGroup.getBlockByIndexOrHash("2").getHash()
+        nodeManager.addTransaction(tx);
+        nodeManager.addBlock(firstBlock);
+        nodeManager.addBlock(secondBlock);
+        assert nodeManager.getBlocks().size() == 3;
+        assert nodeManager.getBlockByIndexOrHash("2").getHash()
                 .equals(secondBlock.getHash());
-        TransactionHusk foundTx = branchGroup.getTxByHash(tx.getHash());
+        TransactionHusk foundTx = nodeManager.getTxByHash(tx.getHash());
         assert foundTx.getHash().equals(tx.getHash());
     }
 
     @Test
     public void generateBlockTest() {
-        branchGroup.addTransaction(tx);
-        BlockHusk newBlock = branchGroup.generateBlock(nodeManager.getWallet());
-        assert branchGroup.getBlocks().size() == 2;
-        BlockHusk chainedBlock = branchGroup.getBlockByIndexOrHash(newBlock.getHash().toString());
+        nodeManager.addTransaction(tx);
+        BlockHusk newBlock = nodeManager.generateBlock();
+        assert nodeManager.getBlocks().size() == 2;
+        BlockHusk chainedBlock = nodeManager.getBlockByIndexOrHash(newBlock.getHash().toString());
         assert chainedBlock.getHash().equals(newBlock.getHash());
         log.debug(Hex.toHexString(ByteUtil.longToBytes(chainedBlock.getBody().size())));
         assert chainedBlock.getBody().size() != 0;
-        assertThat(branchGroup.getTxByHash(tx.getHash()).getHash(), equalTo(tx.getHash()));
+        assertThat(nodeManager.getTxByHash(tx.getHash()).getHash(), equalTo(tx.getHash()));
     }
 
     @Test
