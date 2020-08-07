@@ -29,16 +29,16 @@ public class BlockChainLoaderTest {
     private BlockChainLoader blockChainLoader;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         blockChainLoader = new BlockChainLoader(
                 new File(Objects.requireNonNull(getClass().getClassLoader()
-                .getResource("branch-yeed.json")).getFile()));
+                .getResource("branch-sample.json")).getFile()));
     }
 
     @Test
     public void shouldBeLoadedBranchJsonFile() throws IOException {
         BranchInfo branchInfo = blockChainLoader.loadBranchInfo();
         Assertions.assertThat(branchInfo).isNotNull();
-        Assertions.assertThat(branchInfo.getBranchId()).isNotNull();
+        Assertions.assertThat(branchInfo.getChainId()).isNotNull();
     }
 }

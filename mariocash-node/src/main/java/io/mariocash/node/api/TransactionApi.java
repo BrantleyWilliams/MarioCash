@@ -11,7 +11,7 @@ import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.RejectedAccessException;
 import dev.zhihexireng.node.controller.TransactionDto;
 
-import java.util.Map;
+import java.util.HashMap;
 
 @JsonRpcService("/api/transaction")
 public interface TransactionApi {
@@ -167,7 +167,7 @@ public interface TransactionApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    Map<String, TransactionReceipt> getAllTransactionReceipt();
+    HashMap<String, TransactionReceipt> getAllTransactionReceipt();
 
     /**
      * Returns the TransactionReceipt of transaction hash

@@ -8,6 +8,8 @@ import dev.zhihexireng.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -16,24 +18,23 @@ import java.util.Objects;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BlockChainTest {
+    private static final Logger log = LoggerFactory.getLogger(BlockChainTest.class);
+    private static Wallet wallet;
+    private static DefaultConfig defaultConfig;
+    private String chainId = "chainId";
     private File sampleBranchInfo;
 
     @Before
-    public void init() {
+    public void init() throws Exception {
+        defaultConfig = new DefaultConfig();
+        wallet = new Wallet(defaultConfig);
         sampleBranchInfo = new File(Objects.requireNonNull(getClass().getClassLoader()
-                .getResource("branch-yeed.json")).getFile());
+                .getResource("branch-sample.json")).getFile());
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         clearTestDb();
-    }
-
-    @Test
-    public void shouldBeValidBlock() {
-        BlockChain blockChain = generateTestBlockChain();
-        assertThat(blockChain.getGenesisBlock().getAddress().toString())
-                .isEqualTo("8e32477412a619ff24e6386fa19bc53ad5f4d025");
     }
 
     @Test
@@ -113,7 +114,7 @@ public class BlockChainTest {
     }
 
     private void clearTestDb() {
-        String dbPath = new DefaultConfig().getConfig().getString(Constants.DATABASE_PATH);
+        String dbPath = defaultConfig.getConfig().getString(Constants.DATABASE_PATH);
         FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 }

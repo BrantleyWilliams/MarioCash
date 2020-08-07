@@ -19,7 +19,7 @@ package dev.zhihexireng.core.store;
 import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BranchId;
+import dev.zhihexireng.core.ChainId;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.datasource.DbSource;
@@ -41,12 +41,12 @@ public class BlockStore implements Store<Sha3Hash, BlockHusk> {
         this.db = dbSource.init();
     }
 
-    public BlockStore(BranchId branchId) {
-        this(branchId.toString());
+    public BlockStore(ChainId chainId) {
+        this(chainId.toString());
     }
 
-    public BlockStore(String branchId) {
-        this.db = new LevelDbDataSource(branchId + "/blocks").init();
+    public BlockStore(String chainId) {
+        this.db = new LevelDbDataSource(chainId + "/blocks").init();
     }
 
     @Override
@@ -57,12 +57,8 @@ public class BlockStore implements Store<Sha3Hash, BlockHusk> {
     @Override
     public BlockHusk get(Sha3Hash key) {
         byte[] foundValue = db.get(key.getBytes());
-        try {
-            if (foundValue != null) {
-                return new BlockHusk(foundValue);
-            }
-        } catch (InvalidProtocolBufferException e) {
-            logger.warn("InvalidProtocolBufferException: {}", e);
+        if (foundValue != null) {
+            return new BlockHusk(foundValue);
         }
 
         throw new NonExistObjectException("Not Found [" + key + "]");
@@ -77,7 +73,7 @@ public class BlockStore implements Store<Sha3Hash, BlockHusk> {
                 blockSet.add(new BlockHusk(data));
             }
             return blockSet;
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new NotValidateException(e);
         }
     }

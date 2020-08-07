@@ -2,16 +2,15 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.contract.Contract;
-import dev.zhihexireng.core.store.StateStore;
+import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 
 public class Runtime {
 
-    private final StateStore stateStore;
+    private final StateStore stateStore = new StateStore();
     private final TransactionReceiptStore txReceiptStore;
 
-    public Runtime(StateStore stateStore, TransactionReceiptStore txReceiptStore) {
-        this.stateStore = stateStore;
+    public Runtime(TransactionReceiptStore txReceiptStore) {
         this.txReceiptStore = txReceiptStore;
     }
 

@@ -11,6 +11,7 @@ import org.spongycastle.crypto.InvalidCipherTextException;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.SignatureException;
 import java.util.Scanner;
 
 public class GenesisBlock {
@@ -32,7 +33,7 @@ public class GenesisBlock {
         JsonObject nodeListObject = getJsonObjectFromFile(nodeListFileName);
         genesisObject.add("nodeList", nodeListObject.get("nodeList"));
 
-        //genesisBlock = BlockHusk.genesis(wallet, genesisObject);
+        genesisBlock = BlockHusk.genesis(wallet, genesisObject);
     }
 
     private JsonObject getJsonObjectFromFile(String fileName) throws IOException {

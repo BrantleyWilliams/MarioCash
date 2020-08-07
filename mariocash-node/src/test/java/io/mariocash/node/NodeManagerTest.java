@@ -18,16 +18,16 @@ package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BlockHuskBuilder;
-import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
+import dev.zhihexireng.core.store.TransactionStore;
+import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.FileUtil;
@@ -69,26 +69,25 @@ public class NodeManagerTest {
         nodeManager.setMessageSender(messageSender);
         nodeManager.setWallet(new Wallet());
 
-        Runtime runtime = new Runtime(new StateStore(), new TransactionReceiptStore());
-        BlockChain blockChain = new BlockChain(
+        TransactionStore transactionStore = new TransactionStore(new HashMapDbSource());
+        nodeManager.setTransactionStore(transactionStore);
+        Runtime runtime = new Runtime(new TransactionReceiptStore());
+        nodeManager.setRuntime(runtime);
+        nodeManager.setBlockChain(new BlockChain(
                 new File(getClass().getClassLoader()
-                        .getResource("branch-yeed.json").getFile()));
-
-        BranchGroup branchGroup = new BranchGroup(runtime);
-        branchGroup.addBranch(blockChain.getBranchId(), blockChain);
-        nodeManager.setBranchGroup(branchGroup);
+                        .getResource("branch-sample.json").getFile())));
         nodeManager.setNodeHealthIndicator(mock(NodeHealthIndicator.class));
         nodeManager.init();
         assert nodeManager.getNodeUri() != null;
         this.tx = TestUtils.createTxHusk(nodeManager.getWallet());
-        this.firstBlock = BlockHuskBuilder.buildUnSigned(nodeManager.getWallet(),
-                Collections.singletonList(tx), nodeManager.getBlockByIndexOrHash("0"));
-        this.secondBlock = BlockHuskBuilder.buildSigned(nodeManager.getWallet(),
-                Collections.singletonList(tx), firstBlock);
+        this.firstBlock = new BlockHusk(nodeManager.getWallet(), Collections.singletonList(tx),
+                nodeManager.getBlockByIndexOrHash("0"));
+        this.secondBlock = new BlockHusk(nodeManager.getWallet(), Collections.singletonList(tx),
+                firstBlock);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         //TODO 테스트 설정 파일에서 DB 부분 제거
         FileUtil.recursiveDelete(Paths.get(".mariocash/db"));
     }
@@ -102,7 +101,18 @@ public class NodeManagerTest {
 
     @Test(expected = InvalidSignatureException.class)
     public void unsignedTxTest() {
-        nodeManager.addTransaction(new TransactionHusk(TestUtils.getTransactionFixture()));
+        nodeManager.addTransaction(TestUtils.createUnsignedTxHusk());
+    }
+
+    @Test(expected = FailedOperationException.class)
+    public void addTransactionExceptionTest() {
+        nodeManager.setMessageSender(null);
+        nodeManager.addTransaction(tx);
+    }
+
+    @Test(expected = InvalidSignatureException.class)
+    public void failedOperationExceptionTest() {
+        nodeManager.addTransaction(TestUtils.createInvalidTxHusk());
     }
 
     @Test
