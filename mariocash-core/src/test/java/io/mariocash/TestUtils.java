@@ -18,6 +18,7 @@ package dev.zhihexireng;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.protobuf.ByteString;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
@@ -27,23 +28,28 @@ import dev.zhihexireng.core.BlockSignature;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionBody;
 import dev.zhihexireng.core.TransactionHeader;
+import dev.zhihexireng.core.BlockHuskBuilder;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionSignature;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.exception.InvalidSignatureException;
+import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.FileUtil;
 import dev.zhihexireng.util.TimeUtils;
 
-import java.nio.file.Paths;
-import java.security.SignatureException;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.Random;
 
 public class TestUtils {
-    private static Wallet wallet;
     public static final String YGG_HOME = "testOutput";
+
+    private static Wallet wallet;
+    private static byte[] type =
+            ByteBuffer.allocate(4).putInt(BlockHuskBuilder.DEFAULT_TYPE).array();
+    private static byte[] version =
+            ByteBuffer.allocate(4).putInt(BlockHuskBuilder.DEFAULT_VERSION).array();
 
     private TestUtils() {}
 
@@ -51,12 +57,8 @@ public class TestUtils {
         try {
             wallet = new Wallet();
         } catch (Exception e) {
-            throw new NotValidateException(e);
+            throw new InvalidSignatureException(e);
         }
-    }
-
-    public static void clearOutput() {
-        FileUtil.recursiveDelete(Paths.get(YGG_HOME));
     }
 
     public static Proto.Transaction getTransactionFixture() {
@@ -66,6 +68,35 @@ public class TestUtils {
         } catch (SignatureException e) {
             throw new NotValidateException();
         }
+    }
+
+    public static Proto.Transaction[] getTransactionFixtures() {
+        return new Proto.Transaction[] {getTransactionFixture(), getTransactionFixture()};
+    }
+
+    public static TransactionHusk createTxHusk() {
+        return createTxHusk(wallet);
+    }
+
+    public static TransactionHusk createTxHusk(Wallet wallet) {
+        return createTxHuskByJson(getTransfer()).sign(wallet);
+    }
+
+    public static TransactionHusk createTxHuskByJson(JsonObject jsonObject) {
+        String body = jsonObject.toString();
+        Proto.Transaction.Header transactionHeader = Proto.Transaction.Header.newBuilder()
+                .setRawData(Proto.Transaction.Header.Raw.newBuilder()
+                        .setType(ByteString.copyFrom(type))
+                        .setVersion(ByteString.copyFrom(version))
+                        .setDataHash(ByteString.copyFrom(HashUtil.sha3(body.getBytes())))
+                        .setDataSize(body.getBytes().length)
+                        .build())
+                .build();
+        Proto.Transaction tx = Proto.Transaction.newBuilder()
+                .setHeader(transactionHeader)
+                .setBody(body)
+                .build();
+        return new TransactionHusk(tx);
     }
 
     public static Proto.Block getBlockFixture() {
