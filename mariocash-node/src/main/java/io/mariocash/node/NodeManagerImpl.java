@@ -16,39 +16,25 @@
 
 package dev.zhihexireng.node;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.contract.CoinContract;
-import dev.zhihexireng.contract.GenesisFrontierParam;
-import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.exception.FailedOperationException;
-import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.net.GrpcClientChannel;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.node.config.NodeProperties;
-import dev.zhihexireng.proto.Proto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -140,10 +126,6 @@ public class NodeManagerImpl implements NodeManager {
 
     @Override
     public BlockHusk generateBlock() {
-        BlockHusk block = new BlockHusk(wallet,
-                new ArrayList<>(transactionStore.getUnconfirmedTxs()), blockChain.getPrevBlock());
-        blockChain.addBlock(block);
-        executeAllTx(new TreeSet<>(block.getBody()));
         BlockHusk block = branchGroup.generateBlock(wallet);
         messageSender.newBlock(block);
         return block;
@@ -273,32 +255,6 @@ public class NodeManagerImpl implements NodeManager {
         removePeer(peer.getYnodeUri());
     }
 
-    @Autowired
-    public void setBlockChain(BlockChain blockChain) {
-        this.blockChain = blockChain;
-    }
-
-    private void initFrontiers() throws Exception {
-        if (blockChain.getLastIndex() > 1) {
-            log.warn("It's not a genesis blockchain");
-            return;
-        }
-        // TODO temporary execute genesis yeed tx
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        Proto.Transaction tx = blockChain.getBlockByIndex(0)
-                .getInstance().getBody().getTransactions(0);
-        GenesisFrontierParam[] param =
-                mapper.readValue(tx.getBody().toByteArray(), GenesisFrontierParam[].class);
-        if (!param[0].isGenesisOp()) {
-            return;
-        }
-        for (Map.Entry<String, GenesisFrontierParam.Balance> element : param[0].getFrontier()
-                .entrySet()) {
-            String balance = element.getValue().getBalance();
-            runtime.getStateStore().getState().put(element.getKey(), Long.parseLong(balance));
-        }
     public void setBranchGroup(BranchGroup branchGroup) {
         this.branchGroup = branchGroup;
     }

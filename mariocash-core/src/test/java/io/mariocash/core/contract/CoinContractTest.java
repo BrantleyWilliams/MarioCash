@@ -4,9 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.contract.CoinContract;
-import dev.zhihexireng.contract.StateStore;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,4 +57,5 @@ public class CoinContractTest {
     private Boolean invoke(TransactionHusk tx) throws Exception {
         return coinContract.invoke(tx);
     }
+
 }
