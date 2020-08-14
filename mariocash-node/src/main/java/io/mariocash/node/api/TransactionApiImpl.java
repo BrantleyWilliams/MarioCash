@@ -4,8 +4,7 @@ import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.NodeManager;
-import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.exception.NonExistObjectException;
@@ -27,12 +26,12 @@ public class TransactionApiImpl implements TransactionApi {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionApiImpl.class);
 
-    private final NodeManager nodeManager;
+    private final BranchGroup branchGroup;
     private final TransactionReceiptStore txReceiptStore;
 
     @Autowired
-    public TransactionApiImpl(NodeManager nodeManager, TransactionReceiptStore txReceiptStore) {
-        this.nodeManager = nodeManager;
+    public TransactionApiImpl(BranchGroup branchGroup, TransactionReceiptStore txReceiptStore) {
+        this.branchGroup = branchGroup;
         this.txReceiptStore = txReceiptStore;
     }
 
@@ -55,19 +54,19 @@ public class TransactionApiImpl implements TransactionApi {
         } else {
             blockNumber = -1;
         }
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockHusk block = branchGroup.getBlockByIndexOrHash(String.valueOf(blockNumber));
         return getCount(address, block.getBody());
     }
 
     @Override
     public int getTransactionCount(String address, int blockNumber) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockHusk block = branchGroup.getBlockByIndexOrHash(String.valueOf(blockNumber));
         return getCount(address, block.getBody());
     }
 
     @Override
     public int getBlockTransactionCountByHash(String hashOfBlock) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
+        BlockHusk block = branchGroup.getBlockByIndexOrHash(hashOfBlock);
         return block.getBody().size();
     }
 
@@ -87,7 +86,7 @@ public class TransactionApiImpl implements TransactionApi {
 
     @Override
     public TransactionHusk getTransactionByHash(String hashOfTx) {
-        TransactionHusk tx = nodeManager.getTxByHash(hashOfTx);
+        TransactionHusk tx = branchGroup.getTxByHash(hashOfTx);
         if (tx == null) {
             throw new NonExistObjectException("Transaction");
         }
@@ -97,14 +96,14 @@ public class TransactionApiImpl implements TransactionApi {
     @Override
     public TransactionHusk getTransactionByBlockHashAndIndex(
             String hashOfBlock, int txIndexPosition) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(hashOfBlock);
+        BlockHusk block = branchGroup.getBlockByIndexOrHash(hashOfBlock);
         return block.getBody().get(txIndexPosition);
     }
 
     @Override
     public TransactionHusk getTransactionByBlockNumberAndIndex(
             int blockNumber, int txIndexPosition) {
-        BlockHusk block = nodeManager.getBlockByIndexOrHash(String.valueOf(blockNumber));
+        BlockHusk block = branchGroup.getBlockByIndexOrHash(String.valueOf(blockNumber));
         return block.getBody().get(txIndexPosition);
     }
 
@@ -120,14 +119,14 @@ public class TransactionApiImpl implements TransactionApi {
     /* send */
     @Override
     public String sendTransaction(TransactionDto tx) {
-        TransactionHusk addedTx = nodeManager.addTransaction(TransactionDto.of(tx));
+        TransactionHusk addedTx = branchGroup.addTransaction(TransactionDto.of(tx));
         return addedTx.getHash().toString();
     }
 
     @Override
     public byte[] sendRawTransaction(byte[] bytes) {
         TransactionHusk tx = convert(bytes);
-        TransactionHusk addedTx = nodeManager.addTransaction(tx);
+        TransactionHusk addedTx = branchGroup.addTransaction(tx);
         return addedTx.getHash().getBytes();
     }
 
@@ -139,39 +138,39 @@ public class TransactionApiImpl implements TransactionApi {
 
     private TransactionHusk convert(byte[] bytes) {
 
-        //todo: change method to transaction class method
-
         int sum = 0;
-
-        byte[] chain = new byte[20];
-        chain = Arrays.copyOfRange(bytes, sum, sum += chain.length);
-        byte[] version = new byte[8];
-        version = Arrays.copyOfRange(bytes, sum, sum += version.length);
-        byte[] type = new byte[8];
+        byte[] type = new byte[4];
         type = Arrays.copyOfRange(bytes, sum, sum += type.length);
-        byte[] timestamp = new byte[8];
-        timestamp = Arrays.copyOfRange(bytes, sum, sum += timestamp.length);
-        byte[] bodyHash = new byte[32];
-        bodyHash = Arrays.copyOfRange(bytes, sum, sum += bodyHash.length);
-        byte[] bodyLength = new byte[8];
-        bodyLength = Arrays.copyOfRange(bytes, sum, sum += bodyLength.length);
+        byte[] version = new byte[4];
+        version = Arrays.copyOfRange(bytes, sum, sum += version.length);
+        byte[] dataHash = new byte[32];
+        dataHash = Arrays.copyOfRange(bytes, sum, sum += dataHash.length);
+        byte[] timestampByte = new byte[8];
+        timestampByte = Arrays.copyOfRange(bytes, sum, sum += timestampByte.length);
+        byte[] dataSizeByte = new byte[8];
+        dataSizeByte = Arrays.copyOfRange(bytes, sum, sum += dataSizeByte.length);
         byte[] signature = new byte[65];
         signature = Arrays.copyOfRange(bytes, sum, sum += signature.length);
-        byte[] body = Arrays.copyOfRange(bytes, sum, bytes.length);
+        byte[] dataByte = Arrays.copyOfRange(bytes, sum, bytes.length);
+
+        long timestamp = Longs.fromByteArray(timestampByte);
+        long dataSize = Longs.fromByteArray(dataSizeByte);
+        String data = new String(dataByte);
 
         Proto.Transaction.Header transactionHeader = Proto.Transaction.Header.newBuilder()
-                .setChain(ByteString.copyFrom(chain))
-                .setVersion(ByteString.copyFrom(version))
-                .setType(ByteString.copyFrom(type))
-                .setTimestamp(ByteString.copyFrom(timestamp))
-                .setBodyHash(ByteString.copyFrom(bodyHash))
-                .setBodyLength(ByteString.copyFrom(bodyLength))
+                .setRawData(Proto.Transaction.Header.Raw.newBuilder()
+                        .setType(ByteString.copyFrom(type))
+                        .setVersion(ByteString.copyFrom(version))
+                        .setDataHash(ByteString.copyFrom(dataHash))
+                        .setDataSize(dataSize)
+                        .setTimestamp(timestamp)
+                        .build())
+                .setSignature(ByteString.copyFrom(signature))
                 .build();
 
         Proto.Transaction tx = Proto.Transaction.newBuilder()
                 .setHeader(transactionHeader)
-                .setSignature(ByteString.copyFrom(signature))
-                .setBody(ByteString.copyFrom(body))
+                .setBody(data)
                 .build();
 
         return new TransactionHusk(tx);

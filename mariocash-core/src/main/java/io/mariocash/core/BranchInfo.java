@@ -23,19 +23,14 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BranchInfo {
-    public String chain;
-    public String version;
     public String type;
-    public String prevBlockHash;
-    public String index;
+    public String version;
     public String timestamp;
+    public String prevBlockHash;
     public String merkleRoot;
-    public String bodyLength;
+    public String dataSize;
     public String signature;
-    public List<BranchData> body;
-
-    public BranchInfo() {
-    }
+    public List<BranchData> data;
 
     public BranchId getBranchId() {
         return new BranchId(new Sha3Hash(toString().getBytes()));
@@ -44,28 +39,24 @@ public class BranchInfo {
     @Override
     public String toString() {
         return "BranchInfo{"
-                + "chain='" + chain + '\''
+                + "type='" + type + '\''
                 + ", version='" + version + '\''
-                + ", type='" + type + '\''
                 + ", prevBlockHash='" + prevBlockHash + '\''
-                + ", index='" + index + '\''
-                + ", timestamp='" + timestamp + '\''
                 + ", merkleRoot='" + merkleRoot + '\''
-                + ", bodyLength='" + bodyLength + '\''
+                + ", timestamp='" + timestamp + '\''
+                + ", dataSize='" + dataSize + '\''
                 + ", signature='" + signature + '\''
-                + ", body='" + body + '\''
+                + ", data='" + data + '\''
                 + '}';
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BranchData {
-        public String chain;
-        public String version;
         public String type;
+        public String version;
+        public String dataHash;
         public String timestamp;
-        public String bodyHash;
-        public String bodyLength;
+        public String dataSize;
         public String signature;
-        public String body;
+        public String data;
     }
 }
