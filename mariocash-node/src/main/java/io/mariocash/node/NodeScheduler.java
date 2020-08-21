@@ -16,8 +16,7 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.core.net.NodeManager;
-import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.core.NodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +40,9 @@ class NodeScheduler {
 
     private final NodeManager nodeManager;
 
-    private final PeerGroup peerGroup;
-
     @Autowired
-    public NodeScheduler(MessageSender messageSender, PeerGroup peerGroup,
-                         NodeManager nodeManager) {
+    public NodeScheduler(MessageSender messageSender, NodeManager nodeManager) {
         this.messageSender = messageSender;
-        this.peerGroup = peerGroup;
         this.nodeManager = nodeManager;
     }
 
@@ -59,7 +54,7 @@ class NodeScheduler {
     @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * BLOCK_MINE_SEC)
     public void generateBlock() {
         if (nodeQueue.isEmpty()) {
-            nodeQueue.addAll(peerGroup.getPeerUriList());
+            nodeQueue.addAll(nodeManager.getPeerUriList());
         }
         String peerId = nodeQueue.poll();
         assert peerId != null;

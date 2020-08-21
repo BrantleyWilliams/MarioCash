@@ -2,8 +2,12 @@ package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Longs;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.store.TransactionReceiptStore;
+import dev.zhihexireng.node.NodeManagerImpl;
 import dev.zhihexireng.node.TestUtils;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.junit.Before;
@@ -25,6 +29,8 @@ public class TransactionApiImplTest {
     private static final BlockApi blockApi = new JsonRpcConfig().blockApi();
     private static final TransactionApi txApi = new JsonRpcConfig().transactionApi();
 
+    private final TransactionApiImpl txApiImpl = new TransactionApiImpl(new NodeManagerImpl(),
+            new TransactionReceiptStore());
     private final String address = "0x407d73d8a49eeb85d32cf465507dd71d507100c1";
     private final String tag = "latest";
     private final String hashOfTx =
@@ -92,7 +98,7 @@ public class TransactionApiImplTest {
     @Test
     public void getTransactionByBlockHashAndIndexTest() {
         try {
-            TransactionHusk tx = TestUtils.createTxHusk();
+            TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx(wallet));
             if (txApi.sendTransaction(TransactionDto.createBy(tx)) != null) {
                 Thread.sleep(10000);
                 String hashOfBlock = blockApi.getBlockByHash("1", true).getHash().toString();
@@ -126,7 +132,7 @@ public class TransactionApiImplTest {
 
     @Test
     public void sendTransactionTest() {
-        TransactionHusk tx = TestUtils.createTxHusk();
+        TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx());
 
         // Request Transaction with jsonStr
         try {
@@ -190,9 +196,23 @@ public class TransactionApiImplTest {
     }
 
     @Test
+    public void transactionApiImplTest() {
+        try {
+            assertThat(1).isEqualTo(txApiImpl.getTransactionCount(address, tag));
+            assertThat(2).isEqualTo(txApiImpl.getTransactionCount(address, blockNumber));
+            assertThat(3).isEqualTo(txApiImpl.getBlockTransactionCountByHash(hashOfBlock));
+            assertThat(4).isEqualTo(txApiImpl.getBlockTransactionCountByNumber(blockNumber));
+            assertThat(5).isEqualTo(txApiImpl.getBlockTransactionCountByNumber(tag));
+            assertThat(6).isEqualTo(txApiImpl.newPendingTransactionFilter());
+        } catch (Exception exception) {
+            log.debug("\n\ntransactionApiImplTest :: exception => " + exception);
+        }
+    }
+
+    @Test
     public void txSigValidateTest() throws IOException {
         // Create Transaction
-        TransactionHusk tx = TestUtils.createTxHusk();
+        TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx(wallet));
 
         ObjectMapper mapper = TestUtils.getMapper();
         String jsonStr = mapper.writeValueAsString(TransactionDto.createBy(tx));
@@ -203,4 +223,5 @@ public class TransactionApiImplTest {
         // Signature Validation
         assertTrue(TransactionDto.of(resDto).verify());
     }
+
 }
