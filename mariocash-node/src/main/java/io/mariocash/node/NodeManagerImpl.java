@@ -255,6 +255,7 @@ public class NodeManagerImpl implements NodeManager {
         removePeer(peer.getYnodeUri());
     }
 
+    @Autowired
     public void setBranchGroup(BranchGroup branchGroup) {
         this.branchGroup = branchGroup;
     }

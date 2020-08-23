@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class StemContract extends BaseContract<JsonObject> {
 
@@ -31,9 +29,10 @@ public class StemContract extends BaseContract<JsonObject> {
     /**
      * Returns the id of a registered branch
      *
+     * @param branchId The Id of the branch to create
      * @param branch   The branch.json to register on the stem
      */
-    public String create(JsonObject branch) {
+    public String create(String branchId, JsonObject branch) {
         log.info("[StemContract | create] branch => " + branch);
         // 1. The type of the branch must be one of types.
         // 2. The reference_address of the branch must be contained to branchStore.
@@ -43,10 +42,12 @@ public class StemContract extends BaseContract<JsonObject> {
         String type = branch.get("type").getAsString();
 
         if (verify(refAddress, type)) {
-            String branchId = Hex.encodeHexString(getBranchHash(branch));
-            state.put(branchId, branch);
-            log.info("[StemContract | create] branchId => " + branchId);
-            return branchId;
+            if (isBranchIdValid(branchId, branch)) {
+                state.put(branchId, branch);
+                setSubState(branchId, branch);
+                log.info("[StemContract | create] branchId => " + branchId);
+                return branchId;
+            }
         }
         return null;
     }
@@ -54,17 +55,18 @@ public class StemContract extends BaseContract<JsonObject> {
     /**
      * Returns the id of a updated branch
      *
-     * @param branchId The Id of the branch to update.
+     * @param branchId The Id of the branch to update
      * @param branch   The branch.json to update on the stem
      */
     public String update(String branchId, JsonObject branch) {
-        if (isBranchHonest(branchId, branch)) {
+        if (isBranchIdValid(branchId, branch)) {
             if (isVersionHistoryUpdated(branchId, branch)) {
-                log.info("[StemContract | update] branchId => "
-                        + branchId + "\nbranch => " + branch);
-                state.put(branchId, branch);
+                log.info("[StemContract | update] branchId => " + branchId);
+                log.info("[StemContract | update] branch => " + branch);
+                state.replace(branchId, branch);
                 return branchId;
             }
+            state.replace(branchId, branch);
         }
         return null;
     }
@@ -83,12 +85,7 @@ public class StemContract extends BaseContract<JsonObject> {
     }
     */
 
-    /**
-     * Returns a list of branch.json (query)
-     *
-     * param key       type, name, property, owner, tag or symbol
-     * param element   content of the key
-     */
+    /*
     public List<JsonObject> search(JsonArray params) {
         List<JsonObject> branchList = new ArrayList<>();
         JsonObject param = params.get(0).getAsJsonObject();
@@ -109,6 +106,19 @@ public class StemContract extends BaseContract<JsonObject> {
         }
         return branchList;
     }
+    */
+
+    /**
+     * Returns a list of branch.json (query)
+     *
+     * param key       type, name, property, owner, tag or symbol
+     * param element   content of the key
+     */
+    public Set<Object> search(JsonArray params) {
+        String subStateKey = params.get(0).getAsJsonObject().get("key").getAsString();
+        String key = params.get(0).getAsJsonObject().get("value").getAsString();
+        return state.getSubState(subStateKey).get(key);
+    }
 
     /**
      * Returns branch.json as JsonString (query)
@@ -122,24 +132,6 @@ public class StemContract extends BaseContract<JsonObject> {
             return getBranch(branchId).toString();
         }
         return "";
-    }
-
-    /**
-     * Returns a map consisting of branch id and branch name.
-     * @return branch id and name
-     */
-    public Map<String, String> getallbranchname(JsonArray params) {
-        log.debug("StemContract :: getallbranchname : params => " + params);
-        Map<String, String> branchNameList = new HashMap<>();
-        List<String> branchIdList = state.getAllKey();
-        log.debug("branchIdList :: " + branchIdList);
-
-        if (state.getAll().size() > 0) {
-            for (String key : branchIdList) {
-                branchNameList.put(key, state.get(key).get("name").getAsString());
-            }
-        }
-        return branchNameList;
     }
 
     /**
@@ -207,8 +199,8 @@ public class StemContract extends BaseContract<JsonObject> {
         return true;
     }
 
-    private boolean isBranchHonest(String branchId, JsonObject branch) {
-        if (branchId.equals(getBranchHashStr(getBranchHash(branch)))) {
+    private boolean isBranchIdValid(String branchId, JsonObject branch) {
+        if (branchId.equals(getBranchId(getBranchHash(branch)))) {
             log.info("[Validation] branchId is valid");
             return true;
         }
@@ -230,7 +222,7 @@ public class StemContract extends BaseContract<JsonObject> {
         return state.get(branchId);
     }
 
-    private String getBranchHashStr(byte[] rawBranchHash) {
+    private String getBranchId(byte[] rawBranchHash) {
         return Hex.encodeHexString(rawBranchHash);
     }
 
@@ -254,5 +246,37 @@ public class StemContract extends BaseContract<JsonObject> {
             e.printStackTrace();
         }
         return branchStream.toByteArray();
+    }
+
+    private void setSubState(String branchId, JsonObject branch) {
+        state.putSubState("type",
+                branch.get("type").getAsString(), branchId);
+        state.putSubState("name",
+                branch.get("name").getAsString(), branchId);
+        state.putSubState("property",
+                branch.get("property").getAsString(), branchId);
+        state.putSubState("owner",
+                branch.get("owner").getAsString(), branchId);
+        state.putSubState("symbol",
+                branch.get("symbol").getAsString(), branchId);
+        state.putSubState("tag",
+                branch.get("tag").getAsString(), branchId);
+
+        printSubState();
+    }
+
+    private void printSubState() {
+        log.info("[StemContract | printSubState] typeState => "
+                + state.getSubState("type").toString());
+        log.info("[StemContract | printSubState] nameState => "
+                + state.getSubState("name").toString());
+        log.info("[StemContract | printSubState] propertyState => "
+                + state.getSubState("property").toString());
+        log.info("[StemContract | printSubState] ownerState => "
+                + state.getSubState("owner").toString());
+        log.info("[StemContract | printSubState] symbolState => "
+                + state.getSubState("symbol").toString());
+        log.info("[StemContract | printSubState] tagState => "
+                + state.getSubState("tag").toString());
     }
 }

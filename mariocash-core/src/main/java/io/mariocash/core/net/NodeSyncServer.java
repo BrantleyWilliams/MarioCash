@@ -28,7 +28,6 @@ import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -234,8 +233,7 @@ public class NodeSyncServer {
             return new StreamObserver<Proto.Block>() {
                 @Override
                 public void onNext(Proto.Block protoBlock) {
-                    long id = ByteUtil.byteArrayToLong(
-                            protoBlock.getHeader().getIndex().toByteArray());
+                    long id = protoBlock.getHeader().getRawData().getIndex();
                     BlockHusk block = new BlockHusk(protoBlock);
                     log.debug("Received block id=[{}], hash={}", id, block.getHash());
                     BlockHusk newBlock = nodeManager.addBlock(block);

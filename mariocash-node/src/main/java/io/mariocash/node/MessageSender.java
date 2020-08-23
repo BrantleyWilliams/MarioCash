@@ -19,7 +19,6 @@ package dev.zhihexireng.node;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.event.PeerEventListener;
-import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.node.config.NodeProperties;
@@ -30,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
