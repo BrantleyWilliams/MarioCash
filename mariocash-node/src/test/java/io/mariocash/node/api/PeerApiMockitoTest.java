@@ -1,11 +1,11 @@
 package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.zhihexireng.core.net.GrpcClientChannel;
 import dev.zhihexireng.core.net.Peer;
+import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.node.MessageSender;
+import dev.zhihexireng.node.GRpcClientChannel;
 import dev.zhihexireng.node.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 public class PeerApiMockitoTest {
 
     @Mock
-    private MessageSender messageSender;
+    private PeerChannelGroup peerChannelGroup;
 
     private Peer peer1;
     private Peer peer2;
@@ -48,11 +48,11 @@ public class PeerApiMockitoTest {
         peerGroup = new PeerGroup();
         peerGroup.addPeer(peer1);
         peerGroup.addPeer(peer2);
-        PeerClientChannel client1 = new GrpcClientChannel(peer1);
-        PeerClientChannel client2 = new GrpcClientChannel(peer2);
+        PeerClientChannel client1 = new GRpcClientChannel(peer1);
+        PeerClientChannel client2 = new GRpcClientChannel(peer2);
         peerChannel.put(client1.getPeer().getYnodeUri(), client1);
         peerChannel.put(client2.getPeer().getYnodeUri(), client2);
-        peerApi = new PeerApiImpl(peerGroup, messageSender);
+        peerApi = new PeerApiImpl(peerGroup, peerChannelGroup);
         peerList = new ArrayList<>(peerChannel.keySet());
     }
 
@@ -70,7 +70,7 @@ public class PeerApiMockitoTest {
 
     @Test
     public void getAllActivePeerTest() {
-        when(messageSender.getActivePeerList()).thenReturn(peerList);
+        when(peerChannelGroup.getActivePeerList()).thenReturn(peerList);
         assertThat(peerApi.getAllActivePeer().size()).isEqualTo(2);
     }
 

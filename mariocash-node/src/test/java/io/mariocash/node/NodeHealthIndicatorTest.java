@@ -17,10 +17,9 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.net.PeerClientChannel;
+import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
-import dev.zhihexireng.node.config.NodeProperties;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
@@ -32,9 +31,10 @@ public class NodeHealthIndicatorTest {
 
     @Before
     public void setUp() {
-        MessageSender<PeerClientChannel> sender = new MessageSender<>(new NodeProperties());
+        PeerChannelGroup peerChannelGroup = new PeerChannelGroup(1);
         BlockStore blockStore = new BlockStore(new HashMapDbSource());
-        this.nodeHealthIndicator = new NodeHealthIndicator(new DefaultConfig(), blockStore, sender);
+        this.nodeHealthIndicator = new NodeHealthIndicator(new DefaultConfig(), blockStore,
+                peerChannelGroup);
     }
 
     @Test
