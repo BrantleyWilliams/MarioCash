@@ -24,7 +24,7 @@ import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
-import dev.zhihexireng.core.net.PeerClientChannel;
+import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
@@ -64,8 +64,8 @@ public class NodeManagerTest {
         this.peerGroup = new PeerGroup();
         this.nodeProperties = new NodeProperties();
 
-        MessageSender<PeerClientChannel> messageSender = new MessageSender<>(nodeProperties);
-        messageSender.setListener(nodeManager);
+        PeerChannelGroup peerChannelGroup = new PeerChannelGroup(nodeProperties.getMaxPeers());
+        peerChannelGroup.setListener(nodeManager);
         Runtime runtime = new Runtime(new StateStore(), new TransactionReceiptStore());
         this.branchGroup = new BranchGroup(runtime);
         BlockChain blockChain = new BlockChain(
@@ -73,7 +73,7 @@ public class NodeManagerTest {
                         .getResource("branch-yeed.json").getFile()));
         branchGroup.addBranch(blockChain.getBranchId(), blockChain);
 
-        nodeManager.setMessageSender(messageSender);
+        nodeManager.setPeerChannelGroup(peerChannelGroup);
         nodeManager.setWallet(new Wallet());
         nodeManager.setPeerGroup(peerGroup);
         nodeManager.setBranchGroup(branchGroup);
