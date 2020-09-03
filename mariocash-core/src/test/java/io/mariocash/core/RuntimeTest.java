@@ -29,7 +29,7 @@ public class RuntimeTest {
     }
 
     @Test
-    public void invokeToYeedTest() throws Exception {
+    public void invokeFromYeedTest() throws Exception {
         JsonArray params = new JsonArray();
         JsonObject param1 = new JsonObject();
         param1.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
@@ -47,13 +47,31 @@ public class RuntimeTest {
     }
 
     @Test
+    public void invokeFromStemTest() throws Exception {
+        JsonObject branch = TestUtils.getSampleBranch1();
+        String branchId = TestUtils.getBranchId(branch);
+        JsonArray params = new JsonArray();
+        JsonObject param = new JsonObject();
+        param.addProperty("branchId", branchId);
+        param.add("branch", branch);
+        params.add(param);
+
+        JsonObject txObj = new JsonObject();
+        txObj.addProperty("method", "create");
+        txObj.add("params", params);
+
+        TransactionHusk tx = TestUtils.createTxHuskByJson(txObj).sign(wallet);
+        runtime.invoke(stemContract, tx);
+    }
+
+    @Test
     public void queryToYeedTest() throws Exception {
         JsonArray params = new JsonArray();
         JsonObject param = new JsonObject();
         param.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
         params.add(param);
 
-        JsonObject result = runtime.query(coinContract, createQuery("balanceOf", params));
+        JsonObject result = runtime.query(coinContract, TestUtils.createQuery("balanceOf", params));
         assertThat(result).isNotNull();
     }
 
@@ -65,30 +83,21 @@ public class RuntimeTest {
                 "e1bbdf827bb44f0ae1d88f34e5f3a360484adbf2cf65a6d34162af3bbd4b9523");
         params.add(param);
 
-        JsonObject result = runtime.query(stemContract, createQuery("view", params));
+        JsonObject result = runtime.query(stemContract, TestUtils.createQuery("view", params));
         assertThat(result).isNotNull();
 
-        result = runtime.query(stemContract, createQuery("getCurrentVersion", params));
+        result = runtime.query(stemContract, TestUtils.createQuery("getCurrentVersion", params));
         assertThat(result).isNotNull();
 
-        result = runtime.query(stemContract, createQuery("getVersionHistory", params));
+        result = runtime.query(stemContract, TestUtils.createQuery("getVersionHistory", params));
         assertThat(result).isNotNull();
 
-        param.remove("branchId");
-        param.addProperty("type", "immutable");
-        params.remove(0);
-        params.add(param);
-
-        result = runtime.query(stemContract, createQuery("search", params));
-        assertThat(result).isNotNull();
-    }
-
-    private JsonObject createQuery(String method, JsonArray params) {
-        JsonObject query = new JsonObject();
-        query.addProperty("address", "0xe1980adeafbb9ac6c9be60955484ab1547ab0b76");
-        query.addProperty("method", method);
-        query.add("params", params);
-        System.out.println("createQuery :: query => " + query);
-        return query;
+        //param.remove("branchId");
+        //param.addProperty("key", "type");
+        //param.addProperty("value", "immunity");
+        //params.remove(0);
+        //params.add(param);
+        //result = runtime.query(stemContract, createQuery("search", params));
+        //assertThat(result).isNotNull();
     }
 }

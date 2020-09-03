@@ -5,7 +5,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.contract.StemContract;
+import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.Runtime;
+import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,16 +21,20 @@ import java.util.List;
 public class BranchApiImpl implements BranchApi {
 
     private static final Logger log = LoggerFactory.getLogger(BranchApiImpl.class);
+    private final BranchGroup branchGroup;
     private final Runtime runtime;
 
     @Autowired
-    public BranchApiImpl(Runtime runtime) {
+    public BranchApiImpl(BranchGroup branchGroup, Runtime runtime) {
+        this.branchGroup = branchGroup;
         this.runtime = runtime;
     }
 
     @Override
     public String createBranch(TransactionDto tx) {
-        return null;
+        log.info("[BranchAPI | createBranch] tx => " + tx);
+        TransactionHusk addedTx = branchGroup.addTransaction(TransactionDto.of(tx));
+        return addedTx.getHash().toString();
     }
 
     @Override
@@ -42,24 +48,18 @@ public class BranchApiImpl implements BranchApi {
     }
 
     @Override
-    public String viewBranch(String branchId) {
-        return null;
-    }
-
-    @Override
-    public String getAllBranchName(String data) throws Exception {
+    public String viewBranch(String data) throws Exception {
         return queryOf(data);
-        //return "getAllBranchName!";
     }
 
     @Override
-    public String getCurrentVersionOfBranch(String branchId) {
-        return null;
+    public String getCurrentVersionOfBranch(String data) throws Exception {
+        return queryOf(data);
     }
 
     @Override
-    public JsonArray getVersionHistoryOfBranch(String branchId) {
-        return null;
+    public String getVersionHistoryOfBranch(String data) throws Exception {
+        return queryOf(data);
     }
 
     private String queryOf(String data) throws Exception {

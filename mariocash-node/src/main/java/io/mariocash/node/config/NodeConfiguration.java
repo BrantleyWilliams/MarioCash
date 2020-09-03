@@ -18,7 +18,9 @@ package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.net.NodeServer;
 import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.node.GRpcNodeServer;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -38,9 +40,14 @@ public class NodeConfiguration {
 
     @Bean
     PeerGroup peerGroup() {
-        PeerGroup peerGroup = new PeerGroup(nodeProperties.getMaxPeers());
+        PeerGroup peerGroup = new PeerGroup();
         peerGroup.setSeedPeerList(nodeProperties.getSeedPeerList());
         return peerGroup;
+    }
+
+    @Bean
+    NodeServer nodeServer() {
+        return new GRpcNodeServer();
     }
 
     @Bean

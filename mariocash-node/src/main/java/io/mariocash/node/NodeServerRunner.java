@@ -41,6 +41,8 @@ public class NodeServerRunner implements CommandLineRunner, DisposableBean {
     public void run(String... args) throws Exception {
         String host = nodeProperties.getGrpc().getHost();
         int port = nodeProperties.getGrpc().getPort();
+        int maxPeers = nodeProperties.getMaxPeers();
+        nodeServer.setMaxPeers(maxPeers);
         nodeServer.start(host, port);
         startDaemonAwaitThread();
     }

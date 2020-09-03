@@ -17,7 +17,6 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.BlockStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
@@ -35,14 +34,14 @@ public class NodeHealthIndicator implements HealthIndicator {
 
     private final BlockStore blockStore;
 
-    private final PeerGroup peerGroup;
+    private final MessageSender messageSender;
 
     @Autowired
     public NodeHealthIndicator(DefaultConfig defaultConfig, BlockStore blockStore,
-                               PeerGroup peerGroup) {
+                               MessageSender messageSender) {
         this.defaultConfig = defaultConfig;
         this.blockStore = blockStore;
-        this.peerGroup = peerGroup;
+        this.messageSender = messageSender;
     }
 
     @Override
@@ -66,7 +65,7 @@ public class NodeHealthIndicator implements HealthIndicator {
         builder.withDetail("p2pVersion", defaultConfig.getNetworkP2PVersion());
         builder.withDetail("network", defaultConfig.getNetwork());
         builder.withDetail("height", blockStore.size());
-        builder.withDetail("activePeers", peerGroup.getActivePeerList().size());
+        builder.withDetail("activePeers", messageSender.getActivePeerList().size());
         health.set(builder.build());
     }
 }
