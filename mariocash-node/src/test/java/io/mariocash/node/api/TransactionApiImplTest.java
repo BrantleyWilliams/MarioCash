@@ -2,8 +2,6 @@ package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Longs;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.node.TestUtils;
@@ -94,7 +92,7 @@ public class TransactionApiImplTest {
     @Test
     public void getTransactionByBlockHashAndIndexTest() {
         try {
-            TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx(wallet));
+            TransactionHusk tx = TestUtils.createTxHusk();
             if (txApi.sendTransaction(TransactionDto.createBy(tx)) != null) {
                 Thread.sleep(10000);
                 String hashOfBlock = blockApi.getBlockByHash("1", true).getHash().toString();
@@ -128,7 +126,7 @@ public class TransactionApiImplTest {
 
     @Test
     public void sendTransactionTest() {
-        TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx());
+        TransactionHusk tx = TestUtils.createTxHusk();
 
         // Request Transaction with jsonStr
         try {
@@ -194,7 +192,7 @@ public class TransactionApiImplTest {
     @Test
     public void txSigValidateTest() throws IOException {
         // Create Transaction
-        TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx(wallet));
+        TransactionHusk tx = TestUtils.createTxHusk();
 
         ObjectMapper mapper = TestUtils.getMapper();
         String jsonStr = mapper.writeValueAsString(TransactionDto.createBy(tx));
@@ -205,5 +203,4 @@ public class TransactionApiImplTest {
         // Signature Validation
         assertTrue(TransactionDto.of(resDto).verify());
     }
-
 }

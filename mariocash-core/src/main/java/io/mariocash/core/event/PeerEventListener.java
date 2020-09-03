@@ -19,5 +19,5 @@ package dev.zhihexireng.core.event;
 import dev.zhihexireng.core.net.Peer;
 
 public interface PeerEventListener {
-    void disconnected(Peer peer);
+    void newPeer(Peer peer);
 }
