@@ -23,11 +23,10 @@ import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.net.GrpcClientChannel;
 import dev.zhihexireng.core.net.NodeManager;
 import dev.zhihexireng.core.net.NodeServer;
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerClientChannel;
+import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.proto.BlockChainGrpc;
 import dev.zhihexireng.proto.NetProto;
@@ -35,6 +34,7 @@ import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
 import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,13 +54,13 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     private BranchGroup branchGroup;
 
-    private Wallet wallet;
-
     private PeerGroup peerGroup;
 
-    private Peer peer;
+    private PeerChannelGroup peerChannelGroup;
 
-    private MessageSender<PeerClientChannel> messageSender;
+    private Wallet wallet;
+
+    private Peer peer;
 
     private NodeHealthIndicator nodeHealthIndicator;
 
@@ -74,8 +74,9 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     }
 
     @Autowired
-    public void setMessageSender(MessageSender<PeerClientChannel> messageSender) {
-        this.messageSender = messageSender;
+    public void setPeerChannelGroup(PeerChannelGroup peerChannelGroup) {
+        this.peerChannelGroup = peerChannelGroup;
+        peerChannelGroup.setListener(this);
     }
 
     @Autowired
@@ -95,7 +96,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     @Autowired
     public void setBranchGroup(BranchGroup branchGroup) {
         this.branchGroup = branchGroup;
-        branchGroup.setListener(this);
+        branchGroup.setListener(peerChannelGroup);
     }
 
     @Override
@@ -136,11 +137,10 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     @PreDestroy
     public void destroy() {
         log.info("destroy uri=" + peer.getYnodeUri());
-        messageSender.destroy(peer.getYnodeUri());
+        peerChannelGroup.destroy(peer.getYnodeUri());
     }
 
     private void init() {
-        messageSender.setListener(this);
         requestPeerList();
         activatePeers();
         if (!peerGroup.isEmpty()) {
@@ -155,11 +155,6 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     @Override
     public void generateBlock() {
         branchGroup.generateBlock(wallet);
-    }
-
-    @Override
-    public void chainedBlock(BlockHusk block) {
-        messageSender.newBlock(block);
     }
 
     @Override
@@ -179,21 +174,16 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             return;
         }
         Peer peer = addPeerByYnodeUri(ynodeUri);
-        List<String> peerList = messageSender.broadcastPeerConnect(ynodeUri);
+        List<String> peerList = peerChannelGroup.broadcastPeerConnect(ynodeUri);
         addPeerByYnodeUri(peerList);
         addActivePeer(peer);
     }
 
     @Override
-    public void removePeer(String ynodeUri) {
-        if (peerGroup.removePeer(ynodeUri) != null) {
-            messageSender.broadcastPeerDisconnect(ynodeUri);
-        }
-    }
-
-    @Override
     public void disconnected(Peer peer) {
-        removePeer(peer.getYnodeUri());
+        if (peerGroup.removePeer(peer.getYnodeUri()) != null) {
+            peerChannelGroup.broadcastPeerDisconnect(peer.getYnodeUri());
+        }
     }
 
     private void addPeerByYnodeUri(List<String> peerList) {
@@ -226,7 +216,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         if (peer == null || this.peer.getYnodeUri().equals(peer.getYnodeUri())) {
             return;
         }
-        messageSender.newPeerChannel(new GrpcClientChannel(peer));
+        peerChannelGroup.newPeerChannel(new GRpcClientChannel(peer));
     }
 
     private void requestPeerList() {
@@ -241,7 +231,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             try {
                 Peer peer = Peer.valueOf(ynodeUri);
                 log.info("Trying to connecting SEED peer at {}", ynodeUri);
-                GrpcClientChannel client = new GrpcClientChannel(peer);
+                GRpcClientChannel client = new GRpcClientChannel(peer);
                 // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
                 List<String> peerList = client.requestPeerList(getNodeUri(), 0);
                 client.stop();
@@ -254,11 +244,11 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     private void syncBlockAndTransaction() {
         try {
-            List<BlockHusk> blockList = messageSender.syncBlock(branchGroup.getLastIndex());
+            List<BlockHusk> blockList = peerChannelGroup.syncBlock(branchGroup.getLastIndex());
             for (BlockHusk block : blockList) {
                 branchGroup.addBlock(block);
             }
-            List<TransactionHusk> txList = messageSender.syncTransaction();
+            List<TransactionHusk> txList = peerChannelGroup.syncTransaction();
             for (TransactionHusk tx : txList) {
                 branchGroup.addTransaction(tx);
             }
@@ -365,7 +355,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             log.debug("Received disconnect for=" + peerRequest.getFrom());
             responseObserver.onNext(EMPTY);
             responseObserver.onCompleted();
-            nodeManager.removePeer(peerRequest.getFrom());
+            nodeManager.disconnected(Peer.valueOf(peerRequest.getFrom()));
         }
 
         @Override
@@ -414,7 +404,8 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             return new StreamObserver<Proto.Block>() {
                 @Override
                 public void onNext(Proto.Block protoBlock) {
-                    long id = protoBlock.getHeader().getRawData().getIndex();
+                    long id = ByteUtil.byteArrayToLong(
+                            protoBlock.getHeader().getIndex().toByteArray());
                     BlockHusk block = new BlockHusk(protoBlock);
                     log.debug("Received block id=[{}], hash={}", id, block.getHash());
                     BlockHusk newBlock = branchGroup.addBlock(block);

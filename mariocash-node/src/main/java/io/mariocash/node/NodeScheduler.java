@@ -17,6 +17,7 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.net.NodeManager;
+import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,23 +38,23 @@ class NodeScheduler {
 
     private final Queue<String> nodeQueue = new LinkedBlockingQueue<>();
 
-    private final MessageSender messageSender;
+    private final PeerChannelGroup peerChannelGroup;
 
     private final NodeManager nodeManager;
 
     private final PeerGroup peerGroup;
 
     @Autowired
-    public NodeScheduler(MessageSender messageSender, PeerGroup peerGroup,
+    public NodeScheduler(PeerChannelGroup peerChannelGroup, PeerGroup peerGroup,
                          NodeManager nodeManager) {
-        this.messageSender = messageSender;
+        this.peerChannelGroup = peerChannelGroup;
         this.peerGroup = peerGroup;
         this.nodeManager = nodeManager;
     }
 
     @Scheduled(fixedRate = 1000 * 10)
     public void healthCheck() {
-        messageSender.healthCheck();
+        peerChannelGroup.healthCheck();
     }
 
     @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * BLOCK_MINE_SEC)

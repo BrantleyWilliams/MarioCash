@@ -17,18 +17,15 @@
 package dev.zhihexireng.core.net;
 
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.event.BranchEventListener;
 import dev.zhihexireng.core.event.PeerEventListener;
 
-public interface NodeManager extends PeerEventListener, BranchEventListener {
+public interface NodeManager extends PeerEventListener {
 
     String getNodeUri();
 
     void setMaxPeers(int maxPeers);
 
     void addPeer(String peer);
-
-    void removePeer(String peer);
 
     Wallet getWallet();
 
