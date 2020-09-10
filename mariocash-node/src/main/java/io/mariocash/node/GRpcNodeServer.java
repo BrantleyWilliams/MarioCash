@@ -26,7 +26,6 @@ import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.NodeManager;
 import dev.zhihexireng.core.net.NodeServer;
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.proto.BlockChainGrpc;
 import dev.zhihexireng.proto.NetProto;
@@ -34,7 +33,6 @@ import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +54,6 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     private PeerGroup peerGroup;
 
-    private PeerChannelGroup peerChannelGroup;
-
     private Wallet wallet;
 
     private Peer peer;
@@ -66,17 +62,10 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     private Server server;
 
-    private int maxPeers;
-
     @Autowired
     public void setPeerGroup(PeerGroup peerGroup) {
         this.peerGroup = peerGroup;
-    }
-
-    @Autowired
-    public void setPeerChannelGroup(PeerChannelGroup peerChannelGroup) {
-        this.peerChannelGroup = peerChannelGroup;
-        peerChannelGroup.setListener(this);
+        peerGroup.setListener(this);
     }
 
     @Autowired
@@ -96,7 +85,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     @Autowired
     public void setBranchGroup(BranchGroup branchGroup) {
         this.branchGroup = branchGroup;
-        branchGroup.setListener(peerChannelGroup);
+        branchGroup.setListener(peerGroup);
     }
 
     @Override
@@ -104,7 +93,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         this.peer = Peer.valueOf(wallet.getNodeId(), host, port);
         this.server = ServerBuilder.forPort(port)
                 .addService(new PingPongImpl())
-                .addService(new BlockChainImpl(this, peerGroup, branchGroup))
+                .addService(new BlockChainImpl(peerGroup, branchGroup))
                 .build()
                 .start();
         log.info("GRPC Server started, listening on " + port);
@@ -137,12 +126,12 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     @PreDestroy
     public void destroy() {
         log.info("destroy uri=" + peer.getYnodeUri());
-        peerChannelGroup.destroy(peer.getYnodeUri());
+        peerGroup.destroy(peer.getYnodeUri());
     }
 
     private void init() {
         requestPeerList();
-        activatePeers();
+        peerGroup.addPeer(peer);
         if (!peerGroup.isEmpty()) {
             nodeHealthIndicator.sync();
             syncBlockAndTransaction();
@@ -163,60 +152,11 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     }
 
     @Override
-    public void setMaxPeers(int maxPeers) {
-        this.maxPeers = maxPeers;
-    }
-
-    @Override
-    public void addPeer(String ynodeUri) {
-        if (peerGroup.contains(ynodeUri)) {
-            log.debug("MarioCash node is exist. uri={}", ynodeUri);
-            return;
-        }
-        Peer peer = addPeerByYnodeUri(ynodeUri);
-        List<String> peerList = peerChannelGroup.broadcastPeerConnect(ynodeUri);
-        addPeerByYnodeUri(peerList);
-        addActivePeer(peer);
-    }
-
-    @Override
-    public void disconnected(Peer peer) {
-        if (peerGroup.removePeer(peer.getYnodeUri()) != null) {
-            peerChannelGroup.broadcastPeerDisconnect(peer.getYnodeUri());
-        }
-    }
-
-    private void addPeerByYnodeUri(List<String> peerList) {
-        for (String ynodeUri : peerList) {
-            addPeerByYnodeUri(ynodeUri);
-        }
-    }
-
-    private Peer addPeerByYnodeUri(String ynodeUri) {
-        try {
-            if (peerGroup.count() >= maxPeers) {
-                log.warn("Ignore to add the peer. count={}, peer={}", peerGroup.count(), ynodeUri);
-                return null;
-            }
-            Peer peer = Peer.valueOf(ynodeUri);
-            return peerGroup.addPeer(peer);
-        } catch (Exception e) {
-            log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
-        }
-        return null;
-    }
-
-    private void activatePeers() {
-        for (Peer peer : peerGroup.getPeers()) {
-            addActivePeer(peer);
-        }
-    }
-
-    private void addActivePeer(Peer peer) {
+    public void newPeer(Peer peer) {
         if (peer == null || this.peer.getYnodeUri().equals(peer.getYnodeUri())) {
             return;
         }
-        peerChannelGroup.newPeerChannel(new GRpcClientChannel(peer));
+        peerGroup.newPeerChannel(new GRpcClientChannel(peer));
     }
 
     private void requestPeerList() {
@@ -235,7 +175,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
                 // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
                 List<String> peerList = client.requestPeerList(getNodeUri(), 0);
                 client.stop();
-                addPeerByYnodeUri(peerList);
+                peerGroup.addPeerByYnodeUri(peerList);
             } catch (Exception e) {
                 log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
             }
@@ -244,11 +184,11 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     private void syncBlockAndTransaction() {
         try {
-            List<BlockHusk> blockList = peerChannelGroup.syncBlock(branchGroup.getLastIndex());
+            List<BlockHusk> blockList = peerGroup.syncBlock(branchGroup.getLastIndex());
             for (BlockHusk block : blockList) {
                 branchGroup.addBlock(block);
             }
-            List<TransactionHusk> txList = peerChannelGroup.syncTransaction();
+            List<TransactionHusk> txList = peerGroup.syncTransaction();
             for (TransactionHusk tx : txList) {
                 branchGroup.addTransaction(tx);
             }
@@ -258,12 +198,10 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     }
 
     static class BlockChainImpl extends BlockChainGrpc.BlockChainImplBase {
-        private NodeManager nodeManager;
         private PeerGroup peerGroup;
         private BranchGroup branchGroup;
 
-        BlockChainImpl(NodeManager nodeManager, PeerGroup peerGroup, BranchGroup branchGroup) {
-            this.nodeManager = nodeManager;
+        BlockChainImpl(PeerGroup peerGroup, BranchGroup branchGroup) {
             this.peerGroup = peerGroup;
             this.branchGroup = branchGroup;
         }
@@ -340,7 +278,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             }
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
-            nodeManager.addPeer(peerRequest.getFrom());
+            peerGroup.addPeer(peerRequest.getFrom());
         }
 
         /**
@@ -355,7 +293,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             log.debug("Received disconnect for=" + peerRequest.getFrom());
             responseObserver.onNext(EMPTY);
             responseObserver.onCompleted();
-            nodeManager.disconnected(Peer.valueOf(peerRequest.getFrom()));
+            peerGroup.disconnected(peerRequest.getFrom());
         }
 
         @Override
@@ -404,8 +342,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             return new StreamObserver<Proto.Block>() {
                 @Override
                 public void onNext(Proto.Block protoBlock) {
-                    long id = ByteUtil.byteArrayToLong(
-                            protoBlock.getHeader().getIndex().toByteArray());
+                    long id = protoBlock.getHeader().getRawData().getIndex();
                     BlockHusk block = new BlockHusk(protoBlock);
                     log.debug("Received block id=[{}], hash={}", id, block.getHash());
                     BlockHusk newBlock = branchGroup.addBlock(block);

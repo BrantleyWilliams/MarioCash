@@ -2,7 +2,6 @@ package dev.zhihexireng.node.api;
 
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,17 +14,16 @@ import java.util.List;
 public class PeerApiImpl implements PeerApi {
 
     private final PeerGroup peerGroup;
-    private final PeerChannelGroup peerChannelGroup;
 
     @Autowired
-    public PeerApiImpl(PeerGroup peerGroup, PeerChannelGroup peerChannelGroup) {
+    public PeerApiImpl(PeerGroup peerGroup) {
         this.peerGroup = peerGroup;
-        this.peerChannelGroup = peerChannelGroup;
     }
 
     @Override
     public Peer add(Peer peer) {
-        return peerGroup.addPeer(peer);
+        peerGroup.addPeer(peer);
+        return peer;
     }
 
     @Override
@@ -35,6 +33,6 @@ public class PeerApiImpl implements PeerApi {
 
     @Override
     public List<String> getAllActivePeer() {
-        return peerChannelGroup.getActivePeerList();
+        return peerGroup.getActivePeerList();
     }
 }

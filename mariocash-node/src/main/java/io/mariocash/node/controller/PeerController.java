@@ -17,7 +17,6 @@
 package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerChannelGroup;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -32,12 +31,10 @@ import org.springframework.web.bind.annotation.RestController;
 class PeerController {
 
     private final PeerGroup peerGroup;
-    private final PeerChannelGroup peerChannelGroup;
 
     @Autowired
-    public PeerController(PeerGroup peerGroup, PeerChannelGroup peerChannelGroup) {
+    public PeerController(PeerGroup peerGroup) {
         this.peerGroup = peerGroup;
-        this.peerChannelGroup = peerChannelGroup;
     }
 
     @PostMapping
@@ -54,6 +51,6 @@ class PeerController {
 
     @GetMapping("/active")
     public ResponseEntity getAllActivePeer() {
-        return ResponseEntity.ok(peerChannelGroup.getActivePeerList());
+        return ResponseEntity.ok(peerGroup.getActivePeerList());
     }
 }

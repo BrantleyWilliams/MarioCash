@@ -17,7 +17,7 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.net.PeerChannelGroup;
+import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import org.junit.Before;
@@ -31,10 +31,10 @@ public class NodeHealthIndicatorTest {
 
     @Before
     public void setUp() {
-        PeerChannelGroup peerChannelGroup = new PeerChannelGroup(1);
+        PeerGroup peerGroup = new PeerGroup(1);
         BlockStore blockStore = new BlockStore(new HashMapDbSource());
         this.nodeHealthIndicator = new NodeHealthIndicator(new DefaultConfig(), blockStore,
-                peerChannelGroup);
+                peerGroup);
     }
 
     @Test
