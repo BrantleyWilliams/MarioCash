@@ -50,41 +50,40 @@ public interface BranchApi {
 
     /**
      * View a branch in detail with branchId
-     * @param data query with branch id
+     * @param branchId branch id
      * @return branch
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String viewBranch(String data) throws Exception;
+    String viewBranch(String branchId);
+
+    /**
+     * Get all branch id and name
+     * @return list of branch id and name
+     */
+    @JsonRpcErrors({
+            @JsonRpcError(exception = NonExistObjectException.class,
+                    code = NonExistObjectException.code)})
+    String getAllBranchName(@JsonRpcParam(value = "data") String data) throws Exception;
 
     /**
      * Get the current contract address of the branch by branchId
-     * @param data query with branch id
+     * @param branchId branch id
      * @return current version
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String getCurrentVersionOfBranch(String data) throws Exception;
+    String getCurrentVersionOfBranch(String branchId);
 
     /**
      * Get the versionHistory of the branch by branchId
-     * @param data query with branch id
+     * @param branchId branch id
      * @return versionHistory
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String getVersionHistoryOfBranch(String data) throws Exception;
-
-    /**
-     * Get all branch id
-     * @param data query
-     * @return list of all branch id
-     */
-    @JsonRpcErrors({
-            @JsonRpcError(exception = NonExistObjectException.class,
-                    code = NonExistObjectException.code)})
-    String getAllBranchId(String data) throws Exception;
+    JsonArray getVersionHistoryOfBranch(String branchId);
 }
