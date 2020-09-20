@@ -134,7 +134,7 @@ public class GRpcClientChannelTest {
     @Test
     public void broadcastTransaction() {
 
-        client.broadcastTransaction(TestUtils.sampleTxs());
+        client.broadcastTransaction(TestUtils.getTransactionFixtures());
 
         verify(blockChainService).broadcastTransaction(any());
     }
@@ -142,7 +142,7 @@ public class GRpcClientChannelTest {
     @Test
     public void broadcastBlock() {
 
-        client.broadcastBlock(TestUtils.sampleBlocks());
+        client.broadcastBlock(TestUtils.getBlockFixtures());
 
         verify(blockChainService).broadcastBlock(any());
     }

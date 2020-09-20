@@ -20,13 +20,10 @@ import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BlockHuskBuilder;
 import dev.zhihexireng.core.BranchGroup;
-import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.core.store.StateStore;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.node.config.NodeProperties;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.FileUtil;
@@ -62,8 +59,7 @@ public class NodeManagerTest {
         this.nodeManager = new GRpcNodeServer();
         this.nodeProperties = new NodeProperties();
         this.peerGroup = new PeerGroup(nodeProperties.getMaxPeers());
-        Runtime runtime = new Runtime(new StateStore(), new TransactionReceiptStore());
-        this.branchGroup = new BranchGroup(runtime);
+        this.branchGroup = new BranchGroup();
         BlockChain blockChain = new BlockChain(
                 new File(getClass().getClassLoader()
                         .getResource("branch-yeed.json").getFile()));
@@ -78,9 +74,9 @@ public class NodeManagerTest {
         assert nodeManager.getNodeUri() != null;
 
         this.tx = TestUtils.createTxHusk(nodeManager.getWallet());
-        this.firstBlock = new BlockHusk(nodeManager.getWallet(),
+        this.firstBlock = BlockHuskBuilder.buildUnSigned(nodeManager.getWallet(),
                 Collections.singletonList(tx), branchGroup.getBlockByIndexOrHash("0"));
-        this.secondBlock = new BlockHusk(nodeManager.getWallet(),
+        this.secondBlock = BlockHuskBuilder.buildSigned(nodeManager.getWallet(),
                 Collections.singletonList(tx), firstBlock);
     }
 
@@ -99,7 +95,7 @@ public class NodeManagerTest {
 
     @Test(expected = InvalidSignatureException.class)
     public void unsignedTxTest() {
-        branchGroup.addTransaction(TestUtils.createUnsignedTxHusk());
+        branchGroup.addTransaction(new TransactionHusk(TestUtils.getTransactionFixture()));
     }
 
     @Test
