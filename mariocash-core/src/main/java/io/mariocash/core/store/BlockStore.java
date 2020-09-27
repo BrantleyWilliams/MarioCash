@@ -16,7 +16,6 @@
 
 package dev.zhihexireng.core.store;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchId;
@@ -27,7 +26,6 @@ import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;

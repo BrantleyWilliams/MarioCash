@@ -2,8 +2,6 @@ package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Longs;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.node.TestUtils;

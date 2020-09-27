@@ -18,7 +18,6 @@ package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BlockHuskBuilder;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
