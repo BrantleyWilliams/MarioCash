@@ -9,8 +9,6 @@ import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.core.store.StateStore;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
 import org.slf4j.Logger;
@@ -33,7 +31,6 @@ public class BlockChain {
     private BlockStore blockStore;
     private TransactionStore transactionStore;
     private Contract contract;
-    private Runtime<?> runtime;
 
     @VisibleForTesting
     public BlockChain(File infoFile) {
@@ -42,7 +39,6 @@ public class BlockChain {
             this.blockStore = new BlockStore(getBranchId());
             this.transactionStore = new TransactionStore(new HashMapDbSource());
             this.contract = new NoneContract();
-            this.runtime = new Runtime<>(new StateStore<>(), new TransactionReceiptStore());
             loadBlockChain();
         } catch (Exception e) {
             throw new NotValidateException(e);
@@ -50,12 +46,11 @@ public class BlockChain {
     }
 
     public BlockChain(BlockHusk genesisBlock, BlockStore blockStore,
-                      TransactionStore transactionStore, Contract contract, Runtime runtime) {
+                      TransactionStore transactionStore, Contract contract) {
         this.genesisBlock = genesisBlock;
         this.blockStore = blockStore;
         this.transactionStore = transactionStore;
         this.contract = contract;
-        this.runtime = runtime;
         loadBlockChain();
     }
 
@@ -63,14 +58,20 @@ public class BlockChain {
         try {
             prevBlock = blockStore.get(genesisBlock.getHash());
         } catch (NonExistObjectException e) {
-            addBlock(genesisBlock);
+            prevBlock = genesisBlock;
+            blockStore.put(genesisBlock.getHash(), genesisBlock);
         }
     }
 
-    public BlockHusk generateBlock(Wallet wallet) {
+    public void init(Runtime runtime) {
+        executeAllTx(new TreeSet<>(genesisBlock.getBody()), runtime);
+    }
+
+    public BlockHusk generateBlock(Wallet wallet, Runtime runtime) {
         BlockHusk block = new BlockHusk(wallet,
                 new ArrayList<>(transactionStore.getUnconfirmedTxs()), getPrevBlock());
-        return addBlock(block);
+
+        return addBlock(block, runtime);
     }
 
     public List<TransactionHusk> getTransactionList() {
@@ -105,20 +106,28 @@ public class BlockChain {
         return prevBlock.nextIndex();
     }
 
+    @VisibleForTesting
+    // TODO remove this
+    public BlockHusk addBlock(BlockHusk nextBlock) {
+        return addBlock(nextBlock, null);
+    }
+
     /**
      * Add block.
      *
      * @param nextBlock the next block
      * @throws NotValidateException the not validate exception
      */
-    public BlockHusk addBlock(BlockHusk nextBlock) {
+    public BlockHusk addBlock(BlockHusk nextBlock, Runtime runtime) {
         if (blockStore.contains(nextBlock.getHash())) {
             return null;
         }
         if (!isValidNewBlock(prevBlock, nextBlock)) {
             throw new NotValidateException("Invalid to chain");
         }
-        executeAllTx(new TreeSet<>(nextBlock.getBody()));
+        if (runtime != null) { // TODO remove this
+            executeAllTx(new TreeSet<>(nextBlock.getBody()), runtime);
+        }
         log.debug("Added block index=[{}], blockHash={}", nextBlock.getIndex(),
                 nextBlock.getHash());
         this.blockStore.put(nextBlock.getHash(), nextBlock);
@@ -250,7 +259,7 @@ public class BlockChain {
     }
 
 
-    private void executeAllTx(Set<TransactionHusk> txList) {
+    private void executeAllTx(Set<TransactionHusk> txList, Runtime runtime) {
         try {
             for (TransactionHusk tx : txList) {
                 if (!runtime.invoke(contract, tx)) {

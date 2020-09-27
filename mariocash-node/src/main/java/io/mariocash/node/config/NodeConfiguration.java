@@ -17,7 +17,6 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -35,11 +34,6 @@ public class NodeConfiguration {
     @Autowired
     NodeConfiguration(NodeProperties nodeProperties) {
         this.nodeProperties = nodeProperties;
-    }
-
-    @Bean
-    BranchGroup branchGroup() {
-        return new BranchGroup();
     }
 
     @Bean

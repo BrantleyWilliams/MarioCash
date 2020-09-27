@@ -1,5 +1,6 @@
 package dev.zhihexireng.node.api;
 
+import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.BlockHusk;

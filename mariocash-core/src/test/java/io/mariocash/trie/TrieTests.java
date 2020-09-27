@@ -1,7 +1,7 @@
-package dev.zhihexireng.trie;
+package dev.zhihexireng;
 
-import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.TransactionHusk;
+import dev.zhihexireng.trie.Trie;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
 import org.junit.Test;
