@@ -135,9 +135,15 @@ public class TransactionMockitoTest {
     }
 
     @Test
-    public void sendRawTransaction() {
+    public void sendRawTransaction() throws Exception {
         when(branchGroupMock.addTransaction(any(TransactionHusk.class))).thenReturn(tx);
-        byte[] res = txApiImpl.sendRawTransaction(tx.toBinary());
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = new ObjectOutputStream(bos);
+        out.writeObject(tx);
+        out.flush();
+        byte[] txBytes = bos.toByteArray();
+        bos.close();
+        byte[] res = txApiImpl.sendRawTransaction(txBytes);
         log.debug("\n\nres :: " + Hex.encodeHexString(res));
         assertThat(res).isNotEmpty();
     }
