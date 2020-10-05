@@ -16,11 +16,7 @@
 
 package dev.zhihexireng.node.config;
 
-import dev.zhihexireng.core.BranchGroup;
-import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.core.store.StateStore;
-import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.HashMapDbSource;
@@ -31,26 +27,6 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class StoreConfiguration {
-
-    @Bean
-    BranchGroup branchGroup(Runtime runtime) {
-        return new BranchGroup(runtime);
-    }
-
-    @Bean
-    Runtime runTime(StateStore stateStore, TransactionReceiptStore transactionReceiptStore) {
-        return new Runtime(stateStore, transactionReceiptStore);
-    }
-
-    @Bean
-    StateStore stateStore() {
-        return new StateStore();
-    }
-
-    @Bean
-    TransactionReceiptStore transactionReceiptStore() {
-        return new TransactionReceiptStore();
-    }
 
     @Bean
     BlockStore blockStore(@Qualifier("blockDbSource") DbSource source) {

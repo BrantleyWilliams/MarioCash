@@ -25,7 +25,7 @@ public class StemContractTest {
 
     @Before
     public void setUp() {
-        StateStore<JsonObject> stateStore = new StateStore<JsonObject>();
+        StateStore<JsonObject> stateStore = new StateStore<>();
         TransactionReceiptStore txReceiptStore = new TransactionReceiptStore();
 
         stemContract = new StemContract();
