@@ -1,6 +1,5 @@
 package dev.zhihexireng.node.api;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
@@ -8,15 +7,11 @@ import dev.zhihexireng.contract.StemContract;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.logging.Level;
 
 @Service
 @AutoJsonRpcServiceImpl
