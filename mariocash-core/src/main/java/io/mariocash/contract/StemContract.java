@@ -132,7 +132,7 @@ public class StemContract extends BaseContract<JsonObject> {
                 .getAsString().toLowerCase();
         if (isBranchExist(branchId)) {
             JsonArray versionHistory = getBranch(branchId).get("versionHistory").getAsJsonArray();
-            int index = versionHistory.size() - 1;
+            Integer index = versionHistory.size() - 1;
 
             return versionHistory.get(index).getAsString();
         }
@@ -164,11 +164,17 @@ public class StemContract extends BaseContract<JsonObject> {
     }
 
     private boolean verify(String refAddress, String type) {
-        return isRefAddressValid(refAddress) && isTypeValid(type);
+        if (isRefAddressValid(refAddress) && isTypeValid(type)) {
+            return true;
+        }
+        return false;
     }
 
     private boolean isBranchExist(String branchId) {
-        return state.get(branchId) != null;
+        if (state.get(branchId) != null) {
+            return true;
+        }
+        return false;
     }
 
     private boolean isOwnerValid(String owner) {

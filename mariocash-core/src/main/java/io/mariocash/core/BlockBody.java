@@ -1,6 +1,7 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import dev.zhihexireng.trie.Trie;
 
 import java.io.ByteArrayOutputStream;
