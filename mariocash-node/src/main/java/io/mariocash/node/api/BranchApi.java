@@ -1,11 +1,17 @@
 package dev.zhihexireng.node.api;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
+import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.WrongStructuredException;
 import dev.zhihexireng.node.controller.TransactionDto;
+
+import java.util.List;
+import java.util.Map;
 
 @JsonRpcService("/api/branch")
 public interface BranchApi {
@@ -33,52 +39,51 @@ public interface BranchApi {
 
     /**
      * Search for branches by key (attribute)
-     * @param data key   attribute
-     *             value value of attribute
+     * @param key   attribute
+     * @param value value of attribute
      * @return list of branch
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String searchBranch(String data) throws Exception;
+    List<JsonObject> searchBranch(String key, String value);
 
     /**
      * View a branch in detail with branchId
-     * @param data query with branch id
+     * @param branchId branch id
      * @return branch
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String viewBranch(String data) throws Exception;
+    String viewBranch(String branchId);
+
+    /**
+     * Get all branch id and name
+     * @return list of branch id and name
+     */
+    @JsonRpcErrors({
+            @JsonRpcError(exception = NonExistObjectException.class,
+                    code = NonExistObjectException.code)})
+    String getAllBranchName(@JsonRpcParam(value = "data") String data) throws Exception;
 
     /**
      * Get the current contract address of the branch by branchId
-     * @param data query with branch id
+     * @param branchId branch id
      * @return current version
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String getCurrentVersionOfBranch(String data) throws Exception;
+    String getCurrentVersionOfBranch(String branchId);
 
     /**
      * Get the versionHistory of the branch by branchId
-     * @param data query with branch id
+     * @param branchId branch id
      * @return versionHistory
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String getVersionHistoryOfBranch(String data) throws Exception;
-
-    /**
-     * Get all branch id
-     * @param data query
-     * @return list of all branch id
-     */
-    @JsonRpcErrors({
-            @JsonRpcError(exception = NonExistObjectException.class,
-                    code = NonExistObjectException.code)})
-    String getAllBranchId(String data) throws Exception;
+    JsonArray getVersionHistoryOfBranch(String branchId);
 }

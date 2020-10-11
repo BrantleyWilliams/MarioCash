@@ -1,19 +1,14 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.util.ByteUtil;
-import dev.zhihexireng.util.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
-import java.security.SignatureException;
 
 public class TransactionHeader implements Cloneable {
 
