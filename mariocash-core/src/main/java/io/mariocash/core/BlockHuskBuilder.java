@@ -16,6 +16,13 @@
 
 package dev.zhihexireng.core;
 
+import com.google.protobuf.ByteString;
+import dev.zhihexireng.proto.Proto;
+import dev.zhihexireng.trie.Trie;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+
 public class BlockHuskBuilder {
 
     public static final byte[] EMPTY_BYTE = new byte[32];
