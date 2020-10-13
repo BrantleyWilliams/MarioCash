@@ -16,13 +16,17 @@
 
 package dev.zhihexireng.node.config;
 
+import com.google.gson.JsonObject;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.StemContract;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockChainLoader;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.Runtime;
 import dev.zhihexireng.core.store.BlockStore;
+import dev.zhihexireng.core.store.StateStore;
+import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import dev.zhihexireng.core.store.datasource.DbSource;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
@@ -46,8 +50,10 @@ public class StemBranchConfiguration {
     BlockChain blockChain(BranchGroup branchGroup, BlockStore blockStore,
                           TransactionStore transactionStore,
                           @Qualifier("stemGenesis") BlockHusk genesisBlock,
-                          @Qualifier("stemContract") Contract contract) {
-        BlockChain branch = new BlockChain(genesisBlock, blockStore, transactionStore, contract);
+                          @Qualifier("stemContract") Contract<JsonObject> contract,
+                          @Qualifier("stemRuntime") Runtime<JsonObject> runtime) {
+        BlockChain branch = new BlockChain(genesisBlock, blockStore, transactionStore, contract,
+                runtime);
         branchGroup.addBranch(branch.getBranchId(), branch);
         return branch;
     }
@@ -58,8 +64,19 @@ public class StemBranchConfiguration {
     }
 
     @Bean(name = "stemContract")
-    Contract contract() {
+    Contract<JsonObject> contract() {
         return new StemContract();
+    }
+
+    @Bean(name = "stemRuntime")
+    Runtime<JsonObject> runTime(@Qualifier("stemTxReceiptStore")
+                            TransactionReceiptStore transactionReceiptStore) {
+        return new Runtime<>(new StateStore<>(), transactionReceiptStore);
+    }
+
+    @Bean("stemTxReceiptStore")
+    TransactionReceiptStore transactionReceiptStore() {
+        return new TransactionReceiptStore();
     }
 
     @Primary
