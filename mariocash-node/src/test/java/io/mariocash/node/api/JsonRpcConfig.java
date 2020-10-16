@@ -42,11 +42,11 @@ public class JsonRpcConfig {
         }
     }
 
-    public ContractApi contractApi() {
+    public BranchApi branchApi() {
         try {
-            URL url = new URL("http://localhost:8080/api/contract");
+            URL url = new URL("http://localhost:8080/api/branch");
             return ProxyUtil.createClientProxy(getClass().getClassLoader(),
-                    ContractApi.class, jsonRpcHttpClient(url));
+                    BranchApi.class, jsonRpcHttpClient(url));
         } catch (MalformedURLException exception) {
             exception.printStackTrace();
             return null;
