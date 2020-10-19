@@ -17,7 +17,9 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.common.Sha3Hash;
+import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.core.event.BranchEventListener;
+import dev.zhihexireng.core.store.StateStore;
 
 import java.util.List;
 import java.util.Map;
@@ -86,6 +88,14 @@ public class BranchGroup {
         } else {
             return chain.getBlockByHash(indexOrHash);
         }
+    }
+
+    public StateStore<?> getStateStore() {
+        return chain.getRuntime().getStateStore();
+    }
+
+    public Contract getContract() {
+        return chain.getContract();
     }
 
     private boolean isNumeric(String str) {
