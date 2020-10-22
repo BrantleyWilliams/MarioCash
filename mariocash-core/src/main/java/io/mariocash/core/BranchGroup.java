@@ -16,9 +16,11 @@
 
 package dev.zhihexireng.core;
 
+import com.google.gson.JsonObject;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.core.event.BranchEventListener;
+import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.store.StateStore;
 
 import java.util.List;
@@ -96,6 +98,14 @@ public class BranchGroup {
 
     public Contract getContract() {
         return chain.getContract();
+    }
+
+    public JsonObject query(JsonObject query) {
+        try {
+            return chain.getRuntime().query(chain.getContract(), query);
+        } catch (Exception e) {
+            throw new FailedOperationException(e);
+        }
     }
 
     private boolean isNumeric(String str) {
