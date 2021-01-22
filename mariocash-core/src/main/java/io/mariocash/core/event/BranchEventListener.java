@@ -17,7 +17,10 @@
 package dev.zhihexireng.core.event;
 
 import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.TransactionHusk;
 
 public interface BranchEventListener {
     void chainedBlock(BlockHusk block);
+
+    void receivedTransaction(TransactionHusk tx);
 }

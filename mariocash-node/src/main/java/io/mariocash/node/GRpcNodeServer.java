@@ -19,12 +19,15 @@ package dev.zhihexireng.node;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.NodeManager;
 import dev.zhihexireng.core.net.NodeServer;
+import dev.zhihexireng.core.net.NodeStatus;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.proto.BlockChainGrpc;
@@ -44,7 +47,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Service
 public class GRpcNodeServer implements NodeServer, NodeManager {
@@ -59,23 +61,18 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     private Peer peer;
 
-    private NodeHealthIndicator nodeHealthIndicator;
+    private NodeStatus nodeStatus;
 
     private Server server;
 
     @Autowired
     public void setPeerGroup(PeerGroup peerGroup) {
         this.peerGroup = peerGroup;
-        peerGroup.setListener(this);
     }
 
     @Autowired
-    public void setNodeHealthIndicator(NodeHealthIndicator nodeHealthIndicator) {
-        this.nodeHealthIndicator = nodeHealthIndicator;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
+    public void setNodeStatus(NodeStatus nodeStatus) {
+        this.nodeStatus = nodeStatus;
     }
 
     @Autowired
@@ -86,7 +83,6 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     @Autowired
     public void setBranchGroup(BranchGroup branchGroup) {
         this.branchGroup = branchGroup;
-        branchGroup.setListener(peerGroup);
     }
 
     @Override
@@ -94,7 +90,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         this.peer = Peer.valueOf(wallet.getNodeId(), host, port);
         this.server = ServerBuilder.forPort(port)
                 .addService(new PingPongImpl())
-                .addService(new BlockChainImpl(peerGroup, branchGroup))
+                .addService(new BlockChainImpl(peerGroup, branchGroup, nodeStatus))
                 .build()
                 .start();
         log.info("GRPC Server started, listening on " + port);
@@ -126,20 +122,19 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     @PreDestroy
     public void destroy() {
-        log.info("destroy uri=" + peer.getYnodeUri());
-        peerGroup.destroy(peer.getYnodeUri());
+        log.info("Destroy node=" + peer.getYnodeUri());
+        peerGroup.destroy();
     }
 
     private void init() {
-        requestPeerList();
-        peerGroup.addPeer(peer);
-        if (!peerGroup.isEmpty()) {
-            nodeHealthIndicator.sync();
-            syncBlockAndTransaction();
-        }
-        peerGroup.addPeer(peer);
         log.info("Init node=" + peer.getYnodeUri());
-        nodeHealthIndicator.up();
+        requestPeerList();
+        nodeStatus.sync();
+        for (BlockChain blockChain : branchGroup.getAllBranch()) {
+            BranchId branchId = blockChain.getBranchId();
+            syncBlockAndTransaction(branchId);
+        }
+        nodeStatus.up();
     }
 
     @Override
@@ -152,12 +147,11 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         return peer.getYnodeUri();
     }
 
-    @Override
-    public void newPeer(Peer peer) {
+    public void add(BranchId branchId, Peer peer) {
         if (peer == null || this.peer.getYnodeUri().equals(peer.getYnodeUri())) {
             return;
         }
-        peerGroup.newPeerChannel(new GRpcClientChannel(peer));
+        peerGroup.newPeerChannel(branchId, new GRpcClientChannel(peer));
     }
 
     private void requestPeerList() {
@@ -169,29 +163,19 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             if (ynodeUri.equals(peer.getYnodeUri())) {
                 continue;
             }
-            try {
-                Peer peer = Peer.valueOf(ynodeUri);
-                log.info("Trying to connecting SEED peer at {}", ynodeUri);
-                GRpcClientChannel client = new GRpcClientChannel(peer);
-                // TODO validation peer(encrypting msg by privateKey and signing by publicKey ...)
-                List<String> peerList = client.requestPeerList(getNodeUri(), 0);
-                client.stop();
-                peerGroup.addPeerByYnodeUri(peerList);
-            } catch (Exception e) {
-                log.warn("ynode={}, error={}", ynodeUri, e.getMessage());
-            }
+            Peer peer = Peer.valueOf(ynodeUri);
+            log.info("Trying to connecting SEED peer at {}", peer);
         }
     }
 
-    private void syncBlockAndTransaction() {
+    private void syncBlockAndTransaction(BranchId branchId) {
+        if (peerGroup.isChannelEmpty(branchId)) {
+            return;
+        }
         try {
-            List<BlockHusk> blockList = peerGroup.syncBlock(branchGroup.getLastIndex());
-            for (BlockHusk block : blockList) {
-                branchGroup.addBlock(block);
-            }
-            List<TransactionHusk> txList = peerGroup.syncTransaction();
-            for (TransactionHusk tx : txList) {
-                branchGroup.addTransaction(tx);
+            for (BlockChain blockChain : branchGroup.getAllBranch()) {
+                BlockChainSync.syncTransaction(blockChain, peerGroup);
+                BlockChainSync.syncBlock(blockChain, peerGroup);
             }
         } catch (Exception e) {
             log.warn(e.getMessage(), e);
@@ -199,12 +183,14 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
     }
 
     static class BlockChainImpl extends BlockChainGrpc.BlockChainImplBase {
-        private PeerGroup peerGroup;
-        private BranchGroup branchGroup;
+        private final PeerGroup peerGroup;
+        private final BranchGroup branchGroup;
+        private final NodeStatus nodeStatus;
 
-        BlockChainImpl(PeerGroup peerGroup, BranchGroup branchGroup) {
+        BlockChainImpl(PeerGroup peerGroup, BranchGroup branchGroup, NodeStatus nodeStatus) {
             this.peerGroup = peerGroup;
             this.branchGroup = branchGroup;
+            this.nodeStatus = nodeStatus;
         }
 
         private static final Set<StreamObserver<NetProto.Empty>> txObservers =
@@ -215,24 +201,34 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         /**
          * Sync block response
          *
-         * @param syncLimit        the start block index and limit to sync
+         * @param syncLimit        the start branch id, block index and limit to sync
          * @param responseObserver the observer response to the block list
          */
         @Override
         public void syncBlock(NetProto.SyncLimit syncLimit,
                               StreamObserver<Proto.BlockList> responseObserver) {
             long offset = syncLimit.getOffset();
+            BranchId branchId = BranchId.of(syncLimit.getBranch().toByteArray());
+            BlockChain blockChain = branchGroup.getBranch(branchId);
+            Proto.BlockList.Builder builder = Proto.BlockList.newBuilder();
+            if (blockChain == null) {
+                log.warn("Invalid request for branchId={}", branchId);
+                responseObserver.onNext(builder.build());
+                responseObserver.onCompleted();
+                return;
+            }
+            if (offset < 0) {
+                offset = 0;
+            }
             long limit = syncLimit.getLimit();
             log.debug("Synchronize block request offset={}, limit={}", offset, limit);
 
-            Proto.BlockList.Builder builder = Proto.BlockList.newBuilder();
-            for (BlockHusk husk : branchGroup.getBlocks()) {
-                if (husk.getIndex() >= offset) {
-                    builder.addBlocks(husk.getInstance());
-                }
-                if (limit > 0 && builder.getBlocksCount() > limit) {
+            for (int i = 0; i < limit; i++) {
+                BlockHusk block = branchGroup.getBlockByIndex(branchId, offset++);
+                if (block == null) {
                     break;
                 }
+                builder.addBlocks(block.getInstance());
             }
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -241,60 +237,21 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         /**
          * Sync transaction response
          *
-         * @param empty            the empty message
+         * @param syncLimit        the branch id to sync
          * @param responseObserver the observer response to the transaction list
          */
         @Override
-        public void syncTransaction(NetProto.Empty empty,
+        public void syncTransaction(NetProto.SyncLimit syncLimit,
                                     StreamObserver<Proto.TransactionList> responseObserver) {
             log.debug("Synchronize tx request");
-            Proto.TransactionList.Builder builder
-                    = Proto.TransactionList.newBuilder();
-            for (TransactionHusk husk : branchGroup.getTransactionList()) {
+
+            BranchId branchId = BranchId.of(syncLimit.getBranch().toByteArray());
+            Proto.TransactionList.Builder builder = Proto.TransactionList.newBuilder();
+            for (TransactionHusk husk : branchGroup.getRecentTxs(branchId)) {
                 builder.addTransactions(husk.getInstance());
             }
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
-        }
-
-        /**
-         * Peer list response
-         *
-         * @param peerRequest      the request with limit of peer and peer uri
-         * @param responseObserver the observer response to the peer list
-         */
-        @Override
-        public void requestPeerList(NetProto.PeerRequest peerRequest,
-                                    StreamObserver<NetProto.PeerList> responseObserver) {
-            log.debug("Synchronize peer request from=" + peerRequest.getFrom());
-            NetProto.PeerList.Builder builder = NetProto.PeerList.newBuilder();
-
-            List<String> peerUriList = peerGroup.getPeerUriList();
-
-            if (peerRequest.getLimit() > 0) {
-                int limit = peerRequest.getLimit();
-                builder.addAllPeers(peerUriList.stream().limit(limit).collect(Collectors.toList()));
-            } else {
-                builder.addAllPeers(peerUriList);
-            }
-            responseObserver.onNext(builder.build());
-            responseObserver.onCompleted();
-            peerGroup.addPeer(peerRequest.getFrom());
-        }
-
-        /**
-         * Broadcast a disconnected peer
-         *
-         * @param peerRequest      the request with disconnected peer uri
-         * @param responseObserver the empty response
-         */
-        @Override
-        public void disconnectPeer(NetProto.PeerRequest peerRequest,
-                                   StreamObserver<NetProto.Empty> responseObserver) {
-            log.debug("Received disconnect for=" + peerRequest.getFrom());
-            responseObserver.onNext(EMPTY);
-            responseObserver.onCompleted();
-            peerGroup.disconnected(peerRequest.getFrom());
         }
 
         @Override
@@ -308,12 +265,11 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
                 public void onNext(Proto.Transaction protoTx) {
                     log.debug("Received transaction: {}", protoTx);
                     TransactionHusk tx = new TransactionHusk(protoTx);
-                    TransactionHusk newTx = branchGroup.addTransaction(tx);
-                    // ignore broadcast by other node's broadcast
-                    if (newTx == null) {
-                        return;
+                    try {
+                        branchGroup.addTransaction(tx);
+                    } catch (Exception e) {
+                        log.warn(e.getMessage());
                     }
-
                     for (StreamObserver<NetProto.Empty> observer : txObservers) {
                         observer.onNext(EMPTY);
                     }
@@ -321,13 +277,15 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
                 @Override
                 public void onError(Throwable t) {
-                    log.warn("Broadcasting transaction failed: {}", t.getMessage());
+                    log.warn("broadcastTransaction onError={}", t.getMessage());
                     txObservers.remove(responseObserver);
                     responseObserver.onError(t);
                 }
 
                 @Override
                 public void onCompleted() {
+                    log.warn("broadcastTransaction onCompleted. txObservers={}",
+                            txObservers.size());
                     txObservers.remove(responseObserver);
                     responseObserver.onCompleted();
                 }
@@ -347,12 +305,13 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
                             protoBlock.getHeader().getIndex().toByteArray());
                     BlockHusk block = new BlockHusk(protoBlock);
                     log.debug("Received block id=[{}], hash={}", id, block.getHash());
-                    BlockHusk newBlock = branchGroup.addBlock(block);
-                    // ignore broadcast by other node's broadcast
-                    if (newBlock == null) {
-                        return;
+                    if (isValid(block)) {
+                        try {
+                            branchGroup.addBlock(block);
+                        } catch (Exception e) {
+                            log.warn(e.getMessage());
+                        }
                     }
-
                     for (StreamObserver<NetProto.Empty> observer : blockObservers) {
                         observer.onNext(EMPTY);
                     }
@@ -360,7 +319,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
                 @Override
                 public void onError(Throwable t) {
-                    log.warn("Broadcasting block failed: {}", t.getMessage());
+                    log.warn("BroadcastBlock onError={}", t.getMessage());
                     blockObservers.remove(responseObserver);
                     responseObserver.onError(t);
                 }
@@ -368,7 +327,26 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
                 @Override
                 public void onCompleted() {
                     blockObservers.remove(responseObserver);
+                    log.debug("BroadcastBlock onCompleted. blockObserver={}",
+                            blockObservers.size());
                     responseObserver.onCompleted();
+                }
+
+                private boolean isValid(BlockHusk block) {
+                    BlockChain blockChain = branchGroup.getBranch(block.getBranchId());
+                    if (!nodeStatus.isUpStatus()) {
+                        log.trace("Ignore broadcast block");
+                        return false;
+                    } else if (blockChain == null) {
+                        return false;
+                    } else if (blockChain.getLastIndex() + 1 < block.getIndex()) {
+                        log.info("Sync request latest block id=[{}]", blockChain.getLastIndex());
+                        nodeStatus.sync();
+                        BlockChainSync.syncBlock(blockChain, peerGroup);
+                        nodeStatus.up();
+                        return false;
+                    }
+                    return true;
                 }
             };
         }
@@ -381,6 +359,31 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
             Pong pong = Pong.newBuilder().setPong("Pong").build();
             responseObserver.onNext(pong);
             responseObserver.onCompleted();
+        }
+    }
+
+    private static class BlockChainSync {
+
+        static void syncBlock(BlockChain blockChain, PeerGroup peerGroup) {
+            List<BlockHusk> blockList;
+            do {
+                blockList = peerGroup.syncBlock(blockChain.getBranchId(),
+                        blockChain.getLastIndex() + 1);
+                for (BlockHusk block : blockList) {
+                    blockChain.addBlock(block, false);
+                }
+            } while (!blockList.isEmpty());
+        }
+
+        static void syncTransaction(BlockChain blockChain, PeerGroup peerGroup) {
+            List<TransactionHusk> txList = peerGroup.syncTransaction(blockChain.getBranchId());
+            for (TransactionHusk tx : txList) {
+                try {
+                    blockChain.addTransaction(tx);
+                } catch (Exception e) {
+                    log.warn(e.getMessage());
+                }
+            }
         }
     }
 }

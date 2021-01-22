@@ -4,11 +4,9 @@ import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
-import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
-
-import java.util.Set;
+import dev.zhihexireng.node.controller.BlockDto;
 
 @JsonRpcService("/api/block")
 public interface BlockApi {
@@ -18,15 +16,7 @@ public interface BlockApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = InternalErrorException.class,
                     code = InternalErrorException.code)})
-    int blockNumber();
-
-    /**
-     * Returns all blocks.
-     */
-    @JsonRpcErrors({
-            @JsonRpcError(exception = InternalErrorException.class,
-                          code = InternalErrorException.code)})
-    Set<BlockHusk> getAllBlock();
+    long blockNumber(@JsonRpcParam(value = "branchId") String branchId);
 
     /**
      * Returns information about a block by hash.
@@ -38,8 +28,9 @@ public interface BlockApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    BlockHusk getBlockByHash(@JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
-                         @JsonRpcParam(value = "bool") Boolean bool);
+    BlockDto getBlockByHash(@JsonRpcParam(value = "branchId") String branchId,
+                             @JsonRpcParam(value = "hashOfBlock") String hashOfBlock,
+                             @JsonRpcParam(value = "bool") Boolean bool);
 
     /**
      * Returns information about a block by block number.
@@ -51,8 +42,9 @@ public interface BlockApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    BlockHusk getBlockByNumber(@JsonRpcParam(value = "numOfBlock") String numOfBlock,
-                           @JsonRpcParam(value = "bool") Boolean bool);
+    BlockDto getBlockByNumber(@JsonRpcParam(value = "branchId") String branchId,
+                              @JsonRpcParam(value = "numOfBlock") long numOfBlock,
+                              @JsonRpcParam(value = "bool") Boolean bool);
 
     /**
      * Creates a filter in the node, to notify when a new block arrives.
@@ -69,5 +61,5 @@ public interface BlockApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    BlockHusk getLastBlock();
+    BlockDto getLastBlock(@JsonRpcParam(value = "branchId") String branchId);
 }

@@ -1,59 +1,86 @@
 {
-  "chain": "0000000000000000000000000000000000000000",
-  "version": "0000000000000000",
-  "type": "0000000000000000",
-  "prevBlockHash": "0000000000000000000000000000000000000000000000000000000000000000",
-  "index": "0000000000000000",
-  "timestamp": "0000000000000000",
-  "merkleRoot": "9c8d7142f8813addadeb5ab9c05d85c1e7d250a543e745a58b830ca01fe88396",
-  "bodyLength": "0000000000000000",
-  "signature": "1ce26ba49760c94f36eaeb97a34b09075dbd7519163dda0f0420a0492431578a060360ca1500cc84f77d352c2a503976a5f49fc31078c70e177fcb63813e4c8e10",
-  "body":
-  [
+  "header": {
+    "chain": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
+    "version": "0000000000000000",
+    "type": "0000000000000000",
+    "prevBlockHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "index": "0000000000000000",
+    "timestamp": "00000165cdf3e901",
+    "merkleRoot": "40ac328538dbe3eed8f2227ed456f76c879e1361cc226a0bdbdd1ba314ca5e61",
+    "bodyLength": "0000000000000976"
+  },
+  "signature": "1c0130a081d87d92ba0c7dc5ed18beec920740eb1d23b9d5db14be149c832387364f086f0f919040410ec72c7da864f1b29146f33acc9a4f1926de6defbe75f6b0",
+  "body": [
     {
-      "chain": "0000000000000000000000000000000000000000",
-      "version": "00000001",
-      "type": "00000001",
-      "timestamp": "0000000000000001",
-      "bodyHash": "b0f48f2ed3789ae1222a39552bf1b9abe56dd90ee8a3b6d551494fa645cb57cd",
-      "bodyLength": "0000000000000001",
-      "signature": "1b99a8d4e7b6c20def587d2cc342361cb6b5b0af825e0ecbefb91a1cd30e2c77c117a0fdecd0da4d1cd406bac961e217e99f2c9a6d798ba363c9dc3cc2f8b51aac",
-      "body": {
-        "operator": "GENESIS",
-        "chainName": "YEED",
-        "frontier": {
-          "5db10750e8caff27f906b41c71b3471057dd2000": {
-            "balance": "1000000000"
+      "header": {
+        "chain": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
+        "version": "0000000000000000",
+        "type": "0000000000000000",
+        "timestamp": "00000165cdf3e901",
+        "bodyHash": "57dfd19d3d9e2990e65e9a21179d43ea5ff5ac1bc9a0773f0a8cd99262646f9c",
+        "bodyLength": "00000000000008e1"
+      },
+      "signature": "1c8dd60d8513554536218232c9bdcf155302dd504d06bc61361169996343af34c4194c0030ae6bdc56e9e18d59ad63ae710e389880ab90415006b26254f76df746",
+      "body": [
+        {
+          "method": "genesis",
+          "branchId": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
+          "params": [
+            {
+              "branchId": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
+              "branch": "{\"name\":\"STEM\",\"symbol\":\"STEM\",\"property\":\"ecosystem\",\"type\":\"immunity\",\"description\":\"The Basis of the MARIOCASH Ecosystem. It is also an aggregate and a blockchain containing information of all Branch Chains.\",\"tag\":0.1,\"version\":\"0xcc9612ff91ff844938acdb6608e58506a2f21b8a5d77e88726c0897e8d1d02c0\",\"reference_address\":\"\",\"reserve_address\":\"0xcee3d4755e47055b530deeba062c5bd0c17eb00f\",\"owner\":\"c91e9d46dd4b7584f0b6348ee18277c10fd7cb94\",\"timestamp\":1536755670444,\"version_history\":[\"0xcc9612ff91ff844938acdb6608e58506a2f21b8a5d77e88726c0897e8d1d02c0\"]}"
+            },
+            {
+              "branchId": "a08ee962cd8b2bd0edbfee989c1a9f7884d26532",
+              "branch": "{\"name\":\"YEED\",\"symbol\":\"YEED\",\"property\":\"currency\",\"type\":\"immunity\",\"description\":\"YEED is the currency used inside MARIOCASH. The vitality of the new branch chain is decided by the amount of YEED, which will be consumed gradually.\",\"tag\":0.1,\"version\":\"0xeeabcaf6cf907e0fd27a0d1f305313e9c1069c5d7f8729d227110012c9b37025\",\"reference_address\":\"\",\"reserve_address\":\"0x9cc060690705a13078634637b1d2a5f2fe1b8096\",\"owner\":\"c91e9d46dd4b7584f0b6348ee18277c10fd7cb94\",\"timestamp\":1536756751728,\"version_history\":[\"0xeeabcaf6cf907e0fd27a0d1f305313e9c1069c5d7f8729d227110012c9b37025\"]}"
+            }
+          ],
+          "delegator": {
+            "a7a9ad6f834bcc080586c55e9b1981b7ec39f31d": {
+              "ip": "172.16.10.150",
+              "port": "32918"
+            },
+            "50c7b8af63f57ddef4b954e38e7a1253c896b742": {
+              "ip": "172.16.10.150",
+              "port": "32919"
+            },
+            "5db10750e8caff27f906b41c71b3471057dd2002": {
+              "ip": "100.100.100.3",
+              "port": "32918"
+            },
+            "5db10750e8caff27f906b41c71b3471057dd2003": {
+              "ip": "100.100.100.4",
+              "port": "32918"
+            },
+            "5db10750e8caff27f906b41c71b3471057dd2004": {
+              "ip": "100.100.100.5",
+              "port": "32918"
+            }
           },
-          "5db10750e8caff27f906b41c71b3471057dd2001": {
-            "balance": "1000000000"
-          },
-          "5db10750e8caff27f906b41c71b3471057dd2002": {
-            "balance": "1000000000"
-          },
-          "5db10750e8caff27f906b41c71b3471057dd2003": {
-            "balance": "1000000000"
-          },
-          "5db10750e8caff27f906b41c71b3471057dd2004": {
-            "balance": "1000000000"
-          },
-          "5db10750e8caff27f906b41c71b3471057dd2005": {
-            "balance": "1000000000"
-          },
-          "5db10750e8caff27f906b41c71b3471057dd2006": {
-            "balance": "1000000000"
-          },
-          "5db10750e8caff27f906b41c71b3471057dd2007": {
-            "balance": "1000000000"
-          },
-          "5db10750e8caff27f906b41c71b3471057dd2008": {
-            "balance": "1000000000"
-          },
-          "6f19c769c78513a3a60a3618c6a11eb9a886086a": {
-            "balance": "1000000000"
+          "node": {
+            "5db10750e8caff27f906b41c71b3471057dd2006": {
+              "ip": "100.100.100.6",
+              "port": "32918"
+            },
+            "5db10750e8caff27f906b41c71b3471057dd2007": {
+              "ip": "100.100.100.7",
+              "port": "32918"
+            },
+            "5db10750e8caff27f906b41c71b3471057dd2008": {
+              "ip": "100.100.100.8",
+              "port": "32918"
+            },
+            "5db10750e8caff27f906b41c71b3471057dd2009": {
+              "ip": "100.100.100.9",
+              "port": "32918"
+            },
+            "5db10750e8caff27f906b41c71b3471057dd2010": {
+              "ip": "100.100.100.10",
+              "port": "32918"
+            }
           }
         }
-      }
+      ]
     }
   ]
 }

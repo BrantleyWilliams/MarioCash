@@ -1,6 +1,8 @@
 package dev.zhihexireng.mock;
 
 import dev.zhihexireng.TestUtils;
+import dev.zhihexireng.core.BranchId;
+import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.proto.Pong;
@@ -8,10 +10,11 @@ import dev.zhihexireng.proto.Proto;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public class ChannelMock implements PeerClientChannel {
     private final Peer peer;
+    private final Pong pong = Pong.newBuilder().setPong("Pong").build();
+    private boolean pongResponse = true;
 
     public ChannelMock(String ynodeUri) {
         this.peer = Peer.valueOf(ynodeUri);
@@ -27,23 +30,24 @@ public class ChannelMock implements PeerClientChannel {
     }
 
     @Override
-    public void stop(String ynodeUri) {
-    }
-
-    @Override
     public Pong ping(String message) {
-        return Pong.newBuilder().setPong("Pong").build();
+        if (pongResponse) {
+            pongResponse = false;
+            return pong;
+        }
+        pongResponse = true;
+        return null;
     }
 
     @Override
-    public List<Proto.Block> syncBlock(long offset) {
+    public List<Proto.Block> syncBlock(BranchId branchId, long offset) {
         return Collections.singletonList(TestUtils.sampleBlock().toProtoBlock());
     }
 
     @Override
-    public List<Proto.Transaction> syncTransaction() {
-        return Collections.singletonList(
-                Objects.requireNonNull(TestUtils.sampleTx()).toProtoTransaction());
+    public List<Proto.Transaction> syncTransaction(BranchId branchId) {
+        Proto.Transaction protoTx = Transaction.toProtoTransaction(TestUtils.sampleTransferTx());
+        return Collections.singletonList(protoTx);
     }
 
     @Override
@@ -54,13 +58,7 @@ public class ChannelMock implements PeerClientChannel {
     public void broadcastBlock(Proto.Block[] blocks) {
     }
 
-    @Override
-    public List<String> requestPeerList(String ynodeUri, int limit) {
-        return Collections.singletonList(peer.getYnodeUri());
-    }
-
-    @Override
-    public void disconnectPeer(String ynodeUri) {
-
+    public static PeerClientChannel dummy() {
+        return new ChannelMock("ynode://75bff16c@localhost:32918");
     }
 }

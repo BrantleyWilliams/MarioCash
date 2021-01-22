@@ -18,15 +18,12 @@ package dev.zhihexireng.core.store;
 
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.store.datasource.DbSource;
-import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
-
-import java.util.Set;
 
 public class MetaStore implements Store<MetaStore.MetaInfo, Sha3Hash> {
-    private DbSource<byte[], byte[]> db;
+    private final DbSource<byte[], byte[]> db;
 
-    public MetaStore() {
-        db = new LevelDbDataSource("meta").init();
+    MetaStore(DbSource<byte[], byte[]> dbSource) {
+        this.db = dbSource.init();
     }
 
     @Override
@@ -36,17 +33,17 @@ public class MetaStore implements Store<MetaStore.MetaInfo, Sha3Hash> {
 
     @Override
     public Sha3Hash get(MetaInfo key) {
-        return new Sha3Hash(db.get(key.name().getBytes()));
-    }
-
-    @Override
-    public Set<Sha3Hash> getAll() {
-        return null;
+        return new Sha3Hash(db.get(key.name().getBytes()), true);
     }
 
     @Override
     public boolean contains(MetaInfo key) {
-        return false;
+        return db.get(key.name().getBytes()) != null;
+    }
+
+    @Override
+    public void close() {
+        db.close();
     }
 
     public enum MetaInfo {

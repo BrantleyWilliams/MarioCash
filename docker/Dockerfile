@@ -3,8 +3,8 @@ MAINTAINER MARIOCASH
 ENV SPRING_PROFILES_ACTIVE=prod \
     RUN_SLEEP=0 \
     JAVA_OPTS=""
-EXPOSE 8080 9090
-VOLUME /tmp
+EXPOSE 8080 32918
+VOLUME /.mariocash
 ARG JAR_FILE
 CMD echo "The MarioCash node will start in ${RUN_SLEEP}s..." && \
     sleep ${RUN_SLEEP} && \

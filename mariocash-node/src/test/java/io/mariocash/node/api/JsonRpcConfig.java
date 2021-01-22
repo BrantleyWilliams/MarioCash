@@ -53,6 +53,17 @@ public class JsonRpcConfig {
         }
     }
 
+    public ContractApi contractApi(String server) {
+        try {
+            URL url = new URL("http://" + server + ":8080/api/contract");
+            return ProxyUtil.createClientProxy(getClass().getClassLoader(),
+                    ContractApi.class, jsonRpcHttpClient(url));
+        } catch (MalformedURLException exception) {
+            exception.printStackTrace();
+            return null;
+        }
+    }
+
     public TransactionApi transactionApi() {
         try {
             URL url = new URL("http://localhost:8080/api/transaction");
@@ -64,9 +75,31 @@ public class JsonRpcConfig {
         }
     }
 
+    public TransactionApi transactionApi(String server) {
+        try {
+            URL url = new URL("http://" + server + ":8080/api/transaction");
+            return ProxyUtil.createClientProxy(getClass().getClassLoader(),
+                    TransactionApi.class, jsonRpcHttpClient(url));
+        } catch (MalformedURLException exception) {
+            exception.printStackTrace();
+            return null;
+        }
+    }
+
     public AccountApi accountApi() {
         try {
             URL url = new URL("http://localhost:8080/api/account");
+            return ProxyUtil.createClientProxy(getClass().getClassLoader(),
+                    AccountApi.class, jsonRpcHttpClient(url));
+        } catch (MalformedURLException exception) {
+            exception.printStackTrace();
+            return null;
+        }
+    }
+
+    public AccountApi accountApi(String server) {
+        try {
+            URL url = new URL("http://" + server + ":8080/api/account");
             return ProxyUtil.createClientProxy(getClass().getClassLoader(),
                     AccountApi.class, jsonRpcHttpClient(url));
         } catch (MalformedURLException exception) {

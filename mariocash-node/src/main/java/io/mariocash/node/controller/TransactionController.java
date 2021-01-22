@@ -17,6 +17,7 @@
 package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,12 +29,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("txs")
+@RequestMapping("branches/{branchId}/txs")
 public class TransactionController {
 
     private final BranchGroup branchGroup;
@@ -44,15 +48,21 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity add(@RequestBody TransactionDto request) {
+    public ResponseEntity add(@PathVariable(name = "branchId") String branchId,
+                              @RequestBody TransactionDto request) {
         TransactionHusk tx = TransactionDto.of(request);
-        TransactionHusk addedTx = branchGroup.addTransaction(tx);
-        return ResponseEntity.ok(TransactionDto.createBy(addedTx));
+        if (BranchId.of(branchId).equals(tx.getBranchId())) {
+            TransactionHusk addedTx = branchGroup.addTransaction(tx);
+            return ResponseEntity.ok(TransactionDto.createBy(addedTx));
+        } else {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity get(@PathVariable String id) {
-        TransactionHusk tx = branchGroup.getTxByHash(id);
+    @GetMapping("/{id}")
+    public ResponseEntity get(@PathVariable(name = "branchId") String branchId,
+                              @PathVariable String id) {
+        TransactionHusk tx = branchGroup.getTxByHash(BranchId.of(branchId), id);
 
         if (tx == null) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
@@ -62,10 +72,16 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity getAll() {
-        List<TransactionHusk> txs = branchGroup.getTransactionList();
+    public ResponseEntity getAll(@PathVariable(name = "branchId") String branchId) {
+        long countOfTotal = branchGroup.countOfTxs(BranchId.of(branchId));
+        List<TransactionHusk> txs =
+                new ArrayList<>(branchGroup.getRecentTxs(BranchId.of(branchId)));
         List<TransactionDto> dtoList = txs.stream().sorted(Comparator.reverseOrder())
                 .map(TransactionDto::createBy).collect(Collectors.toList());
-        return ResponseEntity.ok(dtoList);
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("countOfTotal", countOfTotal);
+        res.put("txs", dtoList);
+        return ResponseEntity.ok(res);
     }
 }

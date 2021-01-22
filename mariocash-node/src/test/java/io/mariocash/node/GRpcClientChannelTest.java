@@ -18,6 +18,8 @@ package dev.zhihexireng.node;
 
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcServerRule;
+import dev.zhihexireng.TestUtils;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.proto.BlockChainGrpc;
 import dev.zhihexireng.proto.NetProto;
@@ -56,12 +58,6 @@ public class GRpcClientChannelTest {
     @Captor
     private ArgumentCaptor<NetProto.SyncLimit> syncLimitRequestCaptor;
 
-    @Captor
-    private ArgumentCaptor<NetProto.Empty> emptyCaptor;
-
-    @Captor
-    private ArgumentCaptor<NetProto.PeerRequest> peerRequestCaptor;
-
     private GRpcClientChannel client;
 
     @Before
@@ -75,8 +71,8 @@ public class GRpcClientChannelTest {
     @Test
     public void getPeerYnodeUriTest() {
         GRpcClientChannel client =
-                new GRpcClientChannel(Peer.valueOf("ynode://75bff16c@localhost:9090"));
-        assertEquals("ynode://75bff16c@localhost:9090", client.getPeer().getYnodeUri());
+                new GRpcClientChannel(Peer.valueOf("ynode://75bff16c@localhost:32918"));
+        assertEquals("ynode://75bff16c@localhost:32918", client.getPeer().getYnodeUri());
     }
 
     @Test
@@ -108,7 +104,7 @@ public class GRpcClientChannelTest {
 
         long offset = 0;
 
-        client.syncBlock(offset);
+        client.syncBlock(BranchId.stem(), offset);
 
         verify(blockChainService).syncBlock(syncLimitRequestCaptor.capture(), any());
 
@@ -122,61 +118,25 @@ public class GRpcClientChannelTest {
             argument.onNext(null);
             argument.onCompleted();
             return null;
-        }).when(blockChainService).syncTransaction(emptyCaptor.capture(), any());
+        }).when(blockChainService).syncTransaction(syncLimitRequestCaptor.capture(), any());
 
-        client.syncTransaction();
+        client.syncTransaction(BranchId.stem());
 
-        verify(blockChainService).syncTransaction(emptyCaptor.capture(), any());
+        verify(blockChainService).syncTransaction(syncLimitRequestCaptor.capture(), any());
 
-        assertEquals("", emptyCaptor.getValue().toString());
+        BranchId branch = BranchId.of(syncLimitRequestCaptor.getValue().getBranch().toByteArray());
+        assertEquals(BranchId.stem(), branch);
     }
 
     @Test
     public void broadcastTransaction() {
-
         client.broadcastTransaction(TestUtils.sampleTxs());
-
         verify(blockChainService).broadcastTransaction(any());
     }
 
     @Test
     public void broadcastBlock() {
-
         client.broadcastBlock(TestUtils.sampleBlocks());
-
         verify(blockChainService).broadcastBlock(any());
-    }
-
-    @Test
-    public void requestPeerList() {
-        doAnswer((invocationOnMock) -> {
-            StreamObserver<NetProto.PeerRequest> argument = invocationOnMock.getArgument(1);
-            argument.onNext(null);
-            argument.onCompleted();
-            return null;
-        }).when(blockChainService).requestPeerList(peerRequestCaptor.capture(), any());
-
-        client.requestPeerList("ynode://75bff16c@localhost:9090", 10);
-
-        verify(blockChainService).requestPeerList(peerRequestCaptor.capture(), any());
-
-        assertEquals("ynode://75bff16c@localhost:9090", peerRequestCaptor.getValue().getFrom());
-        assertEquals(10, peerRequestCaptor.getValue().getLimit());
-    }
-
-    @Test
-    public void disconnectPeer() {
-        doAnswer((invocationOnMock) -> {
-            StreamObserver<NetProto.PeerRequest> argument = invocationOnMock.getArgument(1);
-            argument.onNext(null);
-            argument.onCompleted();
-            return null;
-        }).when(blockChainService).disconnectPeer(peerRequestCaptor.capture(), any());
-
-        client.disconnectPeer("ynode://75bff16c@localhost:9091");
-
-        verify(blockChainService).disconnectPeer(peerRequestCaptor.capture(), any());
-
-        assertEquals("ynode://75bff16c@localhost:9091", peerRequestCaptor.getValue().getFrom());
     }
 }

@@ -20,14 +20,12 @@ import com.google.gson.JsonObject;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.security.SignatureException;
 import java.util.Objects;
 
 public class TransactionHusk implements ProtoHusk<Proto.Transaction>, Comparable<TransactionHusk> {
@@ -65,19 +63,15 @@ public class TransactionHusk implements ProtoHusk<Proto.Transaction>, Comparable
     }
 
     public TransactionHusk(JsonObject jsonObject) {
-        try {
-            this.coreTransaction = new Transaction(jsonObject);
-            this.protoTransaction = this.coreTransaction.toProtoTransaction();
-        } catch (SignatureException e) {
-            throw new NotValidateException();
-        }
+        this.coreTransaction = new Transaction(jsonObject);
+        this.protoTransaction = Transaction.toProtoTransaction(this.coreTransaction);
     }
 
-    public Proto.Transaction getProtoTransaction() {
+    Proto.Transaction getProtoTransaction() {
         return protoTransaction;
     }
 
-    public Transaction getCoreTransaction() {
+    Transaction getCoreTransaction() {
         return coreTransaction;
     }
 
@@ -89,7 +83,7 @@ public class TransactionHusk implements ProtoHusk<Proto.Transaction>, Comparable
         return this.protoTransaction.getBody().toStringUtf8();
     }
 
-    public TransactionHusk sign(Wallet wallet) {
+    void sign(Wallet wallet) {
 
         try {
             this.coreTransaction =
@@ -97,28 +91,22 @@ public class TransactionHusk implements ProtoHusk<Proto.Transaction>, Comparable
                             this.coreTransaction.getHeader(),
                             wallet,
                             this.coreTransaction.getBody());
-            this.protoTransaction = this.coreTransaction.toProtoTransaction();
+            this.protoTransaction = Transaction.toProtoTransaction(this.coreTransaction);
         } catch (Exception e) {
             throw new NotValidateException();
         }
-
-        return this;
     }
 
     public Sha3Hash getHash() {
         try {
-            return new Sha3Hash(this.coreTransaction.getHash(), true);
+            return Sha3Hash.createByHashed(this.coreTransaction.getHash());
         } catch (IOException e) {
             throw new NotValidateException();
         }
     }
 
-    public Sha3Hash getHashForSignning() {
-        try {
-            return new Sha3Hash(this.coreTransaction.getHeader().getHashForSignning(), true);
-        } catch (IOException e) {
-            throw new NotValidateException();
-        }
+    public Sha3Hash getHashForSigning() {
+        return Sha3Hash.createByHashed(this.coreTransaction.getHeader().getHashForSigning());
     }
 
     @Override
@@ -161,12 +149,17 @@ public class TransactionHusk implements ProtoHusk<Proto.Transaction>, Comparable
         return Objects.hash(protoTransaction);
     }
 
-    public boolean isSigned() {
+    boolean isSigned() {
         return !this.protoTransaction.getSignature().isEmpty();
     }
 
     public boolean verify() {
-        return this.coreTransaction.getSignature().verify();
+        try {
+            return this.coreTransaction.verify();
+        } catch (Exception e) {
+            log.debug(e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -175,16 +168,17 @@ public class TransactionHusk implements ProtoHusk<Proto.Transaction>, Comparable
      * @return address
      */
     public Address getAddress() {
-        return new Address(this.coreTransaction.getAddress());
+        try {
+            return new Address(this.coreTransaction.getAddress());
+        } catch (Exception e) {
+            log.debug(e.getMessage());
+            return null;
+        }
     }
 
-    /**
-     * Get ECKey(include pubKey) using sig & signData.
-     *
-     * @return ECKey(include pubKey)
-     */
-    private ECKey ecKey() {
-        return this.coreTransaction.getSignature().getEcKeyPub();
+    public BranchId getBranchId() {
+        byte[] chain = protoTransaction.getHeader().getChain().toByteArray();
+        return new BranchId(Sha3Hash.createByHashed(chain));
     }
 
     public JsonObject toJsonObject() {

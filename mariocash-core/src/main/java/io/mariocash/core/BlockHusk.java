@@ -16,20 +16,15 @@
 
 package dev.zhihexireng.core;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.trie.Trie;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.TimeUtils;
 
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,31 +54,11 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         }
     }
 
-    public BlockHusk(Proto.Block.Header blockHeader, Wallet wallet, List<TransactionHusk> body) {
+    public BlockHusk(Wallet wallet, List<TransactionHusk> body, BlockHusk prevBlock) {
 
-        try {
-            byte[] hashDataForSign = BlockHeader.toBlockHeader(blockHeader).getHashForSignning();
-
-            Proto.TransactionList.Builder builder = Proto.TransactionList.newBuilder();
-            for (TransactionHusk tx : body) {
-                builder.addTransactions(tx.getProtoTransaction());
-            }
-
-            Proto.Block protoBlock = Proto.Block.newBuilder()
-                    .setHeader(blockHeader)
-                    .setSignature(ByteString.copyFrom(wallet.signHashedData(hashDataForSign)))
-                    .setBody(builder.build())
-                    .build();
-
-            this.protoBlock = protoBlock;
-            this.coreBlock = Block.toBlock(this.protoBlock);
-
-        } catch (Exception e) {
+        if (wallet == null || body == null || prevBlock == null) {
             throw new NotValidateException();
         }
-    }
-
-    public BlockHusk(Wallet wallet, List<TransactionHusk> body, BlockHusk prevBlock) {
 
         byte[] merkleRoot = Trie.getMerkleRootHusk(body);
         if (merkleRoot == null) {
@@ -93,10 +68,10 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         long length = 0;
 
         for (TransactionHusk txHusk: body) {
-            length += txHusk.getCoreTransaction().getBody().length();
+            length += txHusk.getCoreTransaction().length();
         }
 
-        Proto.Block.Header blockHeader  = getHeader(
+        Proto.Block.Header blockHeader = getHeader(
                 prevBlock.getHeader().getChain().toByteArray(),
                 new byte[8],
                 new byte[8],
@@ -107,7 +82,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
                 length);
 
         try {
-            byte[] hashDataForSign = BlockHeader.toBlockHeader(blockHeader).getHashForSignning();
+            byte[] hashDataForSign = BlockHeader.toBlockHeader(blockHeader).getHashForSigning();
 
             Proto.TransactionList.Builder builder = Proto.TransactionList.newBuilder();
             for (TransactionHusk tx : body) {
@@ -129,23 +104,31 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
     }
 
     public Sha3Hash getHash() {
+
         return new Sha3Hash(protoBlock.getHeader().toByteArray());
     }
 
     public Address getAddress() {
-        return new Address(ecKey().getAddress());
+        try {
+            return new Address(this.coreBlock.getAddress());
+        } catch (Exception e) {
+            throw new NotValidateException();
+        }
+    }
+
+    public BranchId getBranchId() {
+        byte[] chain = protoBlock.getHeader().getChain().toByteArray();
+        return new BranchId(Sha3Hash.createByHashed(chain));
     }
 
     public Sha3Hash getPrevHash() {
+
         return Sha3Hash.createByHashed(getHeader().getPrevBlockHash().toByteArray());
     }
 
     public long getIndex() {
-        return ByteUtil.byteArrayToLong(this.protoBlock.getHeader().getIndex().toByteArray());
-    }
 
-    public long nextIndex() {
-        return getIndex() + 1;
+        return ByteUtil.byteArrayToLong(this.protoBlock.getHeader().getIndex().toByteArray());
     }
 
     public List<TransactionHusk> getBody() {
@@ -166,19 +149,8 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         return this.protoBlock;
     }
 
-    /**
-     * Get ECKey(include pubKey) using sig & signData.
-     *
-     * @return ECKey(include pubKey)
-     */
-    private ECKey ecKey() {
-        try {
-            byte[] hashedRawData = new Sha3Hash(getHeader().toByteArray()).getBytes();
-            byte[] signatureBin = this.protoBlock.getSignature().toByteArray();
-            return ECKey.signatureToKey(hashedRawData, signatureBin);
-        } catch (SignatureException e) {
-            throw new InvalidSignatureException(e);
-        }
+    public boolean verify() {
+        return this.coreBlock.verify();
     }
 
     @Override
@@ -206,43 +178,6 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         return this.coreBlock.toJsonObject();
     }
 
-    @VisibleForTesting
-    public static BlockHusk genesis(Wallet wallet, JsonObject jsonObject) {
-        try {
-            JsonArray jsonArrayTxBody = new JsonArray();
-            jsonArrayTxBody.add(jsonObject);
-
-            TransactionBody txBody = new TransactionBody(jsonArrayTxBody);
-            TransactionHeader txHeader = new TransactionHeader(
-                    new byte[20],
-                    new byte[8],
-                    new byte[8],
-                    TimeUtils.time(),
-                    txBody);
-
-            Transaction tx = new Transaction(txHeader, wallet, txBody);
-            List<Transaction> txList = new ArrayList<>();
-            txList.add(tx);
-
-            BlockBody blockBody = new BlockBody(txList);
-            BlockHeader blockHeader = new BlockHeader(
-                    new byte[20],
-                    new byte[8],
-                    new byte[8],
-                    new byte[32],
-                    0L,
-                    TimeUtils.time(),
-                    blockBody.getMerkleRoot(),
-                    blockBody.length());
-
-            Block coreBlock = new Block(blockHeader, wallet, blockBody);
-
-            return new BlockHusk(Block.toProtoBlock(coreBlock));
-        } catch (Exception e) {
-            throw new NotValidateException();
-        }
-    }
-
     private Proto.Block.Header getHeader() {
         return this.protoBlock.getHeader();
     }
@@ -267,19 +202,6 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
                 .setMerkleRoot(ByteString.copyFrom(merkleRoot))
                 .setBodyLength(ByteString.copyFrom(ByteUtil.longToBytes(bodyLength)))
                 .build();
-    }
-
-    private static long getBodySize(List<TransactionHusk> body) {
-        long size = 0;
-        if (body == null || body.isEmpty()) {
-            return size;
-        }
-        for (TransactionHusk tx : body) {
-            if (tx.getInstance() != null) {
-                size += tx.getInstance().toByteArray().length;
-            }
-        }
-        return size;
     }
 
     @Override

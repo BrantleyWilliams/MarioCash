@@ -2,37 +2,89 @@ package dev.zhihexireng.core.genesis;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.Block;
+import dev.zhihexireng.core.BlockBody;
+import dev.zhihexireng.core.BlockHeader;
+import dev.zhihexireng.core.Transaction;
+import dev.zhihexireng.core.TransactionBody;
+import dev.zhihexireng.core.TransactionHeader;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.util.FileUtil;
+import dev.zhihexireng.util.TimeUtils;
 import org.spongycastle.crypto.InvalidCipherTextException;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
-public class GenesisBlock {
+class GenesisBlock {
 
-    private final DefaultConfig defaultConfig = new DefaultConfig();
-    private BlockHusk genesisBlock;
+    private Block genesisBlock;
 
-    public GenesisBlock() throws IOException, InvalidCipherTextException {
-        Wallet wallet = new Wallet(defaultConfig);
+    GenesisBlock() throws IOException, InvalidCipherTextException {
 
-        String transactionFileName = defaultConfig.getConfig().getString("genesis.config");
+        DefaultConfig defaultConfig = new DefaultConfig();
+        String transactionFileName = defaultConfig.getConfig().getString("genesis.contract");
         JsonObject genesisObject = getJsonObjectFromFile(transactionFileName);
 
-        String frontierFileName = defaultConfig.getConfig().getString("genesis.frontier");
-        JsonObject frontierObject = getJsonObjectFromFile(frontierFileName);
-        genesisObject.add("frontier", frontierObject.get("frontier"));
+        String delegatorListFileName = defaultConfig.getConfig().getString("genesis.delegator");
+        JsonObject delegatorListObject = getJsonObjectFromFile(delegatorListFileName);
+        genesisObject.add("delegator", delegatorListObject.get("delegator"));
 
-        String nodeListFileName = defaultConfig.getConfig().getString("genesis.nodeList");
+        String nodeListFileName = defaultConfig.getConfig().getString("genesis.node");
         JsonObject nodeListObject = getJsonObjectFromFile(nodeListFileName);
-        genesisObject.add("nodeList", nodeListObject.get("nodeList"));
+        genesisObject.add("node", nodeListObject.get("node"));
 
-        //genesisBlock = BlockHusk.genesis(wallet, genesisObject);
+        JsonArray jsonArrayTxBody = new JsonArray();
+        jsonArrayTxBody.add(genesisObject);
+
+        TransactionBody txBody = new TransactionBody(jsonArrayTxBody);
+
+        long timestamp = TimeUtils.time();
+
+        // todo: change values(version, type) using the configuration.
+        TransactionHeader txHeader = new TransactionHeader(
+                new byte[20],
+                new byte[8],
+                new byte[8],
+                timestamp,
+                txBody);
+
+        String branchId = genesisObject.get("branchId").getAsString();
+        byte[] chain = Hex.decode(branchId);
+
+        // todo: change values(version, type) using the configuration.
+        txHeader = new TransactionHeader(
+                chain,
+                new byte[8],
+                new byte[8],
+                timestamp,
+                txBody);
+
+        Wallet wallet = new Wallet(defaultConfig);
+        Transaction tx = new Transaction(txHeader, wallet, txBody);
+        List<Transaction> txList = new ArrayList<>();
+        txList.add(tx);
+
+        BlockBody blockBody = new BlockBody(txList);
+
+        // todo: change values(version, type) using the configuration.
+        BlockHeader blockHeader = new BlockHeader(
+                chain,
+                new byte[8],
+                new byte[8],
+                new byte[32],
+                0L,
+                timestamp,
+                blockBody.getMerkleRoot(),
+                blockBody.length());
+
+        genesisBlock = new Block(blockHeader, wallet, blockBody);
     }
 
     private JsonObject getJsonObjectFromFile(String fileName) throws IOException {
@@ -52,21 +104,11 @@ public class GenesisBlock {
         return new Gson().fromJson(result.toString(), JsonObject.class);
     }
 
-    public BlockHusk getGenesisBlock() {
-        return genesisBlock;
-    }
-
-    public void generateGenesisBlockFile() throws IOException {
+    String getGenesisJson() {
         //todo: change the method to serializing method
 
         JsonObject jsonObject = this.genesisBlock.toJsonObject();
-
-        ClassLoader classLoader = getClass().getClassLoader();
-        File genesisFile = new File(classLoader.getResource(
-                defaultConfig.getConfig().getString("genesis.block")).getFile());
-
-        FileUtil.writeStringToFile(genesisFile,
-                new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject));
+        return new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject);
     }
 
 }

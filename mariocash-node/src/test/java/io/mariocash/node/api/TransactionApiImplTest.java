@@ -1,20 +1,20 @@
 package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.primitives.Longs;
+import dev.zhihexireng.TestUtils;
+import dev.zhihexireng.contract.ContractTx;
+import dev.zhihexireng.core.Address;
+import dev.zhihexireng.core.Branch;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.node.TestUtils;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.util.encoders.Base64;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -25,19 +25,13 @@ public class TransactionApiImplTest {
     private static final BlockApi blockApi = new JsonRpcConfig().blockApi();
     private static final TransactionApi txApi = new JsonRpcConfig().transactionApi();
 
-    private final String address = "0x407d73d8a49eeb85d32cf465507dd71d507100c1";
-    private final String tag = "latest";
-    private final String hashOfTx =
-            "0xbd729cb4ecbcbd3fc66bedb43dbb856f5e71ebefff95fc9503b92921b8466bab";
-    private final String hashOfBlock =
-            "0x76a9fa4681a8abf94618543872444ba079d5302203ac6a5b5b2087a9f56ea8bf";
-    private final int blockNumber = 1;
-    private final int txIndexPosition = 1;
-    private Wallet wallet;
+    private final int blockNumber = 3;
+    private final int txIndexPosition = 2;
+    private final String branchId = BranchId.STEM;
 
     @Before
-    public void setUp() throws IOException, InvalidCipherTextException {
-        this.wallet = new Wallet();
+    public void setUp() {
+        sendTransactionTest();
     }
 
     @Test
@@ -51,18 +45,11 @@ public class TransactionApiImplTest {
     }
 
     @Test
-    public void getTransactionCountTest() {
-        try {
-            assertThat(txApi.getTransactionCount(address, tag)).isNotZero();
-        } catch (Throwable exception) {
-            log.debug("\n\ngetTransactionCountTest :: exception => " + exception);
-        }
-    }
-
-    @Test
     public void getBlockTransactionCountByHashTest() {
         try {
-            assertThat(txApi.getBlockTransactionCountByHash(hashOfTx)).isNotZero();
+            assertThat(txApi.getTransactionCountByBlockHash(branchId,
+                    "d52fffa14f5b88b141d05d8e28c90d8131db1aa63e076bfea9c28c3060049e12"))
+                    .isNotZero();
         } catch (Exception exception) {
             log.debug("\n\ngetBlockTransactionCountByHashTest :: exception => " + exception);
         }
@@ -71,7 +58,7 @@ public class TransactionApiImplTest {
     @Test
     public void getBlockTransactionCountByNumberTest() {
         try {
-            assertThat(txApi.getBlockTransactionCountByNumber(blockNumber)).isNotZero();
+            assertThat(txApi.getTransactionCountByBlockNumber(branchId, blockNumber)).isNotZero();
         } catch (Throwable exception) {
             log.debug("\n\ngetBlockTransactionCountByNumberTest :: exception => " + exception);
         }
@@ -80,45 +67,50 @@ public class TransactionApiImplTest {
     @Test
     public void getTransactionByHashTest() {
         try {
-            TransactionHusk tx = TestUtils.createTxHusk();
-
-            txApi.sendTransaction(TransactionDto.createBy(tx));
-            assertThat(txApi.getTransactionByHash(hashOfTx)).isNotNull();
+            //TransactionHusk tx = TestUtils.createTxHusk();
+            //txApi.sendTransaction(TransactionDto.createBy(tx));
+            assertThat(txApi.getTransactionByHash(branchId,
+                    "f5912fde84c6a3a44b4e529077ca9bf28feccd847137e44a77cd17e9fb9c1353"))
+                    .isNotNull();
         } catch (Exception exception) {
             log.debug("\n\ngetTransactionByHashTest :: exception => " + exception);
         }
     }
 
     @Test
-    public void getTransactionByBlockHashAndIndexTest() {
+    public void getTransactionByBlockHashTest() {
         try {
-            TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx(wallet));
-            if (txApi.sendTransaction(TransactionDto.createBy(tx)) != null) {
-                Thread.sleep(10000);
-                String hashOfBlock = blockApi.getBlockByHash("1", true).getHash().toString();
-                assertThat(hashOfBlock).isNotEmpty();
-                assertThat(txApi.getTransactionByBlockHashAndIndex(hashOfBlock, 0)).isNotNull();
-            } else {
-                log.error("Send Transaction Failed!");
-            }
+            assertThat(txApi.getTransactionByBlockHash(branchId,
+                    "5ef71a90c6d99c7bc13bfbcaffb50cb89210678e99ed6626c9d2f378700b392c",
+                    2)).isNotNull();
         } catch (Exception exception) {
-            log.debug("\n\ngetTransactionByBlockHashAndIndexTest :: exception => " + exception);
+            log.debug("\n\ngetTransactionByBlockHashTest :: exception => " + exception);
         }
     }
 
     @Test
-    public void getTransactionByBlockNumberAndIndexTest() {
+    public void getTransactionByBlockNumberTest() {
         try {
-            assertThat(txApi.getTransactionByBlockNumberAndIndex(blockNumber, txIndexPosition))
+            assertThat(txApi.getTransactionByBlockNumber(branchId, blockNumber, txIndexPosition))
                     .isNotNull();
-        } catch (Exception exception) {
-            log.debug("\n\ngetTransactionByBlockNumberAndIndexTest :: exception => " + exception);
+        } catch (Exception e) {
+            log.debug("\n\ngetTransactionByBlockNumberTest :: exception => " + e);
+        }
+    }
+
+    @Test
+    public void getTransactionByBlockNumberWithTagTest() {
+        try {
+            String tag = "latest";
+            txApi.getTransactionByBlockNumber(branchId, tag, txIndexPosition);
+        } catch (Exception e) {
+            log.debug("\n\ngetTransactionByBlockNumberWithTagTest :: exception => " + e);
         }
     }
 
     @Test
     public void checkTransactionJsonFormat() throws IOException {
-        TransactionHusk tx = TestUtils.createTxHusk();
+        TransactionHusk tx = TestUtils.createTransferTxHusk();
         ObjectMapper objectMapper = TestUtils.getMapper();
         log.debug("\n\nTransaction Format : "
                 + objectMapper.writeValueAsString(TransactionDto.createBy(tx)));
@@ -126,73 +118,54 @@ public class TransactionApiImplTest {
 
     @Test
     public void sendTransactionTest() {
-        TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx());
+        Wallet wallet = TestUtils.wallet();
+        TransactionHusk tx = ContractTx.createYeedTx(
+                wallet, new Address(wallet.getAddress()), 100);
 
         // Request Transaction with jsonStr
         try {
             assertThat(txApi.sendTransaction(TransactionDto.createBy(tx))).isNotEmpty();
         } catch (Exception exception) {
-            log.debug("\n\njsonStringToTxTest :: exception => " + exception);
+            log.debug("\n\nsendTransactionTest :: exception => " + exception);
         }
     }
 
     @Test
     public void sendRawTransactionTest() {
-        // Create an input parameter
-        byte[] type = new byte[4];
-        byte[] version = new byte[4];
-        byte[] dataHash = new byte[32];
-        type = "0000".getBytes();
-        version = "0000".getBytes();
-        dataHash = Base64.decode("bQ4ti+Xk4rGhhFrfNDuMmt+KMw0yVRL0rsfAAUEXASM=");
-        byte[] timestamp = Longs.toByteArray(Long.parseLong("155810745733540"));
-        byte[] dataSize = Longs.toByteArray((long) 38);
-
-        byte[] signature = new byte[65];
-        signature = Base64.decode("HMddN4GjlGPV4x26730eQoHwS9DVmGg0iXmyeJG4H0kqM8UffWs"
-                + "QwARCGHnLa4Su7QOsfEUjP65oEs1fxWKUT8k=");
-        byte[] data = "{\"id\":\"0\",\"name\":\"Rachael\",\"age\":\"27\"}".getBytes();
-
-        int totalLength = type.length + version.length + dataHash.length + timestamp.length
-                        + dataSize.length + signature.length + data.length;
-
-        ByteBuffer bb = ByteBuffer.allocate(totalLength);
-        bb.put(type);
-        bb.put(version);
-        bb.put(dataHash);
-        bb.put(timestamp);
-        bb.put(dataSize);
-        bb.put(signature);
-        bb.put(data);
-
-        byte[] input = bb.array();
-
         // Request Transaction with byteArr
         try {
+            byte[] input = TestUtils.createTransferTxHusk().toBinary();
             // Convert byteArray to Transaction
             assertThat(txApi.sendRawTransaction(input)).isNotEmpty();
-        } catch (Exception exception) {
-            log.debug("\n\nsendRawTransactionTest :: exception => " + exception);
+        } catch (Exception e) {
+            log.debug(e.getMessage());
         }
     }
 
     @Test
     public void newPendingTransactionFilterTest() {
         try {
-            assertThat(txApi.newPendingTransactionFilter()).isNotZero();
-        } catch (Exception exception) {
-            log.debug("\n\njsonStringToTxTest :: exception => " + exception);
+            assertThat(txApi.newPendingTransactionFilter(Branch.STEM)).isGreaterThanOrEqualTo(0);
+            assertThat(txApi.newPendingTransactionFilter(Branch.YEED)).isGreaterThanOrEqualTo(0);
+        } catch (Exception e) {
+            log.debug("\n\nnewPendingTransactionFilterTest :: exception => " + e);
         }
     }
 
     @Test
     public void getAllTransactionReceiptTest() {
+        try {
+            assertThat(txApi.getAllTransactionReceipt(Branch.STEM)).isNotEmpty();
+            assertThat(txApi.getAllTransactionReceipt(Branch.YEED)).isNotEmpty();
+        } catch (Exception e) {
+            log.debug("\n\ngetAllTransactionReceiptTest :: exception => " + e);
+        }
     }
 
     @Test
     public void txSigValidateTest() throws IOException {
         // Create Transaction
-        TransactionHusk tx = new TransactionHusk(TestUtils.sampleTx(wallet));
+        TransactionHusk tx = TestUtils.createTransferTxHusk();
 
         ObjectMapper mapper = TestUtils.getMapper();
         String jsonStr = mapper.writeValueAsString(TransactionDto.createBy(tx));

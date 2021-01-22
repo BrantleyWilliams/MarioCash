@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.node.controller;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.proto.Proto;
@@ -33,9 +34,9 @@ public class TransactionDto {
     private byte[] signature;
     private String body;
     private String author;
-    private String txHash;
+    private String hash;
 
-
+    @JsonProperty("chain")
     public String getChainHex() {
         return Hex.toHexString(chain);
     }
@@ -48,18 +49,7 @@ public class TransactionDto {
         this.chain = Hex.decode(chain);
     }
 
-    public String getTypeHex() {
-        return Hex.toHexString(type);
-    }
-
-    public void setType(byte[] type) {
-        this.type = type;
-    }
-
-    public void setTypeHex(String type) {
-        this.type = Hex.decode(type);
-    }
-
+    @JsonProperty("version")
     public String getVersionHex() {
         return Hex.toHexString(version);
     }
@@ -72,6 +62,28 @@ public class TransactionDto {
         this.version = Hex.decode(version);
     }
 
+    @JsonProperty("type")
+    public String getTypeHex() {
+        return Hex.toHexString(type);
+    }
+
+    public void setType(byte[] type) {
+        this.type = type;
+    }
+
+    public void setTypeHex(String type) {
+        this.type = Hex.decode(type);
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    @JsonProperty("bodyHash")
     public String getBodyHashHex() {
         return Hex.toHexString(bodyHash);
     }
@@ -92,14 +104,7 @@ public class TransactionDto {
         this.bodyLength = bodyLength;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
+    @JsonProperty("signature")
     public String getSignatureHex() {
         return Hex.toHexString(signature);
     }
@@ -120,10 +125,6 @@ public class TransactionDto {
         this.body = body;
     }
 
-    public String getTxHash() {
-        return txHash;
-    }
-
     public String getAuthor() {
         return author;
     }
@@ -132,14 +133,18 @@ public class TransactionDto {
         this.author = author;
     }
 
-    public void setTxHash(String txHash) {
-        this.txHash = txHash;
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 
     public static TransactionHusk of(TransactionDto dto) {
         Proto.Transaction.Header header = Proto.Transaction.Header.newBuilder()
                 .setChain(ByteString.copyFrom(Hex.decode(dto.getChainHex())))
-                .setVersion(ByteString.copyFrom(Hex.decode(dto.getTypeHex())))
+                .setVersion(ByteString.copyFrom(Hex.decode(dto.getVersionHex())))
                 .setType(ByteString.copyFrom(Hex.decode(dto.getTypeHex())))
                 .setTimestamp(ByteString.copyFrom(ByteUtil.longToBytes(dto.getTimestamp())))
                 .setBodyHash(ByteString.copyFrom(Hex.decode(dto.getBodyHashHex())))
@@ -169,8 +174,7 @@ public class TransactionDto {
         transactionDto.setSignature(tx.getInstance().getSignature().toByteArray());
         transactionDto.setBody(tx.getBody());
         transactionDto.setAuthor(tx.getAddress().toString());
-        transactionDto.setTxHash(tx.getHash().toString());
+        transactionDto.setHash(tx.getHash().toString());
         return transactionDto;
     }
-
 }

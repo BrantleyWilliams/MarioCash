@@ -12,8 +12,8 @@ MAINTAINER MARIOCASH
 ENV SPRING_PROFILES_ACTIVE=prod \
     RUN_SLEEP=0 \
     JAVA_OPTS=""
-EXPOSE 8080 9090
-VOLUME /tmp
+EXPOSE 8080 32918
+VOLUME /.mariocash
 CMD echo "The MarioCash Node will start in ${RUN_SLEEP}s..." && \
     sleep ${RUN_SLEEP} && \
     java ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar /app.jar

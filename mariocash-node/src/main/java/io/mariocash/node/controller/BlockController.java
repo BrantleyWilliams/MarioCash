@@ -18,42 +18,39 @@ package dev.zhihexireng.node.controller;
 
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
-import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.BranchId;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("blocks")
+@RequestMapping("branches/{branchId}/blocks")
 class BlockController {
 
-    private final Wallet wallet;
     private final BranchGroup branchGroup;
 
     @Autowired
-    public BlockController(Wallet wallet, BranchGroup branchGroup) {
-        this.wallet = wallet;
+    public BlockController(BranchGroup branchGroup) {
         this.branchGroup = branchGroup;
     }
 
-    @PostMapping
-    public ResponseEntity add() {
-        BlockHusk generatedBlock = branchGroup.generateBlock(wallet);
-        return ResponseEntity.ok(BlockDto.createBy(generatedBlock));
-    }
-
-    @GetMapping("{id}")
-    public ResponseEntity get(@PathVariable(name = "id") String id) {
-        BlockHusk foundBlock = branchGroup.getBlockByIndexOrHash(id);
+    @GetMapping("/{id}")
+    public ResponseEntity get(@PathVariable(name = "branchId") String branchId,
+                              @PathVariable(name = "id") String id) {
+        BlockHusk foundBlock;
+        if (StringUtils.isNumeric(id)) {
+            foundBlock = branchGroup.getBlockByIndex(BranchId.of(branchId), Long.valueOf(id));
+        } else {
+            foundBlock = branchGroup.getBlockByHash(BranchId.of(branchId), id);
+        }
 
         if (foundBlock == null) {
             return ResponseEntity.notFound().build();
@@ -63,16 +60,32 @@ class BlockController {
     }
 
     @GetMapping
-    public ResponseEntity getAll() {
-        Set<BlockHusk> blocks = branchGroup.getBlocks();
-        List<BlockDto> dtoList = blocks.stream().sorted(Comparator.reverseOrder())
-                .map(BlockDto::createBy).collect(Collectors.toList());
-        return ResponseEntity.ok(dtoList);
+    public ResponseEntity getAll(@PathVariable(name = "branchId") String branchId,
+                                 @RequestParam(value = "offset", required = false) Long offset,
+                                 @RequestParam(value = "limit", defaultValue = "25") int limit) {
+        List<BlockDto> blocks = new ArrayList<>();
+        BranchId id = BranchId.of(branchId);
+        long lastIdx = branchGroup.getLastIndex(id);
+
+        if (offset == null) {
+            offset = lastIdx;
+        }
+
+        for (int i = 0; i < limit && offset >= 0; i++) {
+            BlockHusk block = branchGroup.getBlockByIndex(id, offset--);
+            if (block == null) {
+                break;
+            }
+            blocks.add(BlockDto.createBy(block));
+        }
+        return ResponseEntity.ok(blocks);
     }
 
-    @GetMapping("latest")
-    public ResponseEntity latest() {
-        String latest = String.valueOf(branchGroup.getLastIndex());
-        return ResponseEntity.ok(BlockDto.createBy(branchGroup.getBlockByIndexOrHash(latest)));
+    @GetMapping("/latest")
+    public ResponseEntity latest(@PathVariable(name = "branchId") String branchId) {
+        BranchId id = BranchId.of(branchId);
+        long latest = branchGroup.getLastIndex(id);
+        return ResponseEntity.ok(BlockDto.createBy(branchGroup.getBlockByIndex(id, latest)));
     }
+
 }

@@ -5,28 +5,19 @@ import com.googlecode.jsonrpc4j.JsonRpcErrors;
 import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
 import dev.zhihexireng.core.exception.NonExistObjectException;
-import dev.zhihexireng.core.net.Peer;
 
-import java.util.Collection;
 import java.util.List;
 
 @JsonRpcService("/api/peer")
 public interface PeerApi {
-    /**
-     * Returns all peers
-     */
-    @JsonRpcErrors({
-            @JsonRpcError(exception = NonExistObjectException.class,
-                    code = NonExistObjectException.code)})
-    Peer add(@JsonRpcParam(value = "peer") Peer peer);
 
     /**
-     * Returns all peers
+     * Returns peers by branchId
      */
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    Collection<Peer> getAll();
+    List<String> getPeers(@JsonRpcParam(value = "peer") PeerDto peerDto);
 
     /**
      * Returns all active peers

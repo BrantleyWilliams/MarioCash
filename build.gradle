@@ -67,9 +67,9 @@ subprojects {
     checkstyle {
         ignoreFailures = false
         toolVersion = '8.11'
-        sourceSets = [project.sourceSets.main]
         maxWarnings = 0
         configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+        configProperties = [ "suppressionFile" : rootProject.file('config/checkstyle/suppressions.xml')]
     }
 }
 
@@ -134,8 +134,15 @@ project(':mariocash-node') {
         compile("com.github.briandilley.jsonrpc4j:jsonrpc4j:${jsonrpc4jVersion}")
         compile("org.springframework.boot:spring-boot-starter-web")
         compile("org.springframework.boot:spring-boot-starter-actuator")
+        compile("org.springframework.boot:spring-boot-starter-websocket")
+        compile("org.webjars:webjars-locator-core")
+        compile("org.webjars:sockjs-client:1.0.2")
+        compile("org.webjars:stomp-websocket:2.3.3")
+        compile("org.webjars:bootstrap:3.3.7")
+        compile("org.webjars:jquery:3.1.0")
         annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
         runtime('org.springframework.boot:spring-boot-devtools')
+        testCompile project(":mariocash-core").sourceSets.test.output
         testCompile('org.springframework.boot:spring-boot-starter-test')
         testCompile("io.grpc:grpc-testing:${grpcVersion}")
     }

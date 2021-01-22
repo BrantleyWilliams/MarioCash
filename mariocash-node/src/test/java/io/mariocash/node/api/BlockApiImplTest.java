@@ -1,8 +1,9 @@
 package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.node.TestUtils;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.node.controller.BlockDto;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ public class BlockApiImplTest {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionApi.class);
     private static final BlockApi blockApi = new JsonRpcConfig().blockApi();
+    private final String branchId = BranchId.STEM;
 
     @Test
     public void blockApiIsNotNull() {
@@ -27,26 +29,18 @@ public class BlockApiImplTest {
     @Test
     public void blockNumberTest() {
         try {
-            assertThat(blockApi.blockNumber()).isNotNull();
+            assertThat(blockApi.blockNumber(branchId)).isNotNull();
         } catch (Exception exception) {
             log.debug("blockNumberTest :: exception : " + exception);
         }
     }
 
     @Test
-    public void getAllBlockTest() {
-        try {
-            assertThat(blockApi.getAllBlock().size()).isNotZero();
-        } catch (Exception exception) {
-            log.debug("getAllBlockTest :: exception : " + exception, exception);
-        }
-    }
-
-    @Test
     public void getBlockByHashTest() {
         try {
-            String hashOfBlock = blockApi.getBlockByHash("0", true).getPrevHash().toString();
-            assertThat(blockApi.getBlockByHash(hashOfBlock, true)).isNotNull();
+            assertThat(blockApi.getBlockByHash(branchId,
+                    "ad7dd0552336ebf3b2f4f648c4a87d7c35ed74382219e2954047ad9138a247c5",
+                    true)).isNotNull();
         } catch (Exception exception) {
             log.debug("getBlockByHashTest :: exception : " + exception);
         }
@@ -55,7 +49,7 @@ public class BlockApiImplTest {
     @Test
     public void getBlockByNumberTest() {
         try {
-            assertThat(blockApi.getBlockByNumber("0", true)).isNotNull();
+            assertThat(blockApi.getBlockByNumber(branchId, 0, true)).isNotNull();
         } catch (Exception exception) {
             log.debug("getBlockByNumberTest :: exception : " + exception);
         }
@@ -69,7 +63,6 @@ public class BlockApiImplTest {
             log.debug("newBlockFilter :: exception : " + exception);
         }
     }
-
 
     @Test
     public void BlockDtoTest() throws IOException {

@@ -17,7 +17,8 @@
 package dev.zhihexireng.node.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.zhihexireng.node.TestUtils;
+import dev.zhihexireng.TestUtils;
+import dev.zhihexireng.core.BranchId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,15 +32,20 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(TransactionController.class)
 @IfProfileValue(name = "spring.profiles.active", value = "ci")
 public class TransactionControllerTest {
+
+    private static final String BASE_PATH = String.format("/branches/%s/txs", BranchId.STEM);
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,21 +57,32 @@ public class TransactionControllerTest {
     }
 
     @Test
+    public void shouldGetRecentTransaction() throws Exception {
+        mockMvc.perform(get(BASE_PATH))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.countOfTotal", is(1)))
+                .andExpect(jsonPath("$.txs", hasSize(1)))
+                .andExpect(jsonPath("$.txs[0].chain", is(BranchId.STEM)));
+    }
+
+    @Test
     public void shouldGetTransactionByHash() throws Exception {
 
         // 트랜잭션 풀에 있는 트랜잭션을 조회 후 블록 내 트랜잭션 조회 로직 추가 필요.
-        TransactionDto req = TransactionDto.createBy(TestUtils.createTxHusk());
+        TransactionDto req =
+                TransactionDto.createBy(TestUtils.createBranchTxHusk(TestUtils.wallet()));
 
-        MockHttpServletResponse postResponse = mockMvc.perform(post("/txs")
+        MockHttpServletResponse postResponse = mockMvc.perform(post(BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON).content(json.write(req).getJson()))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn().getResponse();
 
-        assertThat(postResponse.getContentAsString()).contains("transfer");
-        String postTxHash = json.parseObject(postResponse.getContentAsString()).getTxHash();
+        assertThat(postResponse.getContentAsString()).contains("create");
+        String postTxHash = json.parseObject(postResponse.getContentAsString()).getHash();
 
-        MockHttpServletResponse getResponse = mockMvc.perform(get("/txs/" + postTxHash))
+        MockHttpServletResponse getResponse = mockMvc.perform(get(BASE_PATH + "/" + postTxHash))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn().getResponse();
@@ -75,8 +92,7 @@ public class TransactionControllerTest {
 
     @Test
     public void shouldGetAllTxs() throws Exception {
-        mockMvc.perform(get("/txs")).andDo(print())
-                .andExpect(status().isOk());
+        mockMvc.perform(get(BASE_PATH)).andDo(print()).andExpect(status().isOk());
     }
 
 }

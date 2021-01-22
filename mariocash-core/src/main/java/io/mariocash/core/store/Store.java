@@ -16,16 +16,12 @@
 
 package dev.zhihexireng.core.store;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
-import java.util.Set;
-
-public interface Store<K, V> {
+interface Store<K, V> {
     void put(K key, V value);
 
-    V get(K key) throws InvalidProtocolBufferException;
-
-    Set<V> getAll();
+    V get(K key);
 
     boolean contains(K key);
+
+    void close();
 }

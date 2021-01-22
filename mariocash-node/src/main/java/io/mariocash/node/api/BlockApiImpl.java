@@ -3,14 +3,12 @@ package dev.zhihexireng.node.api;
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
+import dev.zhihexireng.node.controller.BlockDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Comparator;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @AutoJsonRpcServiceImpl
@@ -24,32 +22,29 @@ public class BlockApiImpl implements BlockApi {
     }
 
     @Override
-    public int blockNumber() {
+    public long blockNumber(String branchId) {
         try {
-            return branchGroup.getBlocks().size();
+            return branchGroup.getLastIndex(BranchId.of(branchId)) + 1;
         } catch (Exception exception) {
             throw new InternalErrorException();
         }
     }
 
     @Override
-    public Set<BlockHusk> getAllBlock() {
-        return branchGroup.getBlocks();
-    }
-
-    @Override
-    public BlockHusk getBlockByHash(String hashOfBlock, Boolean bool) {
+    public BlockDto getBlockByHash(String branchId, String hashOfBlock, Boolean bool) {
         try {
-            return branchGroup.getBlockByIndexOrHash(hashOfBlock);
+            BlockHusk blockHusk = branchGroup.getBlockByHash(BranchId.of(branchId), hashOfBlock);
+            return BlockDto.createBy(blockHusk);
         } catch (Exception exception) {
             throw new NonExistObjectException("block");
         }
     }
 
     @Override
-    public BlockHusk getBlockByNumber(String numOfBlock, Boolean bool) {
+    public BlockDto getBlockByNumber(String branchId, long numOfBlock, Boolean bool) {
         try {
-            return branchGroup.getBlockByIndexOrHash(numOfBlock);
+            BlockHusk blockHusk = branchGroup.getBlockByIndex(BranchId.of(branchId), numOfBlock);
+            return BlockDto.createBy(blockHusk);
         } catch (Exception exception) {
             throw new NonExistObjectException("block");
         }
@@ -65,8 +60,9 @@ public class BlockApiImpl implements BlockApi {
     }
 
     @Override
-    public BlockHusk getLastBlock() {
-        return branchGroup.getBlocks().stream().sorted(Comparator.reverseOrder())
-                .collect(Collectors.toList()).get(0);
+    public BlockDto getLastBlock(String branchId) {
+        BranchId id = BranchId.of(branchId);
+        BlockHusk blockHusk = branchGroup.getBlockByIndex(id, branchGroup.getLastIndex(id));
+        return BlockDto.createBy(blockHusk);
     }
 }

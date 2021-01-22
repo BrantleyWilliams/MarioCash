@@ -5,17 +5,17 @@ import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 
-public class Runtime<T> {
+class Runtime<T> {
 
     private final StateStore<T> stateStore;
     private final TransactionReceiptStore txReceiptStore;
 
-    public Runtime(StateStore<T> stateStore, TransactionReceiptStore txReceiptStore) {
+    Runtime(StateStore<T> stateStore, TransactionReceiptStore txReceiptStore) {
         this.stateStore = stateStore;
         this.txReceiptStore = txReceiptStore;
     }
 
-    public boolean invoke(Contract contract, TransactionHusk tx) throws Exception {
+    public boolean invoke(Contract contract, TransactionHusk tx) {
         contract.init(stateStore, txReceiptStore);
         return contract.invoke(tx);
     }
@@ -25,8 +25,11 @@ public class Runtime<T> {
         return contract.query(query);
     }
 
-    public StateStore<T> getStateStore() {
+    StateStore<T> getStateStore() {
         return this.stateStore;
     }
 
+    TransactionReceiptStore getTransactionReceiptStore() {
+        return this.txReceiptStore;
+    }
 }

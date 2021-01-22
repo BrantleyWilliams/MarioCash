@@ -16,14 +16,9 @@
 
 package dev.zhihexireng.core.net;
 
-import dev.zhihexireng.core.Wallet;
-import dev.zhihexireng.core.event.PeerEventListener;
-
-public interface NodeManager extends PeerEventListener {
+public interface NodeManager {
 
     String getNodeUri();
-
-    Wallet getWallet();
 
     void generateBlock();
 }

@@ -1,24 +1,34 @@
 package dev.zhihexireng.core;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
+import dev.zhihexireng.core.exception.InvalidSignatureException;
+import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.genesis.TransactionInfo;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.ByteUtil;
-import dev.zhihexireng.util.TimeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.SignatureException;
+import java.util.Arrays;
 
 public class Transaction implements Cloneable {
 
+    private static final Logger log = LoggerFactory.getLogger(Transaction.class);
+
+    private static final int SIGNATURE_LENGTH = 65;
+
     // Transaction Data Format v0.0.3
     private TransactionHeader header;
-    private TransactionSignature signature;
+    private byte[] signature;
     private TransactionBody body;
 
     /**
@@ -29,34 +39,62 @@ public class Transaction implements Cloneable {
      * @param body   transaction body
      */
     public Transaction(TransactionHeader header,
-                       TransactionSignature signature, TransactionBody body) {
+                       byte[] signature, TransactionBody body) {
         this.header = header;
         this.signature = signature;
         this.body = body;
+        verify();
     }
 
     /**
      * Transaction Constructor.
      *
      * @param header transaction header
-     * @param wallet wallet for signning
+     * @param wallet wallet for signing
      * @param body   transaction body
      */
-    public Transaction(TransactionHeader header, Wallet wallet, TransactionBody body)
-            throws SignatureException, IOException {
-
-        this.body = body;
-        this.header = header;
-        this.header.setTimestamp(TimeUtils.time());
-        this.signature = new TransactionSignature(wallet, this.header.getHashForSignning());
+    public Transaction(TransactionHeader header, Wallet wallet, TransactionBody body) {
+        this(header, wallet.signHashedData(header.getHashForSigning()), body);
     }
 
-    public Transaction(JsonObject jsonObject) throws SignatureException {
+    /**
+     * Transaction Constructor.
+     *
+     * @param jsonObject jsonObject transaction.
+     */
+    public Transaction(JsonObject jsonObject) {
+        this(new TransactionHeader(jsonObject.get("header").getAsJsonObject()),
+                Hex.decode(jsonObject.get("signature").getAsString()),
+                new TransactionBody(jsonObject.getAsJsonArray("body")));
+    }
 
-        this.header = new TransactionHeader(jsonObject.get("header").getAsJsonObject());
-        this.signature = new TransactionSignature(jsonObject.get("signature").getAsJsonObject());
-        this.body = new TransactionBody(jsonObject.getAsJsonArray("body"));
+    /**
+     * Transaction Constructor.
+     *
+     * @param txBytes binary transaction.
+     */
+    public Transaction(byte[] txBytes) {
+        int position = 0;
 
+        byte[] headerBytes = new byte[84];
+        System.arraycopy(txBytes, 0, headerBytes, 0, headerBytes.length);
+        this.header = new TransactionHeader(headerBytes);
+        position += headerBytes.length;
+
+        byte[] sigBytes = new byte[65];
+        System.arraycopy(txBytes, position, sigBytes, 0, sigBytes.length);
+        position += sigBytes.length;
+        this.signature = sigBytes;
+
+        byte[] bodyBytes = new byte[txBytes.length - headerBytes.length - sigBytes.length];
+        System.arraycopy(txBytes, position, bodyBytes, 0, bodyBytes.length);
+        position += bodyBytes.length;
+        this.body = new TransactionBody(bodyBytes);
+
+        if (position != txBytes.length) {
+            throw new NotValidateException();
+        }
+        verify();
     }
 
     /**
@@ -78,11 +116,11 @@ public class Transaction implements Cloneable {
     }
 
     /**
-     * Get TransactionSignature.
+     * Get Transaction signature.
      *
-     * @return transaction signature class
+     * @return transaction signature
      */
-    public TransactionSignature getSignature() {
+    public byte[] getSignature() {
         return signature;
     }
 
@@ -95,7 +133,7 @@ public class Transaction implements Cloneable {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
 
         bao.write(this.header.toBinary());
-        bao.write(this.signature.getSignature());
+        bao.write(this.signature);
 
         return HashUtil.sha3(bao.toByteArray());
     }
@@ -105,17 +143,8 @@ public class Transaction implements Cloneable {
      *
      * @return transaction hash(HexString)
      */
-    public String getHashString() throws IOException {
+    String getHashString() throws IOException {
         return Hex.toHexString(this.getHash());
-    }
-
-    /**
-     * Get ECKey (include pubKey).
-     *
-     * @return ECKey(include pubKey)
-     */
-    public ECKey getEcKeyPub() {
-        return this.signature.getEcKeyPub();
     }
 
     /**
@@ -123,8 +152,11 @@ public class Transaction implements Cloneable {
      *
      * @return public key
      */
-    public byte[] getPubKey() {
-        return this.getEcKeyPub().getPubKey();
+    byte[] getPubKey() throws SignatureException {
+        ECKey.ECDSASignature ecdsaSignature = new ECKey.ECDSASignature(this.signature);
+        ECKey ecKeyPub = ECKey.signatureToKey(this.header.getHashForSigning(), ecdsaSignature);
+
+        return ecKeyPub.getPubKey();
     }
 
     /**
@@ -132,8 +164,8 @@ public class Transaction implements Cloneable {
      *
      * @return the public key as HexString
      */
-    public String getPubKeyHexString() {
-        return Hex.toHexString(this.getEcKeyPub().getPubKey());
+    String getPubKeyHexString() throws SignatureException {
+        return Hex.toHexString(this.getPubKey());
     }
 
     /**
@@ -141,8 +173,11 @@ public class Transaction implements Cloneable {
      *
      * @return address
      */
-    public byte[] getAddress() {
-        return this.getEcKeyPub().getAddress();
+    public byte[] getAddress() throws SignatureException {
+
+        byte[] pubKey = this.getPubKey();
+        return HashUtil.sha3omit12(
+                Arrays.copyOfRange(pubKey, 1, pubKey.length));
     }
 
     /**
@@ -150,8 +185,8 @@ public class Transaction implements Cloneable {
      *
      * @return address as HexString
      */
-    public String getAddressToString() {
-        return Hex.toHexString(getAddress());
+    String getAddressToString() throws SignatureException {
+        return Hex.toHexString(this.getAddress());
     }
 
     /**
@@ -159,8 +194,74 @@ public class Transaction implements Cloneable {
      *
      * @return tx length
      */
-    public long length() throws IOException {
-        return this.header.length() + this.signature.length() + this.body.length();
+    public long length() {
+        return this.header.length() + this.signature.length + this.body.length();
+    }
+
+    /**
+     * Verify a transaction.(data format & signing)
+     *
+     * @return true(success), false(fail)
+     */
+    public boolean verify() {
+
+        if (!this.verifyData()) {
+            return false;
+        }
+
+        ECKey.ECDSASignature ecdsaSignature = new ECKey.ECDSASignature(this.signature);
+        byte[] hashedHeader = this.header.getHashForSigning();
+        ECKey ecKeyPub;
+        try {
+            ecKeyPub = ECKey.signatureToKey(hashedHeader, ecdsaSignature);
+        } catch (SignatureException e) {
+            throw new InvalidSignatureException(e);
+        }
+
+        return ecKeyPub.verify(hashedHeader, ecdsaSignature);
+    }
+
+    private boolean verifyCheckLengthNotNull(byte[] data, int length, String msg) {
+
+        boolean result = !(data == null || data.length != length);
+
+        if (!result) {
+            log.debug(msg + " is not valid.");
+        }
+
+        return result;
+    }
+
+    /**
+     * Verify a transaction about transaction format.
+     *
+     * @return true(success), false(fail)
+     */
+    private boolean verifyData() {
+        // todo: error code
+        boolean check = true;
+
+        check &= verifyCheckLengthNotNull(
+                this.header.getChain(), TransactionHeader.CHAIN_LENGTH, "chain");
+        check &= verifyCheckLengthNotNull(
+                this.header.getVersion(), TransactionHeader.VERSION_LENGTH, "version");
+        check &= verifyCheckLengthNotNull(
+                this.header.getType(), TransactionHeader.TYPE_LENGTH, "type");
+        check &= this.header.getTimestamp() > 0;
+        check &= verifyCheckLengthNotNull(
+                this.header.getBodyHash(), TransactionHeader.BODYHASH_LENGTH, "bodyHash");
+        check &= !(this.header.getBodyLength() <= 0
+                || this.header.getBodyLength() != this.getBody().length());
+        check &= verifyCheckLengthNotNull(this.signature, SIGNATURE_LENGTH, "signature");
+
+        // check bodyHash
+        if (!Arrays.equals(this.header.getBodyHash(), HashUtil.sha3(this.body.toBinary()))) {
+            log.debug("bodyHash is not equal to body :"
+                    + Hex.toHexString(this.header.getBodyHash()));
+            return false;
+        }
+
+        return check;
     }
 
     /**
@@ -172,7 +273,7 @@ public class Transaction implements Cloneable {
 
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("header", this.header.toJsonObject());
-        jsonObject.add("signature", this.signature.toJsonObject());
+        jsonObject.addProperty("signature", Hex.toHexString(this.signature));
         jsonObject.add("body", this.body.getBody());
 
         return jsonObject;
@@ -192,17 +293,29 @@ public class Transaction implements Cloneable {
         return new GsonBuilder().setPrettyPrinting().create().toJson(this.toJsonObject());
     }
 
+    /**
+     * Get a binary transaction data.
+     *
+     * @return a binary transaction data.
+     * @throws IOException IOException
+     */
     public byte[] toBinary() throws IOException {
 
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
 
         bao.write(this.header.toBinary());
-        bao.write(this.signature.getSignature());
+        bao.write(this.signature);
         bao.write(this.body.toBinary());
 
         return bao.toByteArray();
     }
 
+    /**
+     * Clone a transaction.
+     *
+     * @return a transaction
+     * @throws CloneNotSupportedException CloneNotSupportedException
+     */
     @Override
     public Transaction clone() throws CloneNotSupportedException {
         Transaction tx = (Transaction) super.clone();
@@ -213,11 +326,8 @@ public class Transaction implements Cloneable {
         return tx;
     }
 
-    public Proto.Transaction toProtoTransaction() {
-        return toProtoTransaction(this);
-    }
-
     public static Proto.Transaction toProtoTransaction(Transaction tx) {
+        // todo: move at TransactionHusk
 
         Proto.Transaction.Header protoHeader;
         protoHeader = Proto.Transaction.Header.newBuilder()
@@ -233,15 +343,15 @@ public class Transaction implements Cloneable {
 
         Proto.Transaction protoTransaction = Proto.Transaction.newBuilder()
                 .setHeader(protoHeader)
-                .setSignature(ByteString.copyFrom(tx.getSignature().getSignature()))
+                .setSignature(ByteString.copyFrom(tx.getSignature()))
                 .setBody(ByteString.copyFrom(tx.getBody().toBinary()))
                 .build();
 
         return protoTransaction;
     }
 
-    public static Transaction toTransaction(Proto.Transaction protoTransaction)
-            throws SignatureException, IOException {
+    static Transaction toTransaction(Proto.Transaction protoTransaction) {
+        // todo: move at TransactionHusk
 
         TransactionHeader txHeader = new TransactionHeader(
                 protoTransaction.getHeader().getChain().toByteArray(),
@@ -254,17 +364,28 @@ public class Transaction implements Cloneable {
                         protoTransaction.getHeader().getBodyLength().toByteArray())
                 );
 
-        TransactionSignature txSignature =  new TransactionSignature(
-                protoTransaction.getSignature().toByteArray(),
-                txHeader.getHashForSignning()
-        );
-
         TransactionBody txBody = new TransactionBody(
                 protoTransaction.getBody().toStringUtf8()
         );
 
-        return new Transaction(txHeader, txSignature, txBody);
+        return new Transaction(txHeader, protoTransaction.getSignature().toByteArray(), txBody);
 
+    }
+
+    static Transaction fromTransactionInfo(TransactionInfo txi) {
+
+        TransactionHeader txHeader = new TransactionHeader(
+                Hex.decode(txi.header.chain),
+                Hex.decode(txi.header.version),
+                Hex.decode(txi.header.type),
+                ByteUtil.byteArrayToLong(Hex.decode(txi.header.timestamp)),
+                Hex.decode(txi.header.bodyHash),
+                ByteUtil.byteArrayToLong(Hex.decode(txi.header.bodyLength))
+        );
+
+        TransactionBody txBody = new TransactionBody(new Gson().toJson(txi.body));
+
+        return new Transaction(txHeader, Hex.decode(txi.signature), txBody);
     }
 
 }

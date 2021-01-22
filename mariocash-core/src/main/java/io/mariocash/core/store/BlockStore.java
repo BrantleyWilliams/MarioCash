@@ -18,38 +18,27 @@ package dev.zhihexireng.core.store;
 
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.BlockHusk;
-import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.datasource.DbSource;
-import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Map;
 
 public class BlockStore implements Store<Sha3Hash, BlockHusk> {
-    private static final Logger logger = LoggerFactory.getLogger(BlockStore.class);
-
-    private DbSource<byte[], byte[]> db;
+    private final DbSource<byte[], byte[]> db;
+    private final Map<Long, Sha3Hash> index = new HashMap<>();
 
     public BlockStore(DbSource<byte[], byte[]> dbSource) {
         this.db = dbSource.init();
-    }
-
-    public BlockStore(BranchId branchId) {
-        this(branchId.toString());
-    }
-
-    public BlockStore(String branchId) {
-        this.db = new LevelDbDataSource(branchId + "/blocks").init();
+        indexing();
     }
 
     @Override
     public void put(Sha3Hash key, BlockHusk value) {
-        this.db.put(key.getBytes(), value.getData());
+        db.put(key.getBytes(), value.getData());
+        index.put(value.getIndex(), key);
     }
 
     @Override
@@ -62,18 +51,11 @@ public class BlockStore implements Store<Sha3Hash, BlockHusk> {
         throw new NonExistObjectException("Not Found [" + key + "]");
     }
 
-    @Override
-    public Set<BlockHusk> getAll() {
-        try {
-            List<byte[]> dataList = db.getAll();
-            TreeSet<BlockHusk> blockSet = new TreeSet<>();
-            for (byte[] data : dataList) {
-                blockSet.add(new BlockHusk(data));
-            }
-            return blockSet;
-        } catch (Exception e) {
-            throw new NotValidateException(e);
+    public BlockHusk get(long idx) {
+        if (!index.containsKey(idx)) {
+            return null;
         }
+        return get(index.get(idx));
     }
 
     @Override
@@ -82,10 +64,22 @@ public class BlockStore implements Store<Sha3Hash, BlockHusk> {
     }
 
     public long size() {
-        return this.db.count();
+        return index.size();
     }
 
     public void close() {
         this.db.close();
+    }
+
+    private void indexing() {
+        try {
+            List<byte[]> dataList = db.getAll();
+            for (byte[] data : dataList) {
+                BlockHusk block = new BlockHusk(data);
+                index.put(block.getIndex(), block.getHash());
+            }
+        } catch (Exception e) {
+            throw new NotValidateException(e);
+        }
     }
 }

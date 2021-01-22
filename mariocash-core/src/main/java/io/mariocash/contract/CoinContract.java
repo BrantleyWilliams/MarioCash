@@ -20,42 +20,44 @@ public class CoinContract extends BaseContract<Long> {
     }
 
     /**
-     * Returns TransactionRecipt (invoke)
+     * Returns TransactionReceipt (invoke)
      */
     public TransactionReceipt genesis(JsonArray params) {
-        log.info("\n genesis :: params => " + params);
-        TransactionReceipt txRecipt = new TransactionReceipt();
-        for (int i = 0; i < params.size(); i++) {
-            JsonObject jsonObject = params.get(i).getAsJsonObject();
-            String frontier = jsonObject.get("frontier").getAsString();
-            long balance = jsonObject.get("balance").getAsLong();
-            txRecipt.put(String.format("frontier[%d]", i), frontier);
-            txRecipt.put(String.format("balance[%d]", i), balance);
-            state.put(frontier, balance);
-            log.info("\nAddress of Frontier : " + frontier
-                    + "\nBalance of Frontier : " + balance);
+        TransactionReceipt txReceipt = new TransactionReceipt();
+        if (state.getState().size() == 0) {
+            log.info("\n genesis :: params => " + params);
+            for (int i = 0; i < params.size(); i++) {
+                JsonObject jsonObject = params.get(i).getAsJsonObject();
+                String frontier = jsonObject.get("frontier").getAsString();
+                long balance = jsonObject.get("balance").getAsLong();
+                txReceipt.putLog(String.format("frontier[%d]", i), frontier);
+                txReceipt.putLog(String.format("balance[%d]", i), balance);
+                state.put(frontier, balance);
+                txReceipt.setStatus(TransactionReceipt.SUCCESS);
+                log.info("\nAddress of Frontier : " + frontier
+                        + "\nBalance of Frontier : " + balance);
+            }
         }
-        return txRecipt;
+        return txReceipt;
     }
 
     /**
-     * Returns TransactionRecipt (invoke)
+     * Returns TransactionReceipt (invoke)
      */
     public TransactionReceipt transfer(JsonArray params) {
         log.info("\n transfer :: params => " + params);
         String to = params.get(0).getAsJsonObject().get("address").getAsString().toLowerCase();
-        long amount = params.get(1).getAsJsonObject().get("amount").getAsInt();
+        long amount = params.get(0).getAsJsonObject().get("amount").getAsLong();
 
-        TransactionReceipt txRecipt = new TransactionReceipt();
-        txRecipt.put("from", sender);
-        txRecipt.put("to", to);
-        txRecipt.put("amount", String.valueOf(amount));
+        TransactionReceipt txReceipt = new TransactionReceipt();
+        txReceipt.putLog("from", sender);
+        txReceipt.putLog("to", to);
+        txReceipt.putLog("amount", String.valueOf(amount));
 
         if (state.get(sender) != null) {
             long balanceOfFrom = state.get(sender);
 
             if (balanceOfFrom - amount < 0) {
-                txRecipt.setStatus(0);
                 log.info("\n[ERR] " + sender + " has no enough balance!");
             } else {
                 balanceOfFrom -= amount;
@@ -67,14 +69,15 @@ public class CoinContract extends BaseContract<Long> {
                 } else {
                     state.put(to, amount);
                 }
+                txReceipt.setStatus(TransactionReceipt.SUCCESS);
                 log.info(
                         "\nBalance of From : " + state.get(sender)
                                 + "\nBalance of To   : " + state.get(to));
             }
         } else {
-            txRecipt.setStatus(0);
+            txReceipt.setStatus(0);
             log.info("\n[ERR] " + sender + " has no balance!");
         }
-        return txRecipt;
+        return txReceipt;
     }
 }

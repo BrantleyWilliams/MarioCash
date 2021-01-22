@@ -16,7 +16,9 @@
 
 package dev.zhihexireng.node;
 
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.net.NodeManager;
+import dev.zhihexireng.core.net.NodeStatus;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 class NodeScheduler {
     private static final Logger log = LoggerFactory.getLogger(NodeScheduler.class);
 
-    private static final int BLOCK_MINE_SEC = 10;
+    private static final String cronValue = "*/10 * * * * *";
 
     private final Queue<String> nodeQueue = new LinkedBlockingQueue<>();
 
@@ -41,10 +43,14 @@ class NodeScheduler {
 
     private final PeerGroup peerGroup;
 
+    private final NodeStatus nodeStatus;
+
     @Autowired
-    public NodeScheduler(PeerGroup peerGroup, NodeManager nodeManager) {
+    public NodeScheduler(PeerGroup peerGroup, NodeManager nodeManager,
+                         NodeStatus nodeStatus) {
         this.peerGroup = peerGroup;
         this.nodeManager = nodeManager;
+        this.nodeStatus = nodeStatus;
     }
 
     @Scheduled(fixedRate = 1000 * 10)
@@ -52,18 +58,22 @@ class NodeScheduler {
         peerGroup.healthCheck();
     }
 
-    @Scheduled(initialDelay = 1000 * 5, fixedRate = 1000 * BLOCK_MINE_SEC)
+    @Scheduled(cron = cronValue)
     public void generateBlock() {
+        if (!nodeStatus.isUpStatus()) {
+            log.debug("Waiting for up status...");
+            return;
+        }
+
         if (nodeQueue.isEmpty()) {
-            nodeQueue.addAll(peerGroup.getPeerUriList());
+            nodeQueue.addAll(peerGroup.getPeerUriList(BranchId.stem()));
         }
         String peerId = nodeQueue.poll();
         assert peerId != null;
-        if (peerId.equals(nodeManager.getNodeUri())) {
+        if (peerGroup.getActivePeerList().isEmpty() || peerId.equals(nodeManager.getNodeUri())) {
             nodeManager.generateBlock();
         } else {
             log.debug("Skip generation by another " + peerId.substring(peerId.lastIndexOf("@")));
         }
     }
-
 }

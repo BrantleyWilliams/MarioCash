@@ -1,12 +1,13 @@
 package dev.zhihexireng.node.api;
 
+import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
-import dev.zhihexireng.node.TestUtils;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Before;
@@ -25,8 +26,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -38,48 +37,39 @@ public class TransactionMockitoTest {
     private TransactionReceiptStore txReceiptStoreMock;
     private TransactionHusk tx;
     private BlockHusk block;
-    private Wallet wallet;
 
     private TransactionApiImpl txApiImpl;
     private String hashOfTx;
     private String hashOfBlock;
-    private TransactionReceipt txRecipt;
+    private TransactionReceipt txReceipt;
 
     private HashMap<String, TransactionReceipt> txReceiptStore;
+    private final BranchId stem = BranchId.stem();
 
     @Before
     public void setup() throws Exception {
         txReceiptStore = new HashMap<>();
-        wallet = new Wallet();
-        txApiImpl = new TransactionApiImpl(branchGroupMock, txReceiptStoreMock);
+        Wallet wallet = new Wallet();
+        txApiImpl = new TransactionApiImpl(branchGroupMock);
 
-        tx = TestUtils.createTxHusk(wallet);
+        tx = TestUtils.createBranchTxHusk(wallet);
         hashOfTx = tx.getHash().toString();
         List<TransactionHusk> txList = new ArrayList<>();
         txList.add(tx);
         txList.add(tx);
         txList.add(tx);
-        txRecipt = new TransactionReceipt();
-        txRecipt.setTransactionHash(tx.getHash().toString());
-        txReceiptStore.put(tx.getHash().toString(), txRecipt);
+        txReceipt = new TransactionReceipt();
+        txReceipt.setTransactionHash(hashOfTx);
+        txReceiptStore.put(hashOfTx, txReceipt);
         block = TestUtils.createBlockHuskByTxList(wallet, txList);
         hashOfBlock = block.getHash().toString();
+        when(branchGroupMock.getTransactionReceiptStore(stem)).thenReturn(txReceiptStoreMock);
     }
 
     private static final Logger log = LoggerFactory.getLogger(TransactionApi.class);
 
     @Test
-    public void getTransactionCountTest() {
-        when(branchGroupMock.getBlockByIndexOrHash(any())).thenReturn(block);
-        Integer res = txApiImpl.getTransactionCount(wallet.getHexAddress(), 1);
-        Integer res2 = txApiImpl.getTransactionCount(wallet.getHexAddress(), "latest");
-        Integer sizeOfTxList = 3;
-        assertThat(res).isEqualTo(sizeOfTxList);
-        assertThat(res2).isEqualTo(res);
-    }
-
-    @Test
-    public void hexEncodeAndDecodeByteArray() throws Exception {
+    public void hexEncodeAndDecodeByteArrayTest() throws Exception {
         byte[] origin = tx.getAddress().getBytes();
         String encoded = Hex.encodeHexString(origin);
         byte[] decoded = Hex.decodeHex(encoded);
@@ -88,52 +78,54 @@ public class TransactionMockitoTest {
     }
 
     @Test
-    public void getTransactionByHash() {
-        when(branchGroupMock.getTxByHash(hashOfTx)).thenReturn(tx);
-        TransactionHusk res = txApiImpl.getTransactionByHash(hashOfTx);
+    public void getTransactionByHashTest() {
+        when(branchGroupMock.getTxByHash(stem, hashOfTx)).thenReturn(tx);
+        TransactionDto res = txApiImpl.getTransactionByHash(stem.toString(), hashOfTx);
         assertThat(res).isNotNull();
-        assertEquals(res.getHash().toString(), hashOfTx);
+        assertEquals(res.getHash(), hashOfTx);
     }
 
     @Test
-    public void getTransactionByBlockHashAndIndexTest() {
-        when(branchGroupMock.getBlockByIndexOrHash(hashOfBlock)).thenReturn(block);
-        TransactionHusk res = txApiImpl.getTransactionByBlockHashAndIndex(hashOfBlock, 0);
-        assertEquals(res.getHash().toString(), hashOfTx);
+    public void getTransactionByBlockHashTest() {
+        when(branchGroupMock.getBlockByHash(stem, hashOfBlock)).thenReturn(block);
+        TransactionDto res = txApiImpl.getTransactionByBlockHash(
+                stem.toString(), hashOfBlock, 0);
+        assertEquals(res.getHash(), hashOfTx);
     }
 
     @Test
-    public void getTransactionByBlockNumberAndIndexTest() {
-        when(branchGroupMock.getBlockByIndexOrHash(anyString())).thenReturn(block);
-        TransactionHusk res = txApiImpl.getTransactionByBlockNumberAndIndex(0, 0);
-        TransactionHusk res2 = txApiImpl.getTransactionByBlockNumberAndIndex("latest", 0);
+    public void getTransactionByLatestBlockTest() {
+        when(branchGroupMock.getBlockByIndex(stem,0L)).thenReturn(block);
+        when(branchGroupMock.getLastIndex(stem)).thenReturn(0L);
+        TransactionDto res = txApiImpl.getTransactionByBlockNumber(
+                stem.toString(), 0, 0);
+        TransactionDto res2 = txApiImpl.getTransactionByBlockNumber(
+                stem.toString(), "latest", 0);
         assertEquals(res.getHash(), res2.getHash());
     }
 
     @Test
     public void getTransactionReceiptTest() {
-        when(txReceiptStoreMock.get(hashOfTx)).thenReturn(txRecipt);
-        TransactionReceipt res = txApiImpl.getTransactionReceipt(hashOfTx);
+        when(txReceiptStoreMock.get(hashOfTx)).thenReturn(txReceipt);
+        TransactionReceipt res = txApiImpl.getTransactionReceipt(stem.toString(), hashOfTx);
         assertEquals(res.getTransactionHash(), hashOfTx);
     }
 
     @Test
     public void getAllTransactionReceiptTest() {
         when(txReceiptStoreMock.getTxReceiptStore()).thenReturn(txReceiptStore);
-        Map<String, TransactionReceipt> res = txApiImpl.getAllTransactionReceipt();
+        Map<String, TransactionReceipt> res = txApiImpl.getAllTransactionReceipt(stem.toString());
         assertThat(res.containsKey(hashOfTx)).isTrue();
     }
 
     @Test
     public void sendTransactionTest() {
-        when(branchGroupMock.addTransaction(tx)).thenReturn(tx);
         String res = txApiImpl.sendTransaction(TransactionDto.createBy(tx));
-        assertEquals(res, hashOfTx);
+        assertThat(res).isNotEmpty();
     }
 
     @Test
     public void sendRawTransaction() {
-        when(branchGroupMock.addTransaction(any(TransactionHusk.class))).thenReturn(tx);
         byte[] res = txApiImpl.sendRawTransaction(tx.toBinary());
         log.debug("\n\nres :: " + Hex.encodeHexString(res));
         assertThat(res).isNotEmpty();

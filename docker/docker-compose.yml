@@ -1,20 +1,37 @@
 version: '3'
 
 services:
-  node1:
+
+  mariocash-node1:
     image: zhihexireng/mariocash-node
+    build:
+      context: ./
+      args:
+        JAR_FILE: mariocash-node.jar
     container_name: mariocash-node1
     ports:
     - 8080:8080
-    - 9090:9090
+    - 32918:32918
     environment:
-    - MARIOCASH_NODE_GRPC_HOST=node1
+    - MARIOCASH_NODE_GRPC_HOST=mariocash-node1
     - MARIOCASH_NODE_MAX_PEERS=25
-  node2:
+    volumes:
+    - ynode1-data:/.mariocash
+    restart: on-failure
+  mariocash-node2:
     image: zhihexireng/mariocash-node
     container_name: mariocash-node2
     ports:
     - 8081:8080
     environment:
-    - MARIOCASH_NODE_GRPC_HOST=node2
-    - RUN_SLEEP=3
+    - MARIOCASH_NODE_GRPC_HOST=mariocash-node2
+    - RUN_SLEEP=5
+    volumes:
+    - ynode2-data:/.mariocash
+    restart: on-failure
+
+volumes:
+  ynode1-data:
+    driver: local
+  ynode2-data:
+    driver: local

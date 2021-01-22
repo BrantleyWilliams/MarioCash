@@ -1,15 +1,16 @@
 package dev.zhihexireng.node.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.node.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,53 +19,45 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class PeerApiMockitoTest {
 
+    private static final PeerApi peerApiRpc = new JsonRpcConfig().peerApi();
+    private static final BranchId BRANCH = BranchId.stem();
+
     @Mock
     private PeerGroup peerGroup;
     private Peer peer;
-
     private PeerApiImpl peerApi;
-    private static final PeerApi peerApiRpc = new JsonRpcConfig().peerApi();
 
     @Before
     public void setUp() {
-        this.peer = Peer.valueOf("ynode://65bff16c@127.0.0.1:9090");
+        this.peer = Peer.valueOf("ynode://65bff16c@127.0.0.1:32918");
         peerApi = new PeerApiImpl(peerGroup);
     }
 
     @Test
-    public void addTest() {
-        assertThat(peerApi.add(peer)).isNotNull();
-    }
-
-    @Test
-    public void getAllTest() {
-        when(peerGroup.getPeers()).thenReturn(Collections.singletonList(peer));
-        assertThat(peerApi.getAll().size()).isEqualTo(1);
+    public void getPeersTest() {
+        Peer peer = Peer.valueOf("ynode://75bff16c@127.0.0.1:32918");
+        when(peerGroup.getPeers(BRANCH, peer)).thenReturn(new ArrayList<>());
+        PeerDto requester = PeerDto.valueOf(BRANCH.toString(), peer);
+        Collection<String> peerListWithoutRequester
+                = peerApi.getPeers(requester);
+        assertThat(peerListWithoutRequester).isEmpty();
     }
 
     @Test
     public void getAllActivePeerTest() {
         when(peerGroup.getActivePeerList())
-                .thenReturn(Collections.singletonList(peer.getYnodeUri()));
+                .thenReturn(Collections.singletonList(peer.toString()));
         assertThat(peerApi.getAllActivePeer().size()).isEqualTo(1);
     }
 
     @Test
-    public void addRpcTest() {
+    public void getPeersRpcTest() {
         try {
-            ObjectMapper objectMapper = TestUtils.getMapper();
-            String peerStr = objectMapper.writeValueAsString(peer);
-            Peer peer = objectMapper.readValue(peerStr, Peer.class);
-            peerApiRpc.add(peer);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void getAllRpcTest() {
-        try {
-            peerApiRpc.getAll();
+            Peer peer = Peer.valueOf("ynode://75bff16c@127.0.0.1:32919");
+            PeerDto requester = PeerDto.valueOf(BRANCH.toString(), peer);
+            Collection<String> peerListWithoutRequester =
+                    peerApiRpc.getPeers(requester);
+            assertThat(peerListWithoutRequester.size()).isNotZero();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -16,25 +16,43 @@
 
 package dev.zhihexireng.node;
 
+import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.core.store.datasource.HashMapDbSource;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 
+import static org.junit.Assert.assertNotNull;
+
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class NodeHealthIndicatorTest {
     private static final Status SYNC = new Status("SYNC", "Synchronizing..");
-    NodeHealthIndicator nodeHealthIndicator;
+
+    @Mock
+    private BranchGroup branchGroupMock;
+
+    private NodeHealthIndicator nodeHealthIndicator;
+
+    private Peer owner = Peer.valueOf("ynode://75bff16c@127.0.0.1:32918");
 
     @Before
     public void setUp() {
-        PeerGroup peerGroup = new PeerGroup(1);
-        BlockStore blockStore = new BlockStore(new HashMapDbSource());
-        this.nodeHealthIndicator = new NodeHealthIndicator(new DefaultConfig(), blockStore,
+        PeerGroup peerGroup = new PeerGroup(owner, 1);
+        this.nodeHealthIndicator = new NodeHealthIndicator(new DefaultConfig(), branchGroupMock,
                 peerGroup);
+    }
+
+    @After
+    public void tearDown() {
+        TestUtils.clearTestDb();
     }
 
     @Test
@@ -42,7 +60,7 @@ public class NodeHealthIndicatorTest {
         Health health = nodeHealthIndicator.health();
         assert health.getStatus() == Status.DOWN;
         assert health.getDetails().get("name").equals("mariocash");
-        assert (long) health.getDetails().get("height") == 0;
+        assertNotNull(health.getDetails().get("branches"));
         assert (int) health.getDetails().get("activePeers") == 0;
     }
 

@@ -1,4 +1,4 @@
-# ![logo](docs/images/ygg-logo-green.png) MarioCash
+# ![logo](https://github.com/zhihexireng/mariocash/raw/master/docs/images/ygg-logo-green.png) MarioCash
 
 > We will change the world by blockchain.
 
@@ -55,7 +55,7 @@ To run the cloned repository in the spring default profile, simply run:
 ```
 To run the multiple nodes in IntelliJ IDE, edit the run configuration:
 
-![config](docs/images/intellij-run-config.png)
+![config](https://github.com/zhihexireng/mariocash/raw/master/docs/images/intellij-run-config.png)
 
 ### Running on Docker
 You can fully dockerize the mariocash node. For more information refer to [docker](docker).
@@ -63,10 +63,10 @@ You can fully dockerize the mariocash node. For more information refer to [docke
 Docker is one quick way for running an mariocash node:
 
 ```
-docker --rm -p 8080:8080 -p 9090:9090 -h mariocash-node1 --name mariocash-node1 zhihexireng/mariocash-node
+docker --rm -p 8080:8080 -p 32918:32918 -h mariocash-node1 --name mariocash-node1 zhihexireng/mariocash-node
 ```
 
-MarioCash node binds to `localhost` using `8080` for the RESTful API & JSON RPC, and `9090` for the gRPC by default.
+MarioCash node binds to `localhost` using `8080` for the RESTful API & JSON RPC, and `32918` for the gRPC by default.
 
 You can also use other ports by providing options like `-p 8081:8080`
 
