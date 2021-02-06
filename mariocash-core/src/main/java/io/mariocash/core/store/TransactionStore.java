@@ -16,6 +16,7 @@
 
 package dev.zhihexireng.core.store;
 
+import com.google.common.collect.EvictingQueue;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.exception.FailedOperationException;
@@ -26,26 +27,26 @@ import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     private static final Logger log = LoggerFactory.getLogger(TransactionStore.class);
     private static final Lock LOCK = new ReentrantLock();
 
-    private long cacheSize = 500;
+    private int cacheSize = 500;
     private long countOfTxs = 0;
 
     private final DbSource<byte[], byte[]> db;
     private final Cache<Sha3Hash, TransactionHusk> huskTxPool;
-    private final TreeSet<TransactionHusk> recentTxs = new TreeSet<>();
+    private Queue<TransactionHusk> recentTxs;
     private final Set<Sha3Hash> unconfirmedTxs = new HashSet<>();
 
     TransactionStore(DbSource<byte[], byte[]> db) {
@@ -55,15 +56,17 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
                 .createCache("txPool", CacheConfigurationBuilder
                         .newCacheConfigurationBuilder(Sha3Hash.class, TransactionHusk.class,
                                 ResourcePoolsBuilder.heap(Long.MAX_VALUE)));
+        this.recentTxs = EvictingQueue.create(this.cacheSize);
+
     }
 
-    TransactionStore(DbSource<byte[], byte[]> db, long cacheSize) {
+    TransactionStore(DbSource<byte[], byte[]> db, int cacheSize) {
         this(db);
-        this.cacheSize = cacheSize;
+        this.recentTxs = EvictingQueue.create(cacheSize);
     }
 
     public Collection<TransactionHusk> getRecentTxs() {
-        return this.recentTxs;
+        return recentTxs.stream().collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
@@ -120,9 +123,6 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
 
     private void addReadCache(TransactionHusk tx) {
         recentTxs.add(tx);
-        if (recentTxs.size() > cacheSize) {
-            this.recentTxs.pollFirst();
-        }
     }
 
     public long countOfTxs() {
@@ -136,11 +136,5 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     private void flush(Set<Sha3Hash> keys) {
         huskTxPool.removeAll(keys);
         unconfirmedTxs.removeAll(keys);
-    }
-
-    //TODO Use EvictingQueue
-    public void updateCache(List<TransactionHusk> body) {
-        this.countOfTxs += body.size();
-        this.recentTxs.addAll(body);
     }
 }

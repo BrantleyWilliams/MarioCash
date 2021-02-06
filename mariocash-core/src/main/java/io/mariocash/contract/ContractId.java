@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,31 +14,19 @@
  * limitations under the License.
  */
 
-package dev.zhihexireng.common;
+package dev.zhihexireng.contract;
 
 import dev.zhihexireng.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
-public class Sha3Hash implements Serializable {
+public class ContractId {
+    public static ContractId of;
     private final byte[] data;
 
-    private Sha3Hash(byte[] data, boolean hashed) {
-        if (hashed) {
-            this.data = data;
-        } else {
-            this.data = HashUtil.sha3(data);
-        }
-    }
-
-    public Sha3Hash(byte[] data) {
-        this(data, false);
-    }
-
-    public Sha3Hash(String hash) {
-        this(Hex.decode(hash), true);
+    private ContractId(byte[] data) {
+        this.data = data;
     }
 
     public byte[] getBytes() {
@@ -53,8 +41,8 @@ public class Sha3Hash implements Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Sha3Hash sha3Hash = (Sha3Hash) o;
-        return Arrays.equals(data, sha3Hash.data);
+        ContractId address = (ContractId) o;
+        return Arrays.equals(data, address.data);
     }
 
     @Override
@@ -67,7 +55,8 @@ public class Sha3Hash implements Serializable {
         return Hex.toHexString(data);
     }
 
-    public static Sha3Hash createByHashed(byte[] hashedData) {
-        return new Sha3Hash(hashedData, true);
+    static ContractId of(byte[] contractBytes) {
+        return new ContractId(HashUtil.sha1(contractBytes));
     }
+
 }

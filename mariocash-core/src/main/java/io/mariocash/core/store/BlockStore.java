@@ -19,18 +19,26 @@ package dev.zhihexireng.core.store;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.exception.NonExistObjectException;
+import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.datasource.DbSource;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BlockStore implements Store<Sha3Hash, BlockHusk> {
     private final DbSource<byte[], byte[]> db;
+    private final Map<Long, Sha3Hash> index = new HashMap<>();
 
-    BlockStore(DbSource<byte[], byte[]> dbSource) {
+    public BlockStore(DbSource<byte[], byte[]> dbSource) {
         this.db = dbSource.init();
+        indexing();
     }
 
     @Override
     public void put(Sha3Hash key, BlockHusk value) {
         db.put(key.getBytes(), value.getData());
+        index.put(value.getIndex(), key);
     }
 
     @Override
@@ -43,12 +51,35 @@ public class BlockStore implements Store<Sha3Hash, BlockHusk> {
         throw new NonExistObjectException("Not Found [" + key + "]");
     }
 
+    public BlockHusk get(long idx) {
+        if (!index.containsKey(idx)) {
+            return null;
+        }
+        return get(index.get(idx));
+    }
+
     @Override
     public boolean contains(Sha3Hash key) {
         return db.get(key.getBytes()) != null;
     }
 
+    public long size() {
+        return index.size();
+    }
+
     public void close() {
         this.db.close();
+    }
+
+    private void indexing() {
+        try {
+            List<byte[]> dataList = db.getAll();
+            for (byte[] data : dataList) {
+                BlockHusk block = new BlockHusk(data);
+                index.put(block.getIndex(), block.getHash());
+            }
+        } catch (Exception e) {
+            throw new NotValidateException(e);
+        }
     }
 }
