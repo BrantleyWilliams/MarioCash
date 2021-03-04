@@ -31,9 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -73,15 +71,10 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity getAll(@PathVariable(name = "branchId") String branchId) {
-        long countOfTotal = branchGroup.countOfTxs(BranchId.of(branchId));
         List<TransactionHusk> txs =
                 new ArrayList<>(branchGroup.getRecentTxs(BranchId.of(branchId)));
         List<TransactionDto> dtoList = txs.stream().sorted(Comparator.reverseOrder())
                 .map(TransactionDto::createBy).collect(Collectors.toList());
-
-        Map<String, Object> res = new HashMap<>();
-        res.put("countOfTotal", countOfTotal);
-        res.put("txs", dtoList);
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(dtoList);
     }
 }
