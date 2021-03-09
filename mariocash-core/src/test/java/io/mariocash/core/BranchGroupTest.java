@@ -121,6 +121,8 @@ public class BranchGroupTest {
                     @Override
                     public void receivedTransaction(TransactionHusk tx) {
                     }
+                },
+                contractEvent -> {
                 });
     }
 }
