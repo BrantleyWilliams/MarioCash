@@ -18,7 +18,6 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.ContractClassLoader;
 import dev.zhihexireng.contract.ContractMeta;
@@ -42,7 +41,7 @@ public class BlockChainBuilder {
     private Wallet wallet;
     private Branch branch;
 
-    public BlockChainBuilder(boolean isProduction) {
+    private BlockChainBuilder(boolean isProduction) {
         this.storeBuilder = new StoreBuilder(isProduction);
     }
 
@@ -162,10 +161,6 @@ public class BlockChainBuilder {
         }
     }
 
-    public static BlockChainBuilder of(boolean isProduction) {
-        return new BlockChainBuilder(isProduction);
-    }
-
     private static Contract getContract(String branchName)
             throws IllegalAccessException, InstantiationException {
         if (Branch.STEM.equalsIgnoreCase(branchName)) {
@@ -175,7 +170,10 @@ public class BlockChainBuilder {
             assert stem != null;
             return stem.getContract().newInstance();
         } else if (Branch.YEED.equalsIgnoreCase(branchName)) {
-            return new CoinContract();
+            ContractMeta yeed = ContractClassLoader
+                    .loadContractById("da2778112c033cdbaa3ca75616472c784a4d4410");
+            assert yeed != null;
+            return yeed.getContract().newInstance();
         } else {
             return new NoneContract();
         }
@@ -184,4 +182,9 @@ public class BlockChainBuilder {
     private static <T> Runtime<T> getRunTime(Class<T> clazz) {
         return new Runtime<>(new StateStore<>(), new TransactionReceiptStore());
     }
+
+    public static BlockChainBuilder of(boolean isProduction) {
+        return new BlockChainBuilder(isProduction);
+    }
+
 }
