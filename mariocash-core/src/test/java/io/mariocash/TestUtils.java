@@ -294,10 +294,14 @@ public class TestUtils {
 
     public static BlockChain createBlockChain(boolean isProduction) throws IllegalAccessException,
             InstantiationException {
-        return BlockChainBuilder.Builder()
+        BlockChainBuilder builder = BlockChainBuilder.Builder()
                 .addGenesis(genesis)
-                .addContractId("4fc0d50cba2f2538d6cda789aa4955e88c810ef5")
-                .setProductMode(isProduction)
-                .build();
+                .addContractId("4fc0d50cba2f2538d6cda789aa4955e88c810ef5");
+
+        if (isProduction) {
+            return builder.buildForProduction();
+        } else {
+            return builder.build();
+        }
     }
 }

@@ -60,20 +60,42 @@ public class BlockChainTest {
 
     @Test
     public void shouldBeLoadedStoredBlocks() throws InstantiationException, IllegalAccessException {
-        BlockChain blockCHain1 = TestUtils.createBlockChain(true);
-        BlockHusk genesisBlock = blockCHain1.getGenesisBlock();
+        TestUtils.clearTestDb();
+        BlockChain blockChain1 = TestUtils.createBlockChain(true);
+        BlockHusk genesisBlock = blockChain1.getGenesisBlock();
 
         BlockHusk testBlock = new BlockHusk(
                 TestUtils.getBlockFixture(1L, genesisBlock.getHash()));
-        blockCHain1.addBlock(testBlock, false);
-        blockCHain1.close();
+        blockChain1.addBlock(testBlock, false);
+        blockChain1.close();
 
-        BlockChain blockCHain2 = TestUtils.createBlockChain(true);
-        BlockHusk foundBlock = blockCHain2.getBlockByHash(testBlock.getHash());
-        blockCHain2.close();
-        assertThat(blockCHain2.size()).isEqualTo(2);
+        BlockChain blockChain2 = TestUtils.createBlockChain(true);
+        BlockHusk foundBlock = blockChain2.getBlockByHash(testBlock.getHash());
+        blockChain2.close();
+        assertThat(blockChain2.size()).isEqualTo(2);
         assertThat(testBlock).isEqualTo(foundBlock);
 
+        TestUtils.clearTestDb();
+    }
+
+    @Test
+    public void shouldBeGenerateAfterLoadedStoredBlocks() throws InstantiationException,
+            IllegalAccessException {
+        TestUtils.clearTestDb();
+        BlockChain blockChain1 = TestUtils.createBlockChain(true);
+        BlockHusk genesisBlock = blockChain1.getGenesisBlock();
+
+        BlockHusk testBlock = new BlockHusk(
+                TestUtils.getBlockFixture(1L, genesisBlock.getHash()));
+        blockChain1.addBlock(testBlock, false);
+
+        blockChain1.generateBlock(TestUtils.wallet());
+        assertThat(blockChain1.getLastIndex()).isEqualTo(2);
+        blockChain1.close();
+
+        BlockChain blockChain2 = TestUtils.createBlockChain(true);
+        blockChain2.generateBlock(TestUtils.wallet());
+        assertThat(blockChain1.getLastIndex()).isEqualTo(3);
         TestUtils.clearTestDb();
     }
 

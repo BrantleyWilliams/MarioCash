@@ -26,6 +26,7 @@ import dev.zhihexireng.core.event.ContractEventListener;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +52,7 @@ public class BranchConfiguration implements ContractEventListener {
         this.resource = resource;
     }
 
+    @Autowired
     BranchConfiguration(Environment env, PeerGroup peerGroup) {
         this.isProduction = Arrays.asList(env.getActiveProfiles()).contains("prod");
         this.peerGroup = peerGroup;
@@ -60,12 +62,11 @@ public class BranchConfiguration implements ContractEventListener {
     BranchGroup branchGroup() throws IOException, IllegalAccessException, InstantiationException {
         this.branchGroup = new BranchGroup();
         BlockHusk genesis = Block.loadGenesis(resource.getInputStream());
-        BlockChain blockChain = BlockChainBuilder.Builder()
+        BlockChainBuilder builder = BlockChainBuilder.Builder()
                 .addGenesis(genesis)
-                .addContractId("4fc0d50cba2f2538d6cda789aa4955e88c810ef5")
-                .setProductMode(isProduction)
-                .build();
+                .addContractId("4fc0d50cba2f2538d6cda789aa4955e88c810ef5");
 
+        BlockChain blockChain = isProduction ? builder.buildForProduction() : builder.build();
         branchGroup.addBranch(blockChain.getBranchId(), blockChain, peerGroup, this);
         return branchGroup;
     }
