@@ -30,18 +30,18 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     private static final Logger log = LoggerFactory.getLogger(TransactionStore.class);
     private static final Lock LOCK = new ReentrantLock();
 
-    private static final int CACHE_SIZE = 500;
+    private int cacheSize = 500;
     private long countOfTxs = 0;
 
     private final DbSource<byte[], byte[]> db;
@@ -56,7 +56,7 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
                 .createCache("txPool", CacheConfigurationBuilder
                         .newCacheConfigurationBuilder(Sha3Hash.class, TransactionHusk.class,
                                 ResourcePoolsBuilder.heap(Long.MAX_VALUE)));
-        this.recentTxs = EvictingQueue.create(CACHE_SIZE);
+        this.recentTxs = EvictingQueue.create(this.cacheSize);
 
     }
 
@@ -66,7 +66,7 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     }
 
     public Collection<TransactionHusk> getRecentTxs() {
-        return new ArrayList<>(recentTxs);
+        return recentTxs.stream().collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
@@ -136,10 +136,5 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     private void flush(Set<Sha3Hash> keys) {
         huskTxPool.removeAll(keys);
         unconfirmedTxs.removeAll(keys);
-    }
-
-    public void updateCache(List<TransactionHusk> body) {
-        this.countOfTxs += body.size();
-        this.recentTxs.addAll(body);
     }
 }
