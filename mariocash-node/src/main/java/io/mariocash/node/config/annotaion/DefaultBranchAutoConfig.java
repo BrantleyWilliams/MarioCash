@@ -16,12 +16,11 @@
 
 package dev.zhihexireng.node.config.annotaion;
 
-import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockChainBuilder;
-import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.Branch;
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -62,7 +61,7 @@ class DefaultBranchAutoConfig {
     private BlockChain addBranch(InputStream json, String contractId, PeerGroup peerGroup,
                                  BranchGroup branchGroup)
             throws IllegalAccessException, InstantiationException {
-        BlockHusk genesis = Block.loadGenesis(json);
+        GenesisBlock genesis = new GenesisBlock(json);
 
         BlockChain branch = BlockChainBuilder.Builder()
                 .addGenesis(genesis)
