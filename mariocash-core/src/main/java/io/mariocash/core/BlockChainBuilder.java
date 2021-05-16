@@ -19,8 +19,8 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.ContractClassLoader;
 import dev.zhihexireng.contract.ContractMeta;
-import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.store.BlockStore;
+import dev.zhihexireng.core.store.MetaStore;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.StoreBuilder;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
@@ -28,11 +28,10 @@ import dev.zhihexireng.core.store.TransactionStore;
 
 public class BlockChainBuilder {
 
-    private GenesisBlock genesis;
+    private BlockHusk genesis;
     private String contractId;
-    private boolean productMode = false;
 
-    public BlockChainBuilder addGenesis(GenesisBlock genesis) {
+    public BlockChainBuilder addGenesis(BlockHusk genesis) {
         this.genesis = genesis;
         return this;
     }
@@ -43,22 +42,26 @@ public class BlockChainBuilder {
         return this;
     }
 
-    public BlockChainBuilder setProductMode(boolean productMode) {
-        this.productMode = productMode;
-        return this;
+    public BlockChain build() throws InstantiationException, IllegalAccessException {
+        return buildIntenal(false);
     }
 
-    public BlockChain build() throws InstantiationException, IllegalAccessException {
-        StoreBuilder storeBuilder = new StoreBuilder(this.productMode);
+    public BlockChain buildForProduction() throws InstantiationException, IllegalAccessException {
+        return buildIntenal(true);
+    }
 
-        BlockHusk genesisBlock = genesis.getBlock();
-        BlockStore blockStore = storeBuilder.buildBlockStore(genesisBlock.getBranchId());
-        TransactionStore txStore = storeBuilder.buildTxStore(genesisBlock.getBranchId());
+    private BlockChain buildIntenal(boolean isProduction) throws InstantiationException,
+            IllegalAccessException {
+        StoreBuilder storeBuilder = new StoreBuilder(isProduction);
+        BlockStore blockStore = storeBuilder.buildBlockStore(genesis.getBranchId());
+        TransactionStore txStore = storeBuilder.buildTxStore(genesis.getBranchId());
+        MetaStore metaStore = storeBuilder.buildMetaStore(genesis.getBranchId());
 
         Contract contract = getContract();
         Runtime<?> runtime = getRunTime(contract.getClass().getGenericSuperclass().getClass());
 
-        return new BlockChain(genesisBlock, blockStore, txStore, contract, runtime);
+        return new BlockChain(
+                genesis, blockStore, txStore, metaStore, contract, runtime);
     }
 
     private Contract getContract()

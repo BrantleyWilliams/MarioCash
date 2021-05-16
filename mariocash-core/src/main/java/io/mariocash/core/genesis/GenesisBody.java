@@ -7,7 +7,6 @@ class GenesisBody {
 
     public String method;
     public String branchId;
-    public String contractId;
     public List<Map<String, String>> params;
     public Map<String, DelegatorInfo> delegator;
     public Map<String, NodeInfo> node;

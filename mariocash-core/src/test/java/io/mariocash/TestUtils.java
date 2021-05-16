@@ -38,7 +38,6 @@ import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.FileUtil;
 import dev.zhihexireng.util.TimeUtils;
@@ -59,7 +58,7 @@ public class TestUtils {
             new Address(Hex.decode("e1980adeafbb9ac6c9be60955484ab1547ab0b76"));
 
     private static final Wallet wallet;
-    private static final GenesisBlock genesis;
+    private static final BlockHusk genesis;
 
     private TestUtils() {}
 
@@ -68,7 +67,7 @@ public class TestUtils {
             wallet = new Wallet();
             File genesisFile = new File(Objects.requireNonNull(TestUtils.class.getClassLoader()
                     .getResource("branch-sample.json")).getFile());
-            genesis = new GenesisBlock(new FileInputStream(genesisFile));
+            genesis = Block.loadGenesis(new FileInputStream(genesisFile));
         } catch (Exception e) {
             throw new InvalidSignatureException(e);
         }
@@ -76,10 +75,6 @@ public class TestUtils {
 
     public static Wallet wallet() {
         return wallet;
-    }
-
-    public static GenesisBlock genesis() {
-        return genesis;
     }
 
     public static Proto.Block getBlockFixture() {
@@ -299,10 +294,14 @@ public class TestUtils {
 
     public static BlockChain createBlockChain(boolean isProduction) throws IllegalAccessException,
             InstantiationException {
-        return BlockChainBuilder.Builder()
+        BlockChainBuilder builder = BlockChainBuilder.Builder()
                 .addGenesis(genesis)
-                .addContractId("4fc0d50cba2f2538d6cda789aa4955e88c810ef5")
-                .setProductMode(isProduction)
-                .build();
+                .addContractId("4fc0d50cba2f2538d6cda789aa4955e88c810ef5");
+
+        if (isProduction) {
+            return builder.buildForProduction();
+        } else {
+            return builder.build();
+        }
     }
 }
