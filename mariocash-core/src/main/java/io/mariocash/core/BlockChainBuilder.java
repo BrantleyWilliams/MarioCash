@@ -20,7 +20,6 @@ import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.ContractClassLoader;
 import dev.zhihexireng.contract.ContractMeta;
 import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.core.store.MetaStore;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.StoreBuilder;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
@@ -52,12 +51,11 @@ public class BlockChainBuilder {
         StoreBuilder storeBuilder = new StoreBuilder(this.productMode);
         BlockStore blockStore = storeBuilder.buildBlockStore(genesis.getBranchId());
         TransactionStore txStore = storeBuilder.buildTxStore(genesis.getBranchId());
-        MetaStore metaStore = storeBuilder.buildMetaStore(genesis.getBranchId());
 
         Contract contract = getContract();
         Runtime<?> runtime = getRunTime(contract.getClass().getGenericSuperclass().getClass());
 
-        return new BlockChain(genesis, blockStore, txStore, metaStore, contract, runtime);
+        return new BlockChain(genesis, blockStore, txStore, contract, runtime);
     }
 
     private Contract getContract()
