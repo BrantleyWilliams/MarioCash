@@ -3,7 +3,6 @@ package dev.zhihexireng.core;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.ContractQry;
 import dev.zhihexireng.core.event.BranchEventListener;
 import dev.zhihexireng.core.exception.DuplicatedException;
@@ -99,14 +98,8 @@ public class BranchGroupTest {
     }
 
     @Test
-    public void getContract() throws Exception {
-        Contract contract = branchGroup.getContract(BranchId.stem());
-        assertThat(contract).isNotNull();
-        JsonObject query = ContractQry.createQuery(null, "getAllBranchId",
-                new JsonArray());
-        JsonObject resultObject = contract.query(query);
-        String result = resultObject.get("result").getAsString();
-        assertThat(result).contains(BranchId.STEM);
+    public void getContract() {
+        assertThat(branchGroup.getContract(BranchId.stem())).isNotNull();
     }
 
     @Test
@@ -128,6 +121,8 @@ public class BranchGroupTest {
                     @Override
                     public void receivedTransaction(TransactionHusk tx) {
                     }
+                },
+                contractEvent -> {
                 });
     }
 }

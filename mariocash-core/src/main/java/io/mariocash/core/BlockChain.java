@@ -3,6 +3,7 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.core.event.BranchEventListener;
+import dev.zhihexireng.core.event.ContractEventListener;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
@@ -64,7 +65,8 @@ public class BlockChain {
         }
     }
 
-    public void init() {
+    public void init(ContractEventListener contractEventListener) {
+        contract.setListener(contractEventListener);
         for (long i = 0; i < blockIndex.size(); i++) {
             List<TransactionHusk> blockBody = blockStore.get(blockIndex.get(i)).getBody();
             transactionStore.updateCache(blockBody);
@@ -123,6 +125,14 @@ public class BlockChain {
 
     public BranchId getBranchId() {
         return genesisBlock.getBranchId();
+    }
+
+    public String getBranchName() {
+        return branchName;
+    }
+
+    void setBranchName(String branchName) {
+        this.branchName = branchName;
     }
 
     BlockHusk getGenesisBlock() {

@@ -19,7 +19,6 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.ContractClassLoader;
 import dev.zhihexireng.contract.ContractMeta;
-import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.MetaStore;
 import dev.zhihexireng.core.store.StateStore;
@@ -29,11 +28,18 @@ import dev.zhihexireng.core.store.TransactionStore;
 
 public class BlockChainBuilder {
 
-    private GenesisBlock genesis;
+    private BlockHusk genesis;
+    private String contractId;
     private boolean productMode = false;
 
-    public BlockChainBuilder addGenesis(GenesisBlock genesis) {
+    public BlockChainBuilder addGenesis(BlockHusk genesis) {
         this.genesis = genesis;
+        return this;
+    }
+
+    // TODO get contractId from genesis
+    public BlockChainBuilder addContractId(String contractId) {
+        this.contractId = contractId;
         return this;
     }
 
@@ -44,21 +50,19 @@ public class BlockChainBuilder {
 
     public BlockChain build() throws InstantiationException, IllegalAccessException {
         StoreBuilder storeBuilder = new StoreBuilder(this.productMode);
-
-        BlockHusk genesisBlock = genesis.getBlock();
-        BlockStore blockStore = storeBuilder.buildBlockStore(genesisBlock.getBranchId());
-        TransactionStore txStore = storeBuilder.buildTxStore(genesisBlock.getBranchId());
-        MetaStore metaStore = storeBuilder.buildMetaStore(genesisBlock.getBranchId());
+        BlockStore blockStore = storeBuilder.buildBlockStore(genesis.getBranchId());
+        TransactionStore txStore = storeBuilder.buildTxStore(genesis.getBranchId());
+        MetaStore metaStore = storeBuilder.buildMetaStore(genesis.getBranchId());
 
         Contract contract = getContract();
         Runtime<?> runtime = getRunTime(contract.getClass().getGenericSuperclass().getClass());
 
-        return new BlockChain(genesisBlock, blockStore, txStore, metaStore, contract, runtime);
+        return new BlockChain(genesis, blockStore, txStore, metaStore, contract, runtime);
     }
 
     private Contract getContract()
             throws IllegalAccessException, InstantiationException {
-        ContractMeta contractMeta = ContractClassLoader.loadContractById(genesis.getContractId());
+        ContractMeta contractMeta = ContractClassLoader.loadContractById(contractId);
         return contractMeta.getContract().newInstance();
     }
 

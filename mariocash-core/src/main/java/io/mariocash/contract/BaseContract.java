@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.TransactionReceipt;
+import dev.zhihexireng.core.event.ContractEventListener;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
@@ -11,12 +12,10 @@ import dev.zhihexireng.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.List;
-
 public abstract class BaseContract<T> implements Contract<T> {
     static final Logger log = LoggerFactory.getLogger(BaseContract.class);
     private TransactionReceiptStore txReceiptStore;
+    private ContractEventListener listener;
     protected StateStore<T> state;
     String sender;
 
@@ -42,6 +41,9 @@ public abstract class BaseContract<T> implements Contract<T> {
                     .invoke(this, params);
             txReceipt.putLog("method", method);
             txReceipt.setTransactionHash(txHusk.getHash().toString());
+            if (listener != null) {
+                listener.onContractEvent(ContractEvent.of(txReceipt, txHusk));
+            }
             txReceiptStore.put(txReceipt.getTransactionHash(), txReceipt);
             return true;
         } catch (Throwable e) {
@@ -65,11 +67,7 @@ public abstract class BaseContract<T> implements Contract<T> {
         try {
             Object res = this.getClass().getMethod(method, JsonArray.class)
                     .invoke(this, params);
-            if (res instanceof List) {
-                result.addProperty("result", collectionToString((List) res));
-            } else {
-                result.addProperty("result", res.toString());
-            }
+            result.addProperty("result", res.toString());
         } catch (Exception e) {
             throw new FailedOperationException(e);
         }
@@ -85,16 +83,8 @@ public abstract class BaseContract<T> implements Contract<T> {
         }
     }
 
-    private String collectionToString(Collection<Object> collection) {
-        StringBuilder sb = new StringBuilder();
-        for (Object obj : collection) {
-            String str = obj.toString();
-            if (sb.length() != 0) {
-                sb.append(",");
-            }
-            sb.append(str);
-        }
-
-        return sb.toString();
+    @Override
+    public void setListener(ContractEventListener listener) {
+        this.listener = listener;
     }
 }
