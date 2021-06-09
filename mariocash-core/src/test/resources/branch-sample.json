@@ -1,38 +1,39 @@
 {
   "header": {
-    "chain": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
+    "chain": "99232a38e12176ca08932bf2a37fa5f1c951fd4b",
     "version": "0000000000000000",
     "type": "0000000000000000",
     "prevBlockHash": "0000000000000000000000000000000000000000000000000000000000000000",
     "index": "0000000000000000",
-    "timestamp": "00000165cdf3e901",
-    "merkleRoot": "40ac328538dbe3eed8f2227ed456f76c879e1361cc226a0bdbdd1ba314ca5e61",
-    "bodyLength": "0000000000000976"
+    "timestamp": "00000166a51c4446",
+    "merkleRoot": "e02e3bd7f7d772ee658e0aeaafdf1218068ccb7766cd1e15957d22b81ccec482",
+    "bodyLength": "0000000000000946"
   },
-  "signature": "1c0130a081d87d92ba0c7dc5ed18beec920740eb1d23b9d5db14be149c832387364f086f0f919040410ec72c7da864f1b29146f33acc9a4f1926de6defbe75f6b0",
+  "signature": "1bd936b87c3744ed74015f12cf4c4145e75c7f539d5bd1274e9aa694422a1d1874264cb31651c46f2978381fe1d016dea5608ccd0b1796e7598e1d378f6abc5286",
   "body": [
     {
       "header": {
-        "chain": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
+        "chain": "99232a38e12176ca08932bf2a37fa5f1c951fd4b",
         "version": "0000000000000000",
         "type": "0000000000000000",
-        "timestamp": "00000165cdf3e901",
-        "bodyHash": "57dfd19d3d9e2990e65e9a21179d43ea5ff5ac1bc9a0773f0a8cd99262646f9c",
-        "bodyLength": "00000000000008e1"
+        "timestamp": "00000166a51c4446",
+        "bodyHash": "fdacfaec23d63b864bbacc83e58485f9fec799dd513fb5731a13667cdb1da677",
+        "bodyLength": "00000000000008b1"
       },
-      "signature": "1c8dd60d8513554536218232c9bdcf155302dd504d06bc61361169996343af34c4194c0030ae6bdc56e9e18d59ad63ae710e389880ab90415006b26254f76df746",
+      "signature": "1b6e5e7cb54a81c8dc7c6b624017fc3e056a69bb3b986515219936337aab6a181400e8c4b44996c7ecf27b282bbe0417d2c3c06c48ff44ea60e25501541d91e0c4",
       "body": [
         {
           "method": "genesis",
-          "branchId": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
+          "branchId": "99232a38e12176ca08932bf2a37fa5f1c951fd4b",
+          "contractId": "4fc0d50cba2f2538d6cda789aa4955e88c810ef5",
           "params": [
             {
-              "branchId": "fe7b7c93dd23f78e12ad42650595bc0f874c88f7",
-              "branch": "{\"name\":\"STEM\",\"symbol\":\"STEM\",\"property\":\"ecosystem\",\"type\":\"immunity\",\"description\":\"The Basis of the MARIOCASH Ecosystem. It is also an aggregate and a blockchain containing information of all Branch Chains.\",\"tag\":0.1,\"version\":\"0xcc9612ff91ff844938acdb6608e58506a2f21b8a5d77e88726c0897e8d1d02c0\",\"reference_address\":\"\",\"reserve_address\":\"0xcee3d4755e47055b530deeba062c5bd0c17eb00f\",\"owner\":\"c91e9d46dd4b7584f0b6348ee18277c10fd7cb94\",\"timestamp\":1536755670444,\"version_history\":[\"0xcc9612ff91ff844938acdb6608e58506a2f21b8a5d77e88726c0897e8d1d02c0\"]}"
+              "branchId": "99232a38e12176ca08932bf2a37fa5f1c951fd4b",
+              "branch": "{\"name\":\"STEM\",\"symbol\":\"STEM\",\"property\":\"ecosystem\",\"type\":\"immunity\",\"description\":\"The Basis of the MARIOCASH Ecosystem. It is also an aggregate and a blockchain containing information of all Branch Chains.\",\"tag\":0.1,\"version\":\"4fc0d50cba2f2538d6cda789aa4955e88c810ef5\",\"reference_address\":\"\",\"reserve_address\":\"0xcee3d4755e47055b530deeba062c5bd0c17eb00f\",\"owner\":\"c91e9d46dd4b7584f0b6348ee18277c10fd7cb94\",\"timestamp\":1536755670444,\"version_history\":[\"4fc0d50cba2f2538d6cda789aa4955e88c810ef5\"]}"
             },
             {
-              "branchId": "a08ee962cd8b2bd0edbfee989c1a9f7884d26532",
-              "branch": "{\"name\":\"YEED\",\"symbol\":\"YEED\",\"property\":\"currency\",\"type\":\"immunity\",\"description\":\"YEED is the currency used inside MARIOCASH. The vitality of the new branch chain is decided by the amount of YEED, which will be consumed gradually.\",\"tag\":0.1,\"version\":\"0xeeabcaf6cf907e0fd27a0d1f305313e9c1069c5d7f8729d227110012c9b37025\",\"reference_address\":\"\",\"reserve_address\":\"0x9cc060690705a13078634637b1d2a5f2fe1b8096\",\"owner\":\"c91e9d46dd4b7584f0b6348ee18277c10fd7cb94\",\"timestamp\":1536756751728,\"version_history\":[\"0xeeabcaf6cf907e0fd27a0d1f305313e9c1069c5d7f8729d227110012c9b37025\"]}"
+              "branchId": "7afc09c2c3c72687a78fdf3f03bbe8d35980bc39",
+              "branch": "{\"name\":\"YEED\",\"symbol\":\"YEED\",\"property\":\"currency\",\"type\":\"immunity\",\"description\":\"YEED is the currency used inside MARIOCASH. The vitality of the new branch chain is decided by the amount of YEED, which will be consumed gradually.\",\"tag\":0.1,\"version\":\"da2778112c033cdbaa3ca75616472c784a4d4410\",\"reference_address\":\"\",\"reserve_address\":\"0x9cc060690705a13078634637b1d2a5f2fe1b8096\",\"owner\":\"c91e9d46dd4b7584f0b6348ee18277c10fd7cb94\",\"timestamp\":1536756751728,\"version_history\":[\"da2778112c033cdbaa3ca75616472c784a4d4410\"]}"
             }
           ],
           "delegator": {
