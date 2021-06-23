@@ -60,41 +60,20 @@ public class BlockChainTest {
 
     @Test
     public void shouldBeLoadedStoredBlocks() throws InstantiationException, IllegalAccessException {
-        TestUtils.clearTestDb();
-        BlockChain blockChain1 = TestUtils.createBlockChain(true);
-        BlockHusk genesisBlock = blockChain1.getGenesisBlock();
+        BlockChain blockCHain1 = TestUtils.createBlockChain(true);
+        BlockHusk genesisBlock = blockCHain1.getGenesisBlock();
 
         BlockHusk testBlock = new BlockHusk(
                 TestUtils.getBlockFixture(1L, genesisBlock.getHash()));
-        blockChain1.addBlock(testBlock, false);
-        blockChain1.close();
+        blockCHain1.addBlock(testBlock, false);
+        blockCHain1.close();
 
-        BlockChain blockChain2 = TestUtils.createBlockChain(true);
-        BlockHusk foundBlock = blockChain2.getBlockByHash(testBlock.getHash());
-        blockChain2.close();
-        assertThat(blockChain2.size()).isEqualTo(2);
+        BlockChain blockCHain2 = TestUtils.createBlockChain(true);
+        BlockHusk foundBlock = blockCHain2.getBlockByHash(testBlock.getHash());
+        blockCHain2.close();
+        assertThat(blockCHain2.size()).isEqualTo(2);
         assertThat(testBlock).isEqualTo(foundBlock);
 
-        TestUtils.clearTestDb();
-    }
-
-    @Test
-    public void shouldBeGeneratedAfterLoadedStoredBlocks() throws InstantiationException,
-            IllegalAccessException {
-        TestUtils.clearTestDb();
-        BlockChain newDbBlockChain = TestUtils.createBlockChain(true);
-        BlockHusk genesisBlock = newDbBlockChain.getGenesisBlock();
-
-        BlockHusk testBlock = new BlockHusk(
-                TestUtils.getBlockFixture(1L, genesisBlock.getHash()));
-        newDbBlockChain.addBlock(testBlock, false);
-        newDbBlockChain.generateBlock(TestUtils.wallet());
-        assertThat(newDbBlockChain.getLastIndex()).isEqualTo(2);
-        newDbBlockChain.close();
-
-        BlockChain loadedDbBlockChain = TestUtils.createBlockChain(true);
-        loadedDbBlockChain.generateBlock(TestUtils.wallet());
-        assertThat(loadedDbBlockChain.getLastIndex()).isEqualTo(3);
         TestUtils.clearTestDb();
     }
 

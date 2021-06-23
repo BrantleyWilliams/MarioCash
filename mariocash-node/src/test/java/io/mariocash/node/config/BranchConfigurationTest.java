@@ -1,10 +1,12 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.junit.Before;
 import org.junit.Test;
+import org.spongycastle.crypto.InvalidCipherTextException;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mock.env.MockEnvironment;
@@ -24,21 +26,21 @@ public class BranchConfigurationTest {
     }
 
     @Test
-    public void defaultBranchGroupTest() throws IOException,
+    public void defaultBranchGroupTest() throws IOException, InvalidCipherTextException,
             IllegalAccessException, InstantiationException {
         assert getBranchGroup().getBranchSize() == 1;
     }
 
     @Test
-    public void productionBranchGroupTest() throws IOException,
+    public void productionBranchGroupTest() throws IOException, InvalidCipherTextException,
             IllegalAccessException, InstantiationException {
         mockEnv.addActiveProfile("prod");
         assert getBranchGroup().getBranchSize() == 1;
     }
 
-    private BranchGroup getBranchGroup() throws IOException,
+    private BranchGroup getBranchGroup() throws IOException, InvalidCipherTextException,
             InstantiationException, IllegalAccessException {
-        BranchConfiguration config = new BranchConfiguration(mockEnv, peerGroup);
+        BranchConfiguration config = new BranchConfiguration(mockEnv, new Wallet(), peerGroup);
         config.setResource(loader.getResource("classpath:/genesis.json"));
         return config.branchGroup();
     }

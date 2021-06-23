@@ -1,10 +1,12 @@
 package dev.zhihexireng.core;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.genesis.TransactionInfo;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
@@ -369,4 +371,21 @@ public class Transaction implements Cloneable {
         return new Transaction(txHeader, protoTransaction.getSignature().toByteArray(), txBody);
 
     }
+
+    static Transaction fromTransactionInfo(TransactionInfo txi) {
+
+        TransactionHeader txHeader = new TransactionHeader(
+                Hex.decode(txi.header.chain),
+                Hex.decode(txi.header.version),
+                Hex.decode(txi.header.type),
+                ByteUtil.byteArrayToLong(Hex.decode(txi.header.timestamp)),
+                Hex.decode(txi.header.bodyHash),
+                ByteUtil.byteArrayToLong(Hex.decode(txi.header.bodyLength))
+        );
+
+        TransactionBody txBody = new TransactionBody(new Gson().toJson(txi.body));
+
+        return new Transaction(txHeader, Hex.decode(txi.signature), txBody);
+    }
+
 }

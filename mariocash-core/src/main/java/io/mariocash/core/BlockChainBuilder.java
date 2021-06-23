@@ -16,57 +16,140 @@
 
 package dev.zhihexireng.core;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import dev.zhihexireng.contract.CoinContract;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.ContractClassLoader;
 import dev.zhihexireng.contract.ContractMeta;
-import dev.zhihexireng.core.genesis.GenesisBlock;
+import dev.zhihexireng.contract.NoneContract;
+import dev.zhihexireng.core.exception.FailedOperationException;
+import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.core.store.MetaStore;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.StoreBuilder;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
 import dev.zhihexireng.core.store.TransactionStore;
+import dev.zhihexireng.util.TimeUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BlockChainBuilder {
 
-    private GenesisBlock genesis;
-    private boolean productMode = false;
+    private final StoreBuilder storeBuilder;
 
-    public BlockChainBuilder addGenesis(GenesisBlock genesis) {
-        this.genesis = genesis;
-        return this;
+    public BlockChainBuilder(boolean isProduction) {
+        this.storeBuilder = new StoreBuilder(isProduction);
     }
 
-    public BlockChainBuilder setProductMode(boolean productMode) {
-        this.productMode = productMode;
-        return this;
+    public BlockChain build(Wallet wallet, Branch branch) throws IllegalAccessException,
+            InstantiationException {
+        // TODO fix change builder patten ref : https://jdm.kr/blog/217
+
+        BlockStore blockStore = storeBuilder.buildBlockStore(branch.getBranchId());
+
+        BlockHusk genesis;
+        if (blockStore.size() > 0) {
+            genesis = blockStore.get(0);
+        } else {
+            genesis = getGenesis(wallet, branch);
+        }
+        blockStore.close();
+        return build(genesis, branch.getName());
     }
 
-    public BlockChain build() throws InstantiationException, IllegalAccessException {
-        StoreBuilder storeBuilder = new StoreBuilder(this.productMode);
+    public BlockChain build(BlockHusk genesis, String branchName)
+            throws InstantiationException, IllegalAccessException {
+        // TODO fix blockchain by branch information (contract and other information)
+        BlockStore blockStore = storeBuilder.buildBlockStore(genesis.getBranchId());
+        TransactionStore txStore = storeBuilder.buildTxStore(genesis.getBranchId());
 
-        BlockHusk genesisBlock = genesis.getBlock();
-        BlockStore blockStore = storeBuilder.buildBlockStore(genesisBlock.getBranchId());
-        TransactionStore txStore = storeBuilder.buildTxStore(genesisBlock.getBranchId());
-        MetaStore metaStore = storeBuilder.buildMetaStore(genesisBlock.getBranchId());
-
-        Contract contract = getContract();
+        Contract contract = getContract(branchName);
         Runtime<?> runtime = getRunTime(contract.getClass().getGenericSuperclass().getClass());
 
-        return new BlockChain(genesisBlock, blockStore, txStore, metaStore, contract, runtime);
+        BlockChain blockChain = new BlockChain(genesis, blockStore, txStore, contract, runtime);
+        blockChain.setBranchName(branchName);
+        return blockChain;
     }
 
-    private Contract getContract()
+    private BlockHusk getGenesis(Wallet wallet, Branch branch) {
+
+        if (!branch.isYeed()) {
+            throw new FailedOperationException("Not supported name=" + branch.getName());
+        }
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("branchId", branch.getBranchId().toString());
+        jsonObject.addProperty("method", "genesis");
+
+        JsonArray params = new JsonArray();
+        JsonObject param = new JsonObject();
+        param.addProperty("frontier", branch.getOwner());
+        param.addProperty("balance", "1000000000");
+        params.add(param);
+        jsonObject.add("params", params);
+
+        JsonArray jsonArrayTxBody = new JsonArray();
+        jsonArrayTxBody.add(jsonObject);
+
+        return genesis(wallet, branch.getBranchId(), jsonArrayTxBody);
+    }
+
+    private BlockHusk genesis(Wallet wallet, BranchId branchId, JsonArray jsonArrayTxBody) {
+        try {
+            TransactionBody txBody = new TransactionBody(jsonArrayTxBody);
+
+            TransactionHeader txHeader = new TransactionHeader(
+                    branchId.getBytes(),
+                    new byte[8],
+                    new byte[8],
+                    TimeUtils.time(),
+                    txBody);
+
+            Transaction tx = new Transaction(txHeader, wallet, txBody);
+            List<Transaction> txList = new ArrayList<>();
+            txList.add(tx);
+
+            BlockBody blockBody = new BlockBody(txList);
+            BlockHeader blockHeader = new BlockHeader(
+                    branchId.getBytes(),
+                    new byte[8],
+                    new byte[8],
+                    new byte[32],
+                    0L,
+                    0L,
+                    blockBody.getMerkleRoot(),
+                    blockBody.length());
+
+            Block coreBlock = new Block(blockHeader, wallet, blockBody);
+
+            return new BlockHusk(coreBlock.toProtoBlock());
+        } catch (Exception e) {
+            throw new NotValidateException();
+        }
+    }
+
+    public static BlockChainBuilder of(boolean isProduction) {
+        return new BlockChainBuilder(isProduction);
+    }
+
+    private static Contract getContract(String branchName)
             throws IllegalAccessException, InstantiationException {
-        ContractMeta contractMeta = ContractClassLoader.loadContractById(genesis.getContractId());
-        return contractMeta.getContract().newInstance();
+        if (Branch.STEM.equalsIgnoreCase(branchName)) {
+            // replace StemContract
+            ContractMeta stem = ContractClassLoader
+                    .loadContractById("4fc0d50cba2f2538d6cda789aa4955e88c810ef5");
+            assert stem != null;
+            return stem.getContract().newInstance();
+        } else if (Branch.YEED.equalsIgnoreCase(branchName)) {
+            return new CoinContract();
+        } else {
+            return new NoneContract();
+        }
     }
 
-    private <T> Runtime<T> getRunTime(Class<T> clazz) {
+    private static <T> Runtime<T> getRunTime(Class<T> clazz) {
         return new Runtime<>(new StateStore<>(), new TransactionReceiptStore());
-    }
-
-    public static BlockChainBuilder Builder() {
-        return new BlockChainBuilder();
     }
 }
