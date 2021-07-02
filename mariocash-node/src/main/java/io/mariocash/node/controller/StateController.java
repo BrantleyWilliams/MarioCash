@@ -42,9 +42,9 @@ public class StateController {
 
     @GetMapping("/active")
     public ResponseEntity getAll() {
-        Map<String, Long> activeMap = new HashMap<>();
+        Map<String, String> activeMap = new HashMap<>();
         branchGroup.getAllBranch().forEach(branch ->
-                activeMap.put(branch.getBranchId().toString(), branch.getLastIndex()));
+                activeMap.put(branch.getBranchId().toString(), branch.getBranchName()));
         return ResponseEntity.ok(activeMap);
     }
 

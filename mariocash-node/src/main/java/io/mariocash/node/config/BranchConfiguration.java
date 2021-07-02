@@ -50,7 +50,7 @@ import java.util.Map;
 public class BranchConfiguration implements ContractEventListener {
     private static final Logger log = LoggerFactory.getLogger(BranchConfiguration.class);
 
-    private final BlockChainBuilder builder;
+    private final boolean isProduction;
     private final Wallet wallet;
     private final PeerGroup peerGroup;
 
@@ -64,17 +64,16 @@ public class BranchConfiguration implements ContractEventListener {
     }
 
     BranchConfiguration(Environment env, Wallet wallet, PeerGroup peerGroup) {
-        boolean isProduction = Arrays.asList(env.getActiveProfiles()).contains("prod");
-        this.builder = new BlockChainBuilder(isProduction);
+        this.isProduction = Arrays.asList(env.getActiveProfiles()).contains("prod");
         this.wallet = wallet;
         this.peerGroup = peerGroup;
     }
 
     @Bean
-    BranchGroup branchGroup() throws IOException, IllegalAccessException, InstantiationException {
+    BranchGroup branchGroup() throws IOException {
         this.branchGroup = new BranchGroup();
         BlockHusk genesis = Block.loadGenesis(resource.getInputStream());
-        BlockChain stem = builder.build(genesis, Branch.STEM);
+        BlockChain stem = BlockChainBuilder.buildBlockChain(genesis, Branch.STEM, isProduction);
         branchGroup.addBranch(stem.getBranchId(), stem, peerGroup, this);
         return branchGroup;
     }
@@ -106,7 +105,8 @@ public class BranchConfiguration implements ContractEventListener {
                 String branchName = String.valueOf(branchMap.get("name"));
                 String owner = String.valueOf(branchMap.get("owner"));
                 Branch branch = Branch.of(branchId, branchName, owner);
-                BlockChain blockChain = builder.build(wallet, branch);
+                BlockChain blockChain =
+                        BlockChainBuilder.buildBlockChain(wallet, branch, isProduction);
                 branchGroup.addBranch(blockChain.getBranchId(), blockChain, peerGroup, this);
                 log.info("New branch created. id={}, name={}, genesis={}", blockChain.getBranchId(),
                         blockChain.getBranchName(), blockChain.getPrevBlock().getHash());

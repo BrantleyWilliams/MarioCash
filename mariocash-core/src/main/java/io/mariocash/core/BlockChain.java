@@ -3,22 +3,19 @@ package dev.zhihexireng.core;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.core.event.BranchEventListener;
+import dev.zhihexireng.core.event.ContractEventListener;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.core.store.MetaStore;
 import dev.zhihexireng.core.store.TransactionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -33,23 +30,17 @@ public class BlockChain {
 
     private final BlockStore blockStore;
     private final TransactionStore transactionStore;
-    private final MetaStore metaStore;
-
     private final Contract contract;
     private final Runtime<?> runtime;
 
     private BlockHusk prevBlock;
-    private final Map<Long, Sha3Hash> blockIndex = new HashMap<>();
-
     private String branchName;
 
     public BlockChain(BlockHusk genesisBlock, BlockStore blockStore,
-                      TransactionStore transactionStore, MetaStore metaStore,
-                      Contract contract, Runtime runtime) {
+                      TransactionStore transactionStore, Contract contract, Runtime runtime) {
         this.genesisBlock = genesisBlock;
         this.blockStore = blockStore;
         this.transactionStore = transactionStore;
-        this.metaStore = metaStore;
         this.contract = contract;
         this.runtime = runtime;
         loadBlockChain();
@@ -57,38 +48,26 @@ public class BlockChain {
 
     private void loadBlockChain() {
         try {
-            blockStore.get(genesisBlock.getHash());
-            indexing();
+            prevBlock = blockStore.get(genesisBlock.getHash());
         } catch (NonExistObjectException e) {
-            addBlock(genesisBlock, false);
+            for (TransactionHusk tx : genesisBlock.getBody()) {
+                transactionStore.put(tx.getHash(), tx);
+            }
+            blockStore.put(genesisBlock.getHash(), genesisBlock);
+            prevBlock = genesisBlock;
+            removeTxByBlock(genesisBlock);
         }
     }
 
-    public void init() {
-        for (long i = 0; i < blockIndex.size(); i++) {
-            List<TransactionHusk> blockBody = blockStore.get(blockIndex.get(i)).getBody();
-            transactionStore.updateCache(blockBody);
-            executeAllTx(new TreeSet<>(blockBody));
-            log.debug("Load idx=[{}], tx={}, branch={}, blockHash={}",
-                    blockStore.get(blockIndex.get(i)).getIndex(),
-                    blockBody.size(),
-                    blockStore.get(blockIndex.get(i)).getBranchId(),
-                    blockStore.get(blockIndex.get(i)).getHash());
+    public void init(ContractEventListener contractEventListener) {
+        contract.setListener(contractEventListener);
+        for (int i = 0; i < blockStore.size(); i++) {
+            BlockHusk storedBlock = blockStore.get(i);
+            executeAllTx(new TreeSet<>(storedBlock.getBody()));
+            log.debug("Load idx=[{}], tx={}, branch={}, blockHash={}", storedBlock.getIndex(),
+                    storedBlock.getBody().size(), storedBlock.getBranchId(), storedBlock.getHash());
+            this.prevBlock = storedBlock;
         }
-    }
-
-    private void indexing() {
-        Sha3Hash storedBestBlockHash = metaStore.get(MetaStore.MetaInfo.BEST_BLOCK);
-        Sha3Hash previousBlockHash = storedBestBlockHash;
-        BlockHusk currentBlock;
-
-        while (!BlockHusk.EMPTY_HASH.equals(previousBlockHash)) {
-            currentBlock = blockStore.get(previousBlockHash);
-            blockIndex.put(currentBlock.getIndex(), currentBlock.getHash());
-            previousBlockHash = currentBlock.getPrevHash();
-        }
-
-        this.prevBlock = blockStore.get(storedBestBlockHash);
     }
 
     public void addListener(BranchEventListener listener) {
@@ -109,27 +88,33 @@ public class BlockChain {
         addBlock(block, true);
     }
 
-    Collection<TransactionHusk> getRecentTxs() {
-        return transactionStore.getRecentTxs();
+    List<TransactionHusk> getTransactionList() {
+        List<TransactionHusk> list = getUnconfirmedTxs();
+        list.addAll(transactionStore.getAll());
+        return list;
     }
 
     List<TransactionHusk> getUnconfirmedTxs() {
         return new ArrayList<>(transactionStore.getUnconfirmedTxs());
     }
 
-    long countOfTxs() {
-        return transactionStore.countOfTxs();
-    }
-
     public BranchId getBranchId() {
         return genesisBlock.getBranchId();
+    }
+
+    public String getBranchName() {
+        return branchName;
+    }
+
+    void setBranchName(String branchName) {
+        this.branchName = branchName;
     }
 
     BlockHusk getGenesisBlock() {
         return this.genesisBlock;
     }
 
-    BlockHusk getPrevBlock() {
+    public BlockHusk getPrevBlock() {
         return this.prevBlock;
     }
 
@@ -160,12 +145,10 @@ public class BlockChain {
         }
         executeAllTx(new TreeSet<>(nextBlock.getBody()));
         this.blockStore.put(nextBlock.getHash(), nextBlock);
-        this.blockIndex.put(nextBlock.getIndex(), nextBlock.getHash());
-        this.metaStore.put(MetaStore.MetaInfo.BEST_BLOCK, nextBlock.getHash());
         this.prevBlock = nextBlock;
         log.debug("Added idx=[{}], tx={}, branch={}, blockHash={}", nextBlock.getIndex(),
                 nextBlock.getBody().size(), getBranchId().toString(), nextBlock.getHash());
-        batchTxs(nextBlock);
+        removeTxByBlock(nextBlock);
         if (!listenerList.isEmpty() && broadcast) {
             listenerList.forEach(listener -> listener.chainedBlock(nextBlock));
         }
@@ -210,7 +193,7 @@ public class BlockChain {
     }
 
     public long size() {
-        return blockIndex.size();
+        return blockStore.size();
     }
 
     /**
@@ -240,7 +223,7 @@ public class BlockChain {
     }
 
     public BlockHusk getBlockByIndex(long idx) {
-        return blockStore.get(blockIndex.get(idx));
+        return blockStore.get(idx);
     }
 
     /**
@@ -296,7 +279,7 @@ public class BlockChain {
         }
     }
 
-    private void batchTxs(BlockHusk block) {
+    private void removeTxByBlock(BlockHusk block) {
         if (block == null || block.getBody() == null) {
             return;
         }
@@ -320,7 +303,6 @@ public class BlockChain {
     public void close() {
         this.blockStore.close();
         this.transactionStore.close();
-        this.metaStore.close();
     }
 
     public String toStringStatus() {

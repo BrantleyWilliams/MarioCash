@@ -32,7 +32,6 @@ import java.util.Objects;
 
 public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> {
     private static final byte[] EMPTY_BYTE = new byte[32];
-    static final Sha3Hash EMPTY_HASH = Sha3Hash.createByHashed(EMPTY_BYTE);
 
     private Proto.Block protoBlock;
     private Block coreBlock;
@@ -69,7 +68,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         long length = 0;
 
         for (TransactionHusk txHusk: body) {
-            length += txHusk.getCoreTransaction().length();
+            length += txHusk.getCoreTransaction().getBody().length();
         }
 
         Proto.Block.Header blockHeader = getHeader(

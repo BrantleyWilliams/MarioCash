@@ -2,7 +2,6 @@ package dev.zhihexireng.node.api;
 
 import com.googlecode.jsonrpc4j.JsonRpcError;
 import com.googlecode.jsonrpc4j.JsonRpcErrors;
-import com.googlecode.jsonrpc4j.JsonRpcParam;
 import com.googlecode.jsonrpc4j.JsonRpcService;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 
@@ -18,5 +17,5 @@ public interface ContractApi {
     @JsonRpcErrors({
             @JsonRpcError(exception = NonExistObjectException.class,
                     code = NonExistObjectException.code)})
-    String query(@JsonRpcParam(value = "data") String data) throws Exception;
+    String query(String data) throws Exception;
 }
