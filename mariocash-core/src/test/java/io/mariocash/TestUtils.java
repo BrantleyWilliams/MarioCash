@@ -32,7 +32,6 @@ import dev.zhihexireng.core.BlockChainBuilder;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BlockSignature;
-import dev.zhihexireng.core.Branch;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHusk;
@@ -293,7 +292,12 @@ public class TestUtils {
         FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 
-    public static BlockChain createBlockChain(boolean isProduction) {
-        return BlockChainBuilder.buildBlockChain(genesis, Branch.STEM, isProduction);
+    public static BlockChain createBlockChain(boolean isProduction) throws IllegalAccessException,
+            InstantiationException {
+        return BlockChainBuilder.Builder()
+                .addGenesis(genesis)
+                .addContractId("4fc0d50cba2f2538d6cda789aa4955e88c810ef5")
+                .setProductMode(isProduction)
+                .build();
     }
 }

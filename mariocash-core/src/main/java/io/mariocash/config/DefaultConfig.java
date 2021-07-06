@@ -6,7 +6,6 @@ import com.typesafe.config.ConfigValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -29,14 +28,7 @@ public class DefaultConfig {
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("mariocash.conf");
 
-            String userDir = System.getProperty("user.dir") + "/.mariocash";
-            File file = new File(userDir, "admin.conf");
-            Config adminConfig = ConfigFactory.parseFile(file);
-
-            config = apiConfig
-                    .withFallback(adminConfig)
-                    .withFallback(referenceConfig);
-
+            config = apiConfig.withFallback(referenceConfig);
             config = javaSystemProperties.withFallback(config).resolve();
 
         } catch (Exception e) {

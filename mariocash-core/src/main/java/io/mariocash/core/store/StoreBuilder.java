@@ -37,7 +37,7 @@ public class StoreBuilder {
         return new TransactionStore(getDbSource(branchId + "/txs"));
     }
 
-    public PeerStore buildPeerStore(BranchId branchId) {
+    PeerStore buildPeerStore(BranchId branchId) {
         return new PeerStore(getDbSource(branchId + "/peers"));
     }
 
