@@ -41,9 +41,7 @@ public class Peer {
                         "expecting URL in the format ynode://PUBKEY@HOST:PORT");
             }
             this.peerId = PeerId.of(ynodeUri);
-            if (uri.getUserInfo() != null) {
-                this.pubKey = new Sha3Hash(uri.getUserInfo());
-            }
+            this.pubKey = new Sha3Hash(uri.getUserInfo());
             this.host = uri.getHost();
             this.port = uri.getPort();
             this.ynodeUri = ynodeUri;

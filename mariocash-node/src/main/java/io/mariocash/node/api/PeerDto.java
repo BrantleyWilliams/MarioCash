@@ -40,7 +40,7 @@ public class PeerDto {
         this.port = port;
     }
 
-    public static PeerDto valueOf(String branchId, Peer peer) {
+    static PeerDto valueOf(String branchId, Peer peer) {
         PeerDto dto = new PeerDto();
         dto.branchId = branchId;
         dto.peerId = peer.getPubKey().toString();

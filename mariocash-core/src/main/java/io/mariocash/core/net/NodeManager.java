@@ -21,6 +21,4 @@ public interface NodeManager {
     String getNodeUri();
 
     void generateBlock();
-
-    void bootstrapping();
 }

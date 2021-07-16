@@ -163,16 +163,6 @@ public class LevelDbDataSource implements DbSource<byte[], byte[]> {
         }
     }
 
-    @Override
-    public void delete(byte[] key) {
-        resetDbLock.readLock().lock();
-        try {
-            db.delete(key);
-        } finally {
-            resetDbLock.readLock().unlock();
-        }
-    }
-
     private boolean isAlive() {
         return alive;
     }

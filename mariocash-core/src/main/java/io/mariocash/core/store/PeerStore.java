@@ -16,19 +16,13 @@
 
 package dev.zhihexireng.core.store;
 
+import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerId;
 import dev.zhihexireng.core.store.datasource.DbSource;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 public class PeerStore implements Store<PeerId, Peer> {
-
     private final DbSource<byte[], byte[]> db;
-    private transient Map<PeerId, Peer> peers = new HashMap<>();
 
     PeerStore(DbSource<byte[], byte[]> dbSource) {
         this.db = dbSource.init();
@@ -36,34 +30,25 @@ public class PeerStore implements Store<PeerId, Peer> {
 
     @Override
     public void put(PeerId key, Peer value) {
-        peers.put(key, value);
         db.put(key.getBytes(), value.toString().getBytes());
     }
 
     @Override
     public Peer get(PeerId key) {
-        return peers.get(key);
+        byte[] foundValue = db.get(key.getBytes());
+        if (foundValue != null) {
+            return Peer.valueOf(foundValue);
+        }
+
+        throw new NonExistObjectException("Not Found [" + key + "]");
     }
 
     @Override
     public boolean contains(PeerId key) {
-        return peers.containsKey(key);
+        return db.get(key.getBytes()) != null;
     }
 
     public void close() {
         this.db.close();
-    }
-
-    public void remove(PeerId key) {
-        peers.remove(key);
-        db.delete(key.getBytes());
-    }
-
-    public List<String> getAll() {
-        return peers.values().stream().map(Peer::toString).collect(Collectors.toList());
-    }
-
-    public boolean isEmpty() {
-        return peers.isEmpty();
     }
 }

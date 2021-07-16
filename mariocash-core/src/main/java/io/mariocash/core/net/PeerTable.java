@@ -1,22 +1,19 @@
 package dev.zhihexireng.core.net;
 
-import dev.zhihexireng.core.store.PeerStore;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class PeerTable {
     private final Peer owner;  // our node
     private transient PeerBucket[] buckets;
-    private transient PeerStore peerStore;
+    private transient List<Peer> peers;
 
-    PeerTable(PeerStore peerStore, Peer p) {
-        this(peerStore, p, true);
+    PeerTable(Peer p) {
+        this(p, true);
     }
 
-    private PeerTable(PeerStore peerStore, Peer p, boolean includeHomeNode) {
+    private PeerTable(Peer p, boolean includeHomeNode) {
         this.owner = p;
-        this.peerStore = peerStore;
         init();
         if (includeHomeNode) {
             addPeer(this.owner);
@@ -28,6 +25,7 @@ public class PeerTable {
     }
 
     public final void init() {
+        peers = new ArrayList<>();
         buckets = new PeerBucket[KademliaOptions.BINS];
         for (int i = 0; i < KademliaOptions.BINS; i++) {
             buckets[i] = new PeerBucket(i);
@@ -40,15 +38,15 @@ public class PeerTable {
         if (lastSeen != null) {
             return lastSeen;
         }
-        if (!peerStore.contains(p.getPeerId())) {
-            peerStore.put(p.getPeerId(), p);
+        if (!peers.contains(p)) {
+            peers.add(p);
         }
         return null;
     }
 
     synchronized void dropPeer(Peer p) {
         buckets[getBucketId(p)].dropPeer(p);
-        peerStore.remove(p.getPeerId());
+        peers.remove(p);
     }
 
     public synchronized boolean contains(Peer p) {
@@ -89,7 +87,7 @@ public class PeerTable {
     }
 
     synchronized int getPeersCount() {
-        return peerStore.getAll().size();
+        return peers.size();
     }
 
     synchronized List<Peer> getAllPeers() {
@@ -113,13 +111,5 @@ public class PeerTable {
         }
 
         return new ArrayList<>(closestEntries);
-    }
-
-    synchronized boolean isPeerStoreEmpty() {
-        return peerStore.isEmpty();
-    }
-
-    synchronized List<String> getAllFromPeerStore() {
-        return peerStore.getAll();
     }
 }
