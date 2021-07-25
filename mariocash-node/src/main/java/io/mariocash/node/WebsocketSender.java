@@ -16,10 +16,14 @@
 
 package dev.zhihexireng.node;
 
+import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.Branch;
+import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.event.BranchEventListener;
+import dev.zhihexireng.core.event.BranchGroupEventListener;
 import dev.zhihexireng.node.controller.BlockDto;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +31,14 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class WebsocketSender implements BranchEventListener {
+public class WebsocketSender implements BranchEventListener, BranchGroupEventListener {
 
     private final SimpMessagingTemplate template;
 
     @Autowired
-    public WebsocketSender(SimpMessagingTemplate template) {
+    public WebsocketSender(BranchGroup branchGroup, SimpMessagingTemplate template) {
+        branchGroup.setListener(this);
+        branchGroup.getAllBranch().forEach(branch -> branch.addListener(this));
         this.template = template;
     }
 
@@ -55,6 +61,13 @@ public class WebsocketSender implements BranchEventListener {
                 TransactionDto.createBy(tx));
         if (tx.getBranchId().equals(BranchId.stem())) {
             template.convertAndSend("/topic/stem/txs", TransactionDto.createBy(tx));
+        }
+    }
+
+    @Override
+    public void newBranch(BlockChain blockChain) {
+        if (Branch.YEED.equals(blockChain.getBranchName())) {
+            blockChain.addListener(this);
         }
     }
 }
