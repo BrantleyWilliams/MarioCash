@@ -2,7 +2,6 @@ package dev.zhihexireng.core;
 
 import com.google.common.base.Strings;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.crypto.AESEncrypt;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
@@ -19,8 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-import java.security.SignatureException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -279,20 +276,6 @@ public class Wallet {
     }
 
     /**
-     * Verify the signature with hashed data.
-     *
-     * @param hashedData hashed Data
-     * @param signature  signature
-     * @return verification result
-     */
-    public boolean verifyHashedData(byte[] hashedData, byte[] signature) {
-
-        ECKey.ECDSASignature sig = new ECKey.ECDSASignature(signature);
-
-        return key.verify(hashedData, sig);
-    }
-
-    /**
      * Verify the signature with plain data.
      *
      * @param data      plain data for signed
@@ -307,45 +290,17 @@ public class Wallet {
     }
 
     /**
-     * Verify the signature as static
+     * Verify the signature with hashed data.
      *
-     * @param data signed data
+     * @param hashedData hashed Data
      * @param signature  signature
-     * @param hashed whether hashed data or not
      * @return verification result
      */
-    public static boolean verify(byte[] data, byte[] signature, boolean hashed) {
+    public boolean verifyHashedData(byte[] hashedData, byte[] signature) {
 
-        return verify(data, signature, hashed, null);
-    }
+        ECKey.ECDSASignature sig = new ECKey.ECDSASignature(signature);
 
-    /**
-     * Verify the signature with public key
-     *
-     * @param data signed data
-     * @param signature  signature
-     * @param hashed whether hashed data or not
-     * @param pubKey public key for verifying
-     * @return verification result
-     */
-    public static boolean verify(byte[] data, byte[] signature, boolean hashed, byte[] pubKey) {
-
-        ECKey.ECDSASignature ecdsaSignature = new ECKey.ECDSASignature(signature);
-        byte[] hashedData = hashed ? data : HashUtil.sha3(data);
-        ECKey ecKeyPub;
-        try {
-            ecKeyPub = ECKey.signatureToKey(hashedData, ecdsaSignature);
-        } catch (SignatureException e) {
-            logger.debug("Invalid signature" + e.getMessage());
-            return false;
-        }
-
-        if (pubKey != null && !Arrays.equals(ecKeyPub.getPubKey(), pubKey)) {
-            logger.debug("Invalid signature");
-            return false;
-        }
-
-        return ecKeyPub.verify(hashedData, ecdsaSignature);
+        return key.verify(hashedData, sig);
     }
 
     /**

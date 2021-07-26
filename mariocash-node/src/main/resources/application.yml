@@ -17,13 +17,8 @@ management:
   health:
     diskspace:
       enabled: false
-  endpoint:
-    restart:
-      enabled: true
 
 spring:
   output:
     ansi:
       enabled: always
-
-

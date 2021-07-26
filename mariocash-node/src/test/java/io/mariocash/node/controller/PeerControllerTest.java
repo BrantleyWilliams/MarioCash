@@ -18,7 +18,6 @@ package dev.zhihexireng.node.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.zhihexireng.core.BranchId;
-import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,8 +25,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.json.JacksonTester;
-import org.springframework.cloud.autoconfigure.RefreshEndpointAutoConfiguration;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -40,7 +37,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(PeerController.class)
-@Import(RefreshEndpointAutoConfiguration.class)
 @IfProfileValue(name = "spring.profiles.active", value = "ci")
 public class PeerControllerTest {
     @Autowired
@@ -56,18 +52,22 @@ public class PeerControllerTest {
 
     @Test
     public void shouldGetPeers() throws Exception {
-        peerGroup.addPeer(BranchId.yeed(), Peer.valueOf("ynode://75bff16c@127.0.0.1:8080"));
-
         mockMvc
                 .perform(
-                        get("/peers?branchId=" + BranchId.stem().toString()))
+                        get("/peers")
+                                .param("branchId", BranchId.stem().toString())
+                                .param("peerId", "75bff16c")
+                                .param("ip", "127.0.0.1")
+                                .param("port", "32919"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$", hasSize(0)))
                 .andDo(print());
 
         mockMvc
                 .perform(
-                        get("/peers?branchId=" + BranchId.yeed().toString()))
+                        get("/peers")
+                                .param("branchId", BranchId.stem().toString())
+                                .param("peerId", "75bff16c"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andDo(print());
