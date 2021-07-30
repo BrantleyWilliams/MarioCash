@@ -3,6 +3,7 @@ package dev.zhihexireng.core;
 import com.google.common.base.Strings;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.crypto.AESEncrypt;
+import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.crypto.Password;
 import dev.zhihexireng.util.ByteUtil;
 import dev.zhihexireng.util.FileUtil;
@@ -271,8 +272,24 @@ public class WalletTest {
 
         boolean verifyResult = wallet.verify(plain, signature);
         log.debug("Verify Result: " + verifyResult);
-
         assertTrue(verifyResult);
+
+        verifyResult = wallet.verifyHashedData(HashUtil.sha3(plain), signature);
+        log.debug("Verify Result: " + verifyResult);
+        assertTrue(verifyResult);
+
+        verifyResult = Wallet.verify(HashUtil.sha3(plain), signature, true);
+        log.debug("Verify Result: " + verifyResult);
+        assertTrue(verifyResult);
+
+        verifyResult = Wallet.verify(plain, signature, false);
+        log.debug("Verify Result: " + verifyResult);
+        assertTrue(verifyResult);
+
+        verifyResult = Wallet.verify(plain, signature, false, wallet.getPubicKey());
+        log.debug("Verify Result: " + verifyResult);
+        assertTrue(verifyResult);
+
     }
 
     /**
