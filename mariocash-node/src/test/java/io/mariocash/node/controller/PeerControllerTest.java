@@ -18,6 +18,7 @@ package dev.zhihexireng.node.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.zhihexireng.core.BranchId;
+import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,22 +56,18 @@ public class PeerControllerTest {
 
     @Test
     public void shouldGetPeers() throws Exception {
+        peerGroup.addPeer(BranchId.yeed(), Peer.valueOf("ynode://75bff16c@127.0.0.1:8080"));
+
         mockMvc
                 .perform(
-                        get("/peers")
-                                .param("branchId", BranchId.stem().toString())
-                                .param("peerId", "75bff16c")
-                                .param("ip", "127.0.0.1")
-                                .param("port", "32919"))
+                        get("/peers?branchId=" + BranchId.stem().toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)))
+                .andExpect(jsonPath("$", hasSize(1)))
                 .andDo(print());
 
         mockMvc
                 .perform(
-                        get("/peers")
-                                .param("branchId", BranchId.stem().toString())
-                                .param("peerId", "75bff16c"))
+                        get("/peers?branchId=" + BranchId.yeed().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andDo(print());

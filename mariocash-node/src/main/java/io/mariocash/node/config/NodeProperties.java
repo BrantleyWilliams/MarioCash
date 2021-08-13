@@ -49,8 +49,8 @@ public class NodeProperties {
     }
 
     public static class Grpc {
-        private String host;
-        private int port;
+        String host;
+        int port;
 
         public String getHost() {
             return host;
@@ -68,4 +68,5 @@ public class NodeProperties {
             this.port = port;
         }
     }
+
 }

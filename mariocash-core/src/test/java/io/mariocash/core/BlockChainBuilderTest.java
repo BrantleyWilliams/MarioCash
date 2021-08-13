@@ -17,26 +17,28 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.core.genesis.GenesisBlock;
+import dev.zhihexireng.core.exception.FailedOperationException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 public class BlockChainBuilderTest {
 
-    @Test
-    public void buildBlockChainTest() throws InstantiationException, IllegalAccessException {
-        GenesisBlock genesis = TestUtils.genesis();
-        BlockChain blockChain = BlockChainBuilder.Builder().addGenesis(genesis).build();
-        assertEquals(blockChain.getGenesisBlock().getHash(), genesis.getBlock().getHash());
+    @Test(expected = FailedOperationException.class)
+    public void buildStemBlockChain() {
+        Branch branch = Branch.of(BranchId.STEM, Branch.STEM, TestUtils.OWNER);
+        BlockChainBuilder.buildBlockChain(TestUtils.wallet(), branch, false);
     }
 
     @Test
-    public void buildProductionBlockChainTest()
-            throws InstantiationException, IllegalAccessException {
-        BlockChain bc1 = TestUtils.createBlockChain(false);
-        BlockChain bc2 = TestUtils.createBlockChain(true);
+    public void buildYeedBlockChain() {
+        Branch branch = Branch.of(BranchId.YEED, Branch.YEED, TestUtils.OWNER);
+        BlockChain blockChain =
+                BlockChainBuilder.buildBlockChain(TestUtils.wallet(), branch, false);
+        assertEquals(blockChain.getBranchId(), BranchId.yeed());
 
-        assertEquals(bc1.getGenesisBlock().getHash(), bc2.getGenesisBlock().getHash());
+        BlockHusk genesis = TestUtils.createGenesisBlockHusk();
+        blockChain = BlockChainBuilder.buildBlockChain(genesis, Branch.YEED, false);
+        assertEquals(blockChain.getGenesisBlock().getHash(), genesis.getHash());
     }
 }

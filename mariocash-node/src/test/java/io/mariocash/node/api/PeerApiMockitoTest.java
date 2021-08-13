@@ -9,8 +9,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,29 +33,21 @@ public class PeerApiMockitoTest {
 
     @Test
     public void getPeersTest() {
-        Peer peer = Peer.valueOf("ynode://75bff16c@127.0.0.1:32918");
-        when(peerGroup.getPeers(BRANCH, peer)).thenReturn(new ArrayList<>());
-        PeerDto requester = PeerDto.valueOf(BRANCH.toString(), peer);
-        Collection<String> peerListWithoutRequester
-                = peerApi.getPeers(requester);
-        assertThat(peerListWithoutRequester).isEmpty();
+        when(peerGroup.getPeers(BRANCH)).thenReturn(Collections.singletonList(peer));
+        assertThat(peerApi.getPeers(BRANCH.toString()).size()).isEqualTo(1);
     }
 
     @Test
     public void getAllActivePeerTest() {
         when(peerGroup.getActivePeerList())
-                .thenReturn(Collections.singletonList(peer.toString()));
+                .thenReturn(Collections.singletonList(peer.getYnodeUri()));
         assertThat(peerApi.getAllActivePeer().size()).isEqualTo(1);
     }
 
     @Test
     public void getPeersRpcTest() {
         try {
-            Peer peer = Peer.valueOf("ynode://75bff16c@127.0.0.1:32919");
-            PeerDto requester = PeerDto.valueOf(BRANCH.toString(), peer);
-            Collection<String> peerListWithoutRequester =
-                    peerApiRpc.getPeers(requester);
-            assertThat(peerListWithoutRequester.size()).isNotZero();
+            peerApiRpc.getPeers(BRANCH.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
