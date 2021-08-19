@@ -32,13 +32,13 @@ import dev.zhihexireng.core.BlockChainBuilder;
 import dev.zhihexireng.core.BlockHeader;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BlockSignature;
-import dev.zhihexireng.core.Branch;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.Wallet;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.proto.Proto;
 import dev.zhihexireng.util.FileUtil;
 import dev.zhihexireng.util.TimeUtils;
@@ -59,7 +59,7 @@ public class TestUtils {
             new Address(Hex.decode("e1980adeafbb9ac6c9be60955484ab1547ab0b76"));
 
     private static final Wallet wallet;
-    private static final BlockHusk genesis;
+    private static final GenesisBlock genesis;
 
     private TestUtils() {}
 
@@ -68,7 +68,7 @@ public class TestUtils {
             wallet = new Wallet();
             File genesisFile = new File(Objects.requireNonNull(TestUtils.class.getClassLoader()
                     .getResource("branch-sample.json")).getFile());
-            genesis = Block.loadGenesis(new FileInputStream(genesisFile));
+            genesis = new GenesisBlock(new FileInputStream(genesisFile));
         } catch (Exception e) {
             throw new InvalidSignatureException(e);
         }
@@ -76,6 +76,10 @@ public class TestUtils {
 
     public static Wallet wallet() {
         return wallet;
+    }
+
+    public static GenesisBlock genesis() {
+        return genesis;
     }
 
     public static Proto.Block getBlockFixture() {
@@ -293,7 +297,11 @@ public class TestUtils {
         FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 
-    public static BlockChain createBlockChain(boolean isProduction) {
-        return BlockChainBuilder.buildBlockChain(genesis, Branch.STEM, isProduction);
+    public static BlockChain createBlockChain(boolean isProduction) throws IllegalAccessException,
+            InstantiationException {
+        return BlockChainBuilder.Builder()
+                .addGenesis(genesis)
+                .setProductMode(isProduction)
+                .build();
     }
 }
