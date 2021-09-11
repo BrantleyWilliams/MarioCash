@@ -51,9 +51,4 @@ public class HashMapDbSource implements DbSource<byte[], byte[]> {
     public void close() {
         db = null;
     }
-
-    @Override
-    public void delete(byte[] key) {
-        db.remove(Hex.encodeHexString(key));
-    }
 }

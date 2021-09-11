@@ -1,10 +1,14 @@
 package dev.zhihexireng.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
+import dev.zhihexireng.core.exception.NotValidateException;
+import dev.zhihexireng.core.genesis.BlockInfo;
+import dev.zhihexireng.core.genesis.TransactionInfo;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
@@ -16,6 +20,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -254,6 +259,38 @@ public class Block implements Cloneable {
 
         return new Block(blockHeader, protoBlock.getSignature().toByteArray(), txBody);
 
+    }
+
+    public static BlockHusk loadGenesis(InputStream branchInfoStream) {
+        try {
+            BlockInfo blockinfo = new ObjectMapper().readValue(branchInfoStream, BlockInfo.class);
+            return new BlockHusk(Block.fromBlockInfo(blockinfo).toProtoBlock());
+        } catch (Exception e) {
+            throw new NotValidateException(e);
+        }
+    }
+
+    private static Block fromBlockInfo(BlockInfo blockinfo) {
+        BlockHeader blockHeader = new BlockHeader(
+                Hex.decode(blockinfo.header.chain),
+                Hex.decode(blockinfo.header.version),
+                Hex.decode(blockinfo.header.type),
+                Hex.decode(blockinfo.header.prevBlockHash),
+                ByteUtil.byteArrayToLong(Hex.decode(blockinfo.header.index)),
+                ByteUtil.byteArrayToLong(Hex.decode(blockinfo.header.timestamp)),
+                Hex.decode(blockinfo.header.merkleRoot),
+                ByteUtil.byteArrayToLong(Hex.decode(blockinfo.header.bodyLength))
+        );
+
+        List<Transaction> txList = new ArrayList<>();
+
+        for (TransactionInfo txi : blockinfo.body) {
+            txList.add(Transaction.fromTransactionInfo(txi));
+        }
+
+        BlockBody txBody = new BlockBody(txList);
+
+        return new Block(blockHeader, Hex.decode(blockinfo.signature), txBody);
     }
 
 }
