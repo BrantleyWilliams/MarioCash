@@ -87,7 +87,7 @@ public class GRpcNodeServerTest {
     }
 
     @Test
-    public void syncBlock() {
+    public void syncBlock() throws InstantiationException, IllegalAccessException {
         Set<BlockHusk> blocks = new HashSet<>();
         blocks.add(block);
         when(branchGroupMock.getBlockByIndex(BranchId.stem(), 0L)).thenReturn(block);
@@ -104,7 +104,7 @@ public class GRpcNodeServerTest {
 
     @Test
     public void syncTransaction() {
-        when(branchGroupMock.getTransactionList(BranchId.stem()))
+        when(branchGroupMock.getRecentTxs(BranchId.stem()))
                 .thenReturn(Collections.singletonList(tx));
 
         BlockChainGrpc.BlockChainBlockingStub blockingStub

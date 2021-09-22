@@ -32,6 +32,7 @@ import java.util.Objects;
 
 public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> {
     private static final byte[] EMPTY_BYTE = new byte[32];
+    static final Sha3Hash EMPTY_HASH = Sha3Hash.createByHashed(EMPTY_BYTE);
 
     private Proto.Block protoBlock;
     private Block coreBlock;
@@ -41,7 +42,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
             this.protoBlock = Proto.Block.parseFrom(bytes);
             this.coreBlock = Block.toBlock(this.protoBlock);
         } catch (Exception e) {
-            throw new NotValidateException();
+            throw new NotValidateException(e);
         }
     }
 
@@ -50,7 +51,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         try {
             this.coreBlock = Block.toBlock(this.protoBlock);
         } catch (Exception e) {
-            throw new NotValidateException();
+            throw new NotValidateException(e);
         }
     }
 
@@ -68,7 +69,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         long length = 0;
 
         for (TransactionHusk txHusk: body) {
-            length += txHusk.getCoreTransaction().getBody().length();
+            length += txHusk.getCoreTransaction().length();
         }
 
         Proto.Block.Header blockHeader = getHeader(
@@ -99,7 +100,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
             this.coreBlock = Block.toBlock(this.protoBlock);
 
         } catch (Exception e) {
-            throw new NotValidateException();
+            throw new NotValidateException(e);
         }
     }
 
@@ -112,7 +113,7 @@ public class BlockHusk implements ProtoHusk<Proto.Block>, Comparable<BlockHusk> 
         try {
             return new Address(this.coreBlock.getAddress());
         } catch (Exception e) {
-            throw new NotValidateException();
+            throw new NotValidateException(e);
         }
     }
 

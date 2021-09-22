@@ -3,6 +3,7 @@ package dev.zhihexireng.core;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.zhihexireng.TestUtils;
+import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.contract.ContractQry;
 import dev.zhihexireng.core.event.BranchEventListener;
 import dev.zhihexireng.core.exception.DuplicatedException;
@@ -23,7 +24,7 @@ public class BranchGroupTest {
     private BlockHusk block;
 
     @Before
-    public void setUp() {
+    public void setUp() throws InstantiationException, IllegalAccessException {
         branchGroup = new BranchGroup();
         addBranch(TestUtils.createBlockChain(false));
         assertThat(branchGroup.getBranchSize()).isEqualTo(1);
@@ -38,19 +39,26 @@ public class BranchGroupTest {
     }
 
     @Test(expected = DuplicatedException.class)
-    public void addExistedBranch() {
+    public void addExistedBranch() throws InstantiationException, IllegalAccessException {
         addBranch(TestUtils.createBlockChain(false));
     }
 
     @Test
     public void addTransaction() {
+        // should be existed tx on genesis block
+        assertThat(branchGroup.getRecentTxs(tx.getBranchId()).size()).isEqualTo(1);
+        assertThat(branchGroup.countOfTxs(tx.getBranchId())).isEqualTo(1);
+
         branchGroup.addTransaction(tx);
-        TransactionHusk pooledTx1 = branchGroup.getTxByHash(tx.getBranchId(), tx.getHash());
-        assertThat(pooledTx1.getHash()).isEqualTo(tx.getHash());
-        TransactionHusk pooledTx2 = branchGroup.getTxByHash(tx.getBranchId(),
-                tx.getHash().toString());
-        assertThat(pooledTx2.getHash()).isEqualTo(tx.getHash());
-        assertThat(branchGroup.getTransactionList(tx.getBranchId()).size()).isEqualTo(2);
+        TransactionHusk foundTxBySha3 = branchGroup.getTxByHash(
+                tx.getBranchId(), tx.getHash());
+        assertThat(foundTxBySha3.getHash()).isEqualTo(tx.getHash());
+
+        TransactionHusk foundTxByString = branchGroup.getTxByHash(
+                tx.getBranchId(), tx.getHash().toString());
+        assertThat(foundTxByString.getHash()).isEqualTo(tx.getHash());
+
+        assertThat(branchGroup.getUnconfirmedTxs(tx.getBranchId()).size()).isEqualTo(1);
     }
 
     @Test
@@ -91,8 +99,14 @@ public class BranchGroupTest {
     }
 
     @Test
-    public void getContract() {
-        assertThat(branchGroup.getContract(BranchId.stem())).isNotNull();
+    public void getContract() throws Exception {
+        Contract contract = branchGroup.getContract(BranchId.stem());
+        assertThat(contract).isNotNull();
+        JsonObject query = ContractQry.createQuery(null, "getAllBranchId",
+                new JsonArray());
+        JsonObject resultObject = contract.query(query);
+        String result = resultObject.get("result").getAsString();
+        assertThat(result).contains(BranchId.STEM);
     }
 
     @Test
@@ -114,8 +128,6 @@ public class BranchGroupTest {
                     @Override
                     public void receivedTransaction(TransactionHusk tx) {
                     }
-                },
-                contractEvent -> {
                 });
     }
 }

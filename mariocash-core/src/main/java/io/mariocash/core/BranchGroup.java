@@ -20,45 +20,27 @@ import com.google.gson.JsonObject;
 import dev.zhihexireng.common.Sha3Hash;
 import dev.zhihexireng.contract.Contract;
 import dev.zhihexireng.core.event.BranchEventListener;
-import dev.zhihexireng.core.event.BranchGroupEventListener;
-import dev.zhihexireng.core.event.ContractEventListener;
 import dev.zhihexireng.core.exception.DuplicatedException;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.store.StateStore;
 import dev.zhihexireng.core.store.TransactionReceiptStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 public class BranchGroup {
-    private static final Logger log = LoggerFactory.getLogger(BranchGroup.class);
-
     private final Map<BranchId, BlockChain> branches = new ConcurrentHashMap<>();
 
-    private BranchGroupEventListener listener;
-
-    public void setListener(BranchGroupEventListener listener) {
-        this.listener = listener;
-    }
-
     public void addBranch(BranchId branchId, BlockChain blockChain,
-                          BranchEventListener branchEventListener,
-                          ContractEventListener contractEventListener) {
+                          BranchEventListener branchEventListener) {
         if (branches.containsKey(branchId)) {
             throw new DuplicatedException(branchId.toString() + " duplicated");
         }
         blockChain.addListener(branchEventListener);
-        blockChain.init(contractEventListener);
+        blockChain.init();
         branches.put(branchId, blockChain);
-        if (listener != null) {
-            listener.newBranch(blockChain);
-        }
     }
 
     public BlockChain getBranch(BranchId branchId) {
@@ -80,8 +62,8 @@ public class BranchGroup {
         return branches.get(id).getLastIndex();
     }
 
-    public List<TransactionHusk> getTransactionList(BranchId branchId) {
-        return branches.get(branchId).getTransactionList();
+    public Collection<TransactionHusk> getRecentTxs(BranchId branchId) {
+        return branches.get(branchId).getRecentTxs();
     }
 
     public TransactionHusk getTxByHash(BranchId branchId, String id) {
@@ -94,17 +76,7 @@ public class BranchGroup {
 
     public void generateBlock(Wallet wallet) {
         for (BlockChain blockChain : branches.values()) {
-            if (blockChain.getBranchId().equals(BranchId.stem())) {
-                blockChain.generateBlock(wallet);
-            } else {
-                try {
-                    int randomSleep = ThreadLocalRandom.current().nextInt(1, 9 + 1);
-                    TimeUnit.SECONDS.sleep(randomSleep);
-                    blockChain.generateBlock(wallet);
-                } catch (InterruptedException e) {
-                    log.warn(e.getMessage());
-                }
-            }
+            blockChain.generateBlock(wallet);
         }
     }
 
@@ -151,5 +123,9 @@ public class BranchGroup {
         } catch (Exception e) {
             throw new FailedOperationException(e);
         }
+    }
+
+    public long countOfTxs(BranchId branchId) {
+        return branches.get(branchId).countOfTxs();
     }
 }

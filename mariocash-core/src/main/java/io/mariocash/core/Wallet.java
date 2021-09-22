@@ -2,7 +2,6 @@ package dev.zhihexireng.core;
 
 import com.google.common.base.Strings;
 import dev.zhihexireng.config.DefaultConfig;
-import dev.zhihexireng.core.exception.InvalidSignatureException;
 import dev.zhihexireng.crypto.AESEncrypt;
 import dev.zhihexireng.crypto.ECKey;
 import dev.zhihexireng.crypto.HashUtil;

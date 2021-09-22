@@ -19,6 +19,7 @@ package dev.zhihexireng.node;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.config.DefaultConfig;
 import dev.zhihexireng.core.BranchGroup;
+import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.junit.After;
 import org.junit.Before;
@@ -40,9 +41,11 @@ public class NodeHealthIndicatorTest {
 
     private NodeHealthIndicator nodeHealthIndicator;
 
+    private Peer owner = Peer.valueOf("ynode://75bff16c@127.0.0.1:32918");
+
     @Before
     public void setUp() {
-        PeerGroup peerGroup = new PeerGroup(1);
+        PeerGroup peerGroup = new PeerGroup(owner, 1);
         this.nodeHealthIndicator = new NodeHealthIndicator(new DefaultConfig(), branchGroupMock,
                 peerGroup);
     }

@@ -17,16 +17,21 @@
 package dev.zhihexireng.node.config;
 
 import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
+import dev.zhihexireng.node.config.annotaion.EnableDefaultBranch;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 
 @Configuration
+@EnableDefaultBranch
 public class NodeConfiguration {
 
     private final NodeProperties nodeProperties;
@@ -36,11 +41,21 @@ public class NodeConfiguration {
         this.nodeProperties = nodeProperties;
     }
 
+    @Value("${server.port:8080}")
+    private int jsonRpcPort;
+
     @Bean
-    PeerGroup peerGroup() {
-        PeerGroup peerGroup = new PeerGroup(nodeProperties.getMaxPeers());
+    PeerGroup peerGroup(Wallet wallet) {
+        Peer owner = Peer.valueOf(wallet.getNodeId(), nodeProperties.getGrpc().getHost(),
+                jsonRpcPort);
+        PeerGroup peerGroup = new PeerGroup(owner, nodeProperties.getMaxPeers());
         peerGroup.setSeedPeerList(nodeProperties.getSeedPeerList());
         return peerGroup;
+    }
+
+    @Bean
+    BranchGroup branchGroup() {
+        return new BranchGroup();
     }
 
     @Bean
