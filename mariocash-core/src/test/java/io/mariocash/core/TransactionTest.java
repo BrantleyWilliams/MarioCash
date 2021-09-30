@@ -2,9 +2,10 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import dev.zhihexireng.common.util.ByteUtil;
+import dev.zhihexireng.common.util.TimeUtils;
+import dev.zhihexireng.core.account.Wallet;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
-import dev.zhihexireng.util.TimeUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;

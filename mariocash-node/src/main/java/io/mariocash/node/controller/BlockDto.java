@@ -16,9 +16,9 @@
 
 package dev.zhihexireng.node.controller;
 
+import dev.zhihexireng.common.util.ByteUtil;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;

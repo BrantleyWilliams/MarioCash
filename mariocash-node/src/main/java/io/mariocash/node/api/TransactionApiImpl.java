@@ -6,7 +6,7 @@ import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.TransactionReceipt;
+import dev.zhihexireng.core.contract.TransactionReceipt;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.springframework.beans.factory.annotation.Autowired;

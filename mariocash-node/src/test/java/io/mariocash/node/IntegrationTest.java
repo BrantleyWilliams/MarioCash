@@ -16,10 +16,10 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.crypto.AESEncrypt;
-import dev.zhihexireng.crypto.ECKey;
-import dev.zhihexireng.crypto.Password;
-import dev.zhihexireng.util.ByteUtil;
+import dev.zhihexireng.common.crypto.AESEncrypt;
+import dev.zhihexireng.common.crypto.ECKey;
+import dev.zhihexireng.common.crypto.Password;
+import dev.zhihexireng.common.util.ByteUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static dev.zhihexireng.crypto.HashUtil.sha3;
+import static dev.zhihexireng.common.crypto.HashUtil.sha3;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 

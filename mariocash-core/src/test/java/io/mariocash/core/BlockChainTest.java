@@ -1,7 +1,6 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.core.event.BranchEventListener;
 import dev.zhihexireng.core.exception.NotValidateException;
 import org.junit.Before;
 import org.junit.Test;

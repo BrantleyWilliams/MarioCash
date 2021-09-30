@@ -4,11 +4,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.contract.ContractQry;
-import dev.zhihexireng.core.Address;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.account.Address;
+import dev.zhihexireng.core.account.Wallet;
+import dev.zhihexireng.core.contract.ContractQry;
 import dev.zhihexireng.node.api.JsonRpcConfig;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.apache.commons.codec.binary.Hex;
@@ -22,9 +22,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-import static dev.zhihexireng.contract.ContractTx.createBranch;
-import static dev.zhihexireng.contract.ContractTx.createStemTxByBranch;
-import static dev.zhihexireng.contract.ContractTx.createYeedTx;
+import static dev.zhihexireng.core.contract.ContractTx.createBranch;
+import static dev.zhihexireng.core.contract.ContractTx.createStemTxByBranch;
+import static dev.zhihexireng.core.contract.ContractTx.createYeedTx;
 
 public class NodeContractDemoClient {
 

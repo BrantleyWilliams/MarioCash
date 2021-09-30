@@ -17,6 +17,7 @@
 package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
+import dev.zhihexireng.core.account.Wallet;
 import org.spongycastle.util.encoders.Hex;
 
 public class TransactionSignature implements Cloneable {
@@ -43,7 +44,7 @@ public class TransactionSignature implements Cloneable {
         return Hex.toHexString(this.signature);
     }
 
-    public JsonObject toJsonObject() {
+    JsonObject toJsonObject() {
         JsonObject jsonObject = new JsonObject();
 
         jsonObject.addProperty("signature", Hex.toHexString(this.signature));

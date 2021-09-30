@@ -16,7 +16,7 @@
 
 package dev.zhihexireng.common;
 
-import dev.zhihexireng.crypto.HashUtil;
+import dev.zhihexireng.common.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.Serializable;

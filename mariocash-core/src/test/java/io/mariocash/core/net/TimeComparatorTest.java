@@ -1,6 +1,6 @@
 package dev.zhihexireng.core.net;
 
-import dev.zhihexireng.util.Utils;
+import dev.zhihexireng.common.util.Utils;
 import org.junit.Test;
 
 import java.util.ArrayList;

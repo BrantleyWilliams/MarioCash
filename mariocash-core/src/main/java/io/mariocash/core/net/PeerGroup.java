@@ -17,9 +17,9 @@
 package dev.zhihexireng.core.net;
 
 import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.BranchEventListener;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.event.BranchEventListener;
 import dev.zhihexireng.core.exception.DuplicatedException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.store.PeerStore;

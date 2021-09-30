@@ -1,7 +1,7 @@
 package dev.zhihexireng.core.net;
 
+import dev.zhihexireng.common.util.Utils;
 import dev.zhihexireng.core.BranchId;
-import dev.zhihexireng.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

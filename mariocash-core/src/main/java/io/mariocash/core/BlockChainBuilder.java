@@ -16,9 +16,10 @@
 
 package dev.zhihexireng.core;
 
-import dev.zhihexireng.contract.Contract;
-import dev.zhihexireng.contract.ContractClassLoader;
-import dev.zhihexireng.contract.ContractMeta;
+import dev.zhihexireng.core.contract.Contract;
+import dev.zhihexireng.core.contract.ContractClassLoader;
+import dev.zhihexireng.core.contract.ContractMeta;
+import dev.zhihexireng.core.contract.Runtime;
 import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.MetaStore;

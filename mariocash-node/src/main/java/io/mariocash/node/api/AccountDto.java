@@ -1,6 +1,6 @@
 package dev.zhihexireng.node.api;
 
-import dev.zhihexireng.core.Account;
+import dev.zhihexireng.core.account.Account;
 import org.apache.commons.codec.binary.Hex;
 
 public class AccountDto {

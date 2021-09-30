@@ -18,9 +18,9 @@ package dev.zhihexireng.node.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
+import dev.zhihexireng.common.util.ByteUtil;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 public class TransactionDto {

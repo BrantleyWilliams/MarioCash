@@ -18,8 +18,8 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import dev.zhihexireng.common.Sha3Hash;
-import dev.zhihexireng.contract.Contract;
-import dev.zhihexireng.core.event.BranchEventListener;
+import dev.zhihexireng.core.account.Wallet;
+import dev.zhihexireng.core.contract.Contract;
 import dev.zhihexireng.core.exception.DuplicatedException;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.store.StateStore;

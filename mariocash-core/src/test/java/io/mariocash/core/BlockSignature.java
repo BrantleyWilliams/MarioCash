@@ -16,6 +16,8 @@
 
 package dev.zhihexireng.core;
 
+import dev.zhihexireng.core.account.Wallet;
+
 public class BlockSignature implements Cloneable {
 
     private final byte[] signature;

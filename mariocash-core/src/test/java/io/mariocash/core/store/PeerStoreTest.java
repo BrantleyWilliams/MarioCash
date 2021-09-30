@@ -17,9 +17,9 @@
 package dev.zhihexireng.core.store;
 
 import dev.zhihexireng.TestUtils;
+import dev.zhihexireng.common.util.FileUtil;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
-import dev.zhihexireng.util.FileUtil;
 import org.junit.AfterClass;
 import org.junit.Test;
 

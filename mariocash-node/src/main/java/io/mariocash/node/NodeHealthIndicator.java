@@ -16,7 +16,7 @@
 
 package dev.zhihexireng.node;
 
-import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.common.config.DefaultConfig;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.BranchId;

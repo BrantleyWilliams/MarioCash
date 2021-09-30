@@ -16,7 +16,7 @@
 
 package dev.zhihexireng.core.store.datasource;
 
-import dev.zhihexireng.util.FileUtil;
+import dev.zhihexireng.common.util.FileUtil;
 import org.junit.AfterClass;
 import org.junit.Test;
 

@@ -1,7 +1,9 @@
 package dev.zhihexireng.core;
 
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.crypto.ECKey;
+import dev.zhihexireng.common.crypto.ECKey;
+import dev.zhihexireng.core.account.Account;
+import dev.zhihexireng.core.account.Wallet;
 import dev.zhihexireng.proto.Proto;
 import org.junit.Before;
 import org.junit.Test;

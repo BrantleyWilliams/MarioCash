@@ -18,9 +18,9 @@ package dev.zhihexireng.core.store;
 
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.common.Sha3Hash;
+import dev.zhihexireng.common.util.FileUtil;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.store.datasource.LevelDbDataSource;
-import dev.zhihexireng.util.FileUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Test;

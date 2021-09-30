@@ -5,7 +5,6 @@ import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.store.BlockStore;
-import dev.zhihexireng.mock.ChannelMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

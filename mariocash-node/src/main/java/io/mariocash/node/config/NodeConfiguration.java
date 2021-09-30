@@ -16,9 +16,9 @@
 
 package dev.zhihexireng.node.config;
 
-import dev.zhihexireng.config.DefaultConfig;
+import dev.zhihexireng.common.config.DefaultConfig;
 import dev.zhihexireng.core.BranchGroup;
-import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.account.Wallet;
 import dev.zhihexireng.core.net.Peer;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.node.config.annotaion.EnableDefaultBranch;

@@ -19,12 +19,13 @@ package dev.zhihexireng.node;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import dev.zhihexireng.common.util.ByteUtil;
 import dev.zhihexireng.core.BlockChain;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.account.Wallet;
 import dev.zhihexireng.core.net.NodeManager;
 import dev.zhihexireng.core.net.NodeServer;
 import dev.zhihexireng.core.net.NodeStatus;
@@ -36,7 +37,6 @@ import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,7 +150,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         peerGroup.getClosestPeers().forEach(p -> addPeerChannel(BranchId.stem(), p));
     }
 
-    public void addPeerChannel(BranchId branchId, Peer peer) {
+    private void addPeerChannel(BranchId branchId, Peer peer) {
         if (peer == null || peerGroup.getOwner().equals(peer)) {
             return;
         }

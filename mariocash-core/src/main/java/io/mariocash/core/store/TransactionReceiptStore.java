@@ -1,6 +1,6 @@
 package dev.zhihexireng.core.store;
 
-import dev.zhihexireng.core.TransactionReceipt;
+import dev.zhihexireng.core.contract.TransactionReceipt;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

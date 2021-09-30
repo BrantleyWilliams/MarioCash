@@ -2,11 +2,11 @@ package dev.zhihexireng.core;
 
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
+import dev.zhihexireng.common.crypto.HashUtil;
+import dev.zhihexireng.common.util.ByteUtil;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NotValidateException;
-import dev.zhihexireng.crypto.HashUtil;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;

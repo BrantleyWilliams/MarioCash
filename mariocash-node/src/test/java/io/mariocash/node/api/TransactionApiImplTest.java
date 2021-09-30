@@ -2,12 +2,12 @@ package dev.zhihexireng.node.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.zhihexireng.TestUtils;
-import dev.zhihexireng.contract.ContractTx;
-import dev.zhihexireng.core.Address;
 import dev.zhihexireng.core.Branch;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.Wallet;
+import dev.zhihexireng.core.account.Address;
+import dev.zhihexireng.core.account.Wallet;
+import dev.zhihexireng.core.contract.ContractTx;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,8 +1,8 @@
 package dev.zhihexireng.node.api;
 
 import com.google.gson.JsonObject;
-import dev.zhihexireng.contract.ContractQry;
 import dev.zhihexireng.core.BranchId;
+import dev.zhihexireng.core.contract.ContractQry;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

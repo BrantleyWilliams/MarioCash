@@ -17,9 +17,9 @@
 package dev.zhihexireng.node;
 
 import dev.zhihexireng.core.BlockHusk;
+import dev.zhihexireng.core.BranchEventListener;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
-import dev.zhihexireng.core.event.BranchEventListener;
 import dev.zhihexireng.node.controller.BlockDto;
 import dev.zhihexireng.node.controller.TransactionDto;
 import org.springframework.beans.factory.annotation.Autowired;
