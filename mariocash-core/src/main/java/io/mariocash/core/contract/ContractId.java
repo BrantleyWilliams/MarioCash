@@ -59,7 +59,4 @@ public class ContractId {
         return new ContractId(HashUtil.sha1(contractBytes));
     }
 
-    static ContractId of(String hexString) {
-        return new ContractId(Hex.decode(hexString));
-    }
 }

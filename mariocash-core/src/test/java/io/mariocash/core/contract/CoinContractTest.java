@@ -25,47 +25,35 @@ import dev.zhihexireng.core.store.TransactionReceiptStore;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.math.BigDecimal;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CoinContractTest {
-    private static final String TRANSFER_FROM = TestUtils.wallet().getHexAddress();
+
     private CoinContract coinContract;
 
     @Before
     public void setUp() {
-        StateStore<BigDecimal> stateStore = new StateStore<>();
+        StateStore<Long> stateStore = new StateStore<>();
         TransactionReceiptStore txReceiptStore = new TransactionReceiptStore();
         coinContract = new CoinContract();
         coinContract.init(stateStore, txReceiptStore);
-        JsonArray params = ContractQry.createParams("frontier", TRANSFER_FROM, "balance", "100");
+        String frontier = TestUtils.wallet().getHexAddress();
+        JsonArray params = ContractQry.createParams("frontier", frontier, "balance", "1000000000");
         TransactionReceipt result = coinContract.genesis(params);
         assertThat(result.isSuccess()).isTrue();
-        assertBalanceFromAndTo("100", "0");
+        JsonObject balance = coinContract.query(sampleBalanceOfQueryJson(frontier));
+        assertThat(balance.get("result").getAsString()).isEqualTo("1000000000");
     }
 
     @Test
     public void transferTest() {
         TransactionHusk tx =
-                ContractTx.createYeedTx(TestUtils.wallet(), TestUtils.TRANSFER_TO, 10);
+                ContractTx.createYeedTx(TestUtils.wallet(), TestUtils.TRANSFER_TO, 100);
         boolean result = coinContract.invoke(tx);
         assertThat(result).isTrue();
-        assertBalanceFromAndTo("90", "10");
-    }
-
-    @Test
-    public void transferWrongAmountTest() {
-        TransactionHusk tx =
-                ContractTx.createYeedTx(TestUtils.wallet(), TestUtils.TRANSFER_TO, 1000);
-        boolean result = coinContract.invoke(tx);
-        assertThat(result).isFalse();
-        assertBalanceFromAndTo("100", "0");
-
-        tx = ContractTx.createYeedTx(TestUtils.wallet(), TestUtils.TRANSFER_TO, 100);
-        result = coinContract.invoke(tx);
-        assertThat(result).isTrue();
-        assertBalanceFromAndTo("0", "100");
+        JsonObject balance =
+                coinContract.query(sampleBalanceOfQueryJson(TestUtils.TRANSFER_TO.toString()));
+        assertThat(balance.get("result").getAsString()).isEqualTo("100");
     }
 
     private JsonObject sampleBalanceOfQueryJson(String address) {
@@ -81,14 +69,4 @@ public class CoinContractTest {
         query.add("params", params);
         return query;
     }
-
-    private void assertBalanceFromAndTo(String from, String to) {
-        JsonObject fromBalance = coinContract.query(sampleBalanceOfQueryJson(TRANSFER_FROM));
-        assertThat(fromBalance.get("result").getAsString()).isEqualTo(from);
-        JsonObject toBalance =
-                coinContract.query(sampleBalanceOfQueryJson(TestUtils.TRANSFER_TO.toString()));
-        assertThat(toBalance.get("result").getAsString()).isEqualTo(to);
-
-    }
 }
-
