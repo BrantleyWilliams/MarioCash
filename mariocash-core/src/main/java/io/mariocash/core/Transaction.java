@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.security.SignatureException;
 import java.util.Arrays;
 
-import static dev.zhihexireng.common.config.Constants.TIMESTAMP_2018;
-
 public class Transaction implements Cloneable {
 
     private static final Logger log = LoggerFactory.getLogger(Transaction.class);
@@ -248,7 +246,7 @@ public class Transaction implements Cloneable {
                 this.header.getVersion(), TransactionHeader.VERSION_LENGTH, "version");
         check &= verifyCheckLengthNotNull(
                 this.header.getType(), TransactionHeader.TYPE_LENGTH, "type");
-        check &= this.header.getTimestamp() > TIMESTAMP_2018;
+        check &= this.header.getTimestamp() > 0;
         check &= verifyCheckLengthNotNull(
                 this.header.getBodyHash(), TransactionHeader.BODYHASH_LENGTH, "bodyHash");
         check &= !(this.header.getBodyLength() <= 0
