@@ -2,12 +2,7 @@ package dev.zhihexireng.core.genesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import dev.zhihexireng.common.config.DefaultConfig;
 import dev.zhihexireng.common.util.ByteUtil;
-import dev.zhihexireng.common.util.TimeUtils;
 import dev.zhihexireng.core.Block;
 import dev.zhihexireng.core.BlockBody;
 import dev.zhihexireng.core.BlockHeader;
@@ -15,17 +10,12 @@ import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.Transaction;
 import dev.zhihexireng.core.TransactionBody;
 import dev.zhihexireng.core.TransactionHeader;
-import dev.zhihexireng.core.account.Wallet;
 import dev.zhihexireng.core.exception.NotValidateException;
-import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class GenesisBlock {
 
@@ -92,78 +82,5 @@ public class GenesisBlock {
         TransactionBody txBody = new TransactionBody(new Gson().toJson(txi.body));
 
         return new Transaction(txHeader, Hex.decode(txi.signature), txBody);
-    }
-
-    static String generate() throws IOException, InvalidCipherTextException {
-        //todo: change the method to serializing method
-
-        DefaultConfig defaultConfig = new DefaultConfig();
-        String transactionFileName = defaultConfig.getConfig().getString("genesis.contract");
-        JsonObject genesisObject = getJsonObjectFromFile(transactionFileName);
-
-        String delegatorListFileName = defaultConfig.getConfig().getString("genesis.delegator");
-        JsonObject delegatorListObject = getJsonObjectFromFile(delegatorListFileName);
-        genesisObject.add("delegator", delegatorListObject.get("delegator"));
-
-        String nodeListFileName = defaultConfig.getConfig().getString("genesis.node");
-        JsonObject nodeListObject = getJsonObjectFromFile(nodeListFileName);
-        genesisObject.add("node", nodeListObject.get("node"));
-
-        JsonArray jsonArrayTxBody = new JsonArray();
-        jsonArrayTxBody.add(genesisObject);
-
-        TransactionBody txBody = new TransactionBody(jsonArrayTxBody);
-
-        long timestamp = TimeUtils.time();
-
-        String branchId = genesisObject.get("branchId").getAsString();
-        byte[] chain = Hex.decode(branchId);
-
-        // todo: change values(version, type) using the configuration.
-        TransactionHeader txHeader = new TransactionHeader(
-                chain,
-                new byte[8],
-                new byte[8],
-                timestamp,
-                txBody);
-
-        Wallet wallet = new Wallet(defaultConfig);
-        Transaction tx = new Transaction(txHeader, wallet, txBody);
-        List<Transaction> txList = new ArrayList<>();
-        txList.add(tx);
-
-        BlockBody blockBody = new BlockBody(txList);
-
-        // todo: change values(version, type) using the configuration.
-        BlockHeader blockHeader = new BlockHeader(
-                chain,
-                new byte[8],
-                new byte[8],
-                new byte[32],
-                0L,
-                timestamp,
-                blockBody.getMerkleRoot(),
-                blockBody.length());
-
-        Block genesisBlock = new Block(blockHeader, wallet, blockBody);
-        JsonObject jsonObject = genesisBlock.toJsonObject();
-        return new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject);
-    }
-
-    private static JsonObject getJsonObjectFromFile(String fileName) throws IOException {
-        StringBuilder result = new StringBuilder();
-        ClassLoader classLoader = GenesisBlock.class.getClassLoader();
-        File file = new File(classLoader.getResource(fileName).getFile());
-
-        Scanner scanner = new Scanner(file);
-
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            result.append(line).append("\n");
-        }
-
-        scanner.close();
-
-        return new Gson().fromJson(result.toString(), JsonObject.class);
     }
 }
