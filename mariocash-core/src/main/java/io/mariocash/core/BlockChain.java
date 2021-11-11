@@ -6,6 +6,7 @@ import dev.zhihexireng.core.contract.Contract;
 import dev.zhihexireng.core.contract.Runtime;
 import dev.zhihexireng.core.exception.FailedOperationException;
 import dev.zhihexireng.core.exception.InvalidSignatureException;
+import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.exception.NotValidateException;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.MetaStore;
@@ -50,21 +51,29 @@ public class BlockChain {
         this.metaStore = metaStore;
         this.contract = contract;
         this.runtime = runtime;
+        loadBlockChain();
+    }
 
-        // Empty blockChain
-        if (!blockStore.contains(genesisBlock.getHash())) {
-            initGenesis();
-        } else {
+    private void loadBlockChain() {
+        try {
+            blockStore.get(genesisBlock.getHash());
             indexing();
-            updateTxCache();
+        } catch (NonExistObjectException e) {
+            addBlock(genesisBlock, false);
         }
     }
 
-    private void initGenesis() {
-        for (TransactionHusk tx : genesisBlock.getBody()) {
-            addTransaction(tx);
+    public void init() {
+        for (long i = 0; i < blockIndex.size(); i++) {
+            List<TransactionHusk> blockBody = blockStore.get(blockIndex.get(i)).getBody();
+            transactionStore.updateCache(blockBody);
+            executeAllTx(new TreeSet<>(blockBody));
+            log.debug("Load idx=[{}], tx={}, branch={}, blockHash={}",
+                    blockStore.get(blockIndex.get(i)).getIndex(),
+                    blockBody.size(),
+                    blockStore.get(blockIndex.get(i)).getBranchId(),
+                    blockStore.get(blockIndex.get(i)).getHash());
         }
-        addBlock(genesisBlock, false);
     }
 
     private void indexing() {
@@ -79,19 +88,6 @@ public class BlockChain {
         }
 
         this.prevBlock = blockStore.get(storedBestBlockHash);
-    }
-
-    private void updateTxCache() {
-        for (long i = 0; i < blockIndex.size(); i++) {
-            List<TransactionHusk> blockBody = blockStore.get(blockIndex.get(i)).getBody();
-            transactionStore.updateCache(blockBody);
-            executeAllTx(new TreeSet<>(blockBody));
-            log.debug("Load idx=[{}], tx={}, branch={}, blockHash={}",
-                    blockStore.get(blockIndex.get(i)).getIndex(),
-                    blockBody.size(),
-                    blockStore.get(blockIndex.get(i)).getBranchId(),
-                    blockStore.get(blockIndex.get(i)).getHash());
-        }
     }
 
     public void addListener(BranchEventListener listener) {
