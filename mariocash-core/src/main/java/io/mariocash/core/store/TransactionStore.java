@@ -45,34 +45,34 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     private static final int CACHE_SIZE = 500;
     private long countOfTxs = 0;
 
-    private Queue<TransactionHusk> readCache;
-    private final Cache<Sha3Hash, TransactionHusk> pendingPool;
-    private final Set<Sha3Hash> pendingKeys = new HashSet<>();
     private final DbSource<byte[], byte[]> db;
+    private final Cache<Sha3Hash, TransactionHusk> huskTxPool;
+    private Queue<TransactionHusk> recentTxs;
+    private final Set<Sha3Hash> unconfirmedTxs = new HashSet<>();
 
     TransactionStore(DbSource<byte[], byte[]> db) {
         this.db = db.init();
-        this.pendingPool = CacheManagerBuilder
+        this.huskTxPool = CacheManagerBuilder
                 .newCacheManagerBuilder().build(true)
                 .createCache("txPool", CacheConfigurationBuilder
                         .newCacheConfigurationBuilder(Sha3Hash.class, TransactionHusk.class,
                                 ResourcePoolsBuilder.heap(Long.MAX_VALUE)));
-        this.readCache = EvictingQueue.create(CACHE_SIZE);
+        this.recentTxs = EvictingQueue.create(CACHE_SIZE);
 
     }
 
     TransactionStore(DbSource<byte[], byte[]> db, int cacheSize) {
         this(db);
-        this.readCache = EvictingQueue.create(cacheSize);
+        this.recentTxs = EvictingQueue.create(cacheSize);
     }
 
     public Collection<TransactionHusk> getRecentTxs() {
-        return new ArrayList<>(readCache);
+        return new ArrayList<>(recentTxs);
     }
 
     @Override
     public boolean contains(Sha3Hash key) {
-        return pendingPool.containsKey(key) || db.get(key.getBytes()) != null;
+        return huskTxPool.containsKey(key) || db.get(key.getBytes()) != null;
     }
 
     @Override
@@ -83,18 +83,18 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     @Override
     public void put(Sha3Hash key, TransactionHusk tx) {
         LOCK.lock();
-        pendingPool.put(key, tx);
-        if (pendingPool.containsKey(key)) {
-            pendingKeys.add(key);
+        huskTxPool.put(key, tx);
+        if (huskTxPool.containsKey(key)) {
+            unconfirmedTxs.add(key);
         } else {
-            log.warn("unconfirmedTxs size={}, ignore key={}", pendingKeys.size(), key);
+            log.warn("unconfirmedTxs size={}, ignore key={}", unconfirmedTxs.size(), key);
         }
         LOCK.unlock();
     }
 
     @Override
     public TransactionHusk get(Sha3Hash key) {
-        TransactionHusk item = pendingPool.get(key);
+        TransactionHusk item = huskTxPool.get(key);
         try {
             return item != null ? item : new TransactionHusk(db.get(key.getBytes()));
         } catch (Exception e) {
@@ -105,7 +105,7 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     public void batch(Set<Sha3Hash> keys) {
         LOCK.lock();
         if (keys.size() > 0) {
-            Map<Sha3Hash, TransactionHusk> map = pendingPool.getAll(keys);
+            Map<Sha3Hash, TransactionHusk> map = huskTxPool.getAll(keys);
             int countOfBatchedTxs = map.size();
             for (Sha3Hash key : map.keySet()) {
                 TransactionHusk foundTx = map.get(key);
@@ -123,7 +123,7 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     }
 
     private void addReadCache(TransactionHusk tx) {
-        readCache.add(tx);
+        recentTxs.add(tx);
     }
 
     public long countOfTxs() {
@@ -131,17 +131,16 @@ public class TransactionStore implements Store<Sha3Hash, TransactionHusk> {
     }
 
     public Collection<TransactionHusk> getUnconfirmedTxs() {
-        return pendingPool.getAll(pendingKeys).values();
+        return huskTxPool.getAll(unconfirmedTxs).values();
     }
 
     private void flush(Set<Sha3Hash> keys) {
-        log.debug("pendingSize={}, readCacheSize={}", pendingKeys.size(), readCache.size());
-        pendingPool.removeAll(keys);
-        pendingKeys.removeAll(keys);
+        huskTxPool.removeAll(keys);
+        unconfirmedTxs.removeAll(keys);
     }
 
     public void updateCache(List<TransactionHusk> body) {
         this.countOfTxs += body.size();
-        this.readCache.addAll(body);
+        this.recentTxs.addAll(body);
     }
 }

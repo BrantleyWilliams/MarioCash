@@ -7,6 +7,8 @@ import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.node.controller.BlockDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 @AutoJsonRpcServiceImpl
 public class BlockApiImpl implements BlockApi {
 
+    private static final Logger log = LoggerFactory.getLogger(BlockApiImpl.class);
     private final BranchGroup branchGroup;
 
     @Autowired
@@ -25,7 +28,8 @@ public class BlockApiImpl implements BlockApi {
     public long blockNumber(String branchId) {
         try {
             return branchGroup.getLastIndex(BranchId.of(branchId)) + 1;
-        } catch (Exception exception) {
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
             throw new InternalErrorException();
         }
     }

@@ -297,7 +297,8 @@ public class TestUtils {
         FileUtil.recursiveDelete(Paths.get(dbPath));
     }
 
-    public static BlockChain createBlockChain(boolean isProduction) {
+    public static BlockChain createBlockChain(boolean isProduction) throws IllegalAccessException,
+            InstantiationException {
         return BlockChainBuilder.Builder()
                 .addGenesis(genesis)
                 .setProductMode(isProduction)

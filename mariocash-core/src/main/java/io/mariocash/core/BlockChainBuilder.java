@@ -20,7 +20,6 @@ import dev.zhihexireng.core.contract.Contract;
 import dev.zhihexireng.core.contract.ContractClassLoader;
 import dev.zhihexireng.core.contract.ContractMeta;
 import dev.zhihexireng.core.contract.Runtime;
-import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.genesis.GenesisBlock;
 import dev.zhihexireng.core.store.BlockStore;
 import dev.zhihexireng.core.store.MetaStore;
@@ -44,7 +43,7 @@ public class BlockChainBuilder {
         return this;
     }
 
-    public BlockChain build() {
+    public BlockChain build() throws InstantiationException, IllegalAccessException {
         StoreBuilder storeBuilder = new StoreBuilder(this.productMode);
 
         BlockHusk genesisBlock = genesis.getBlock();
@@ -58,14 +57,10 @@ public class BlockChainBuilder {
         return new BlockChain(genesisBlock, blockStore, txStore, metaStore, contract, runtime);
     }
 
-    private Contract getContract() {
+    private Contract getContract()
+            throws IllegalAccessException, InstantiationException {
         ContractMeta contractMeta = ContractClassLoader.loadContractById(genesis.getContractId());
-        try {
-            return contractMeta.getContract().newInstance();
-        } catch (Exception e) {
-            throw new InternalErrorException("Can't load contract id="
-                    + genesis.getContractId(), e);
-        }
+        return contractMeta.getContract().newInstance();
     }
 
     private <T> Runtime<T> getRunTime(Class<T> clazz) {
