@@ -1,14 +1,12 @@
 package dev.zhihexireng.core.net;
 
 import dev.zhihexireng.core.BranchId;
-import dev.zhihexireng.proto.NodeInfo;
 import dev.zhihexireng.proto.Pong;
 import dev.zhihexireng.proto.Proto;
 
 import java.util.List;
 
 public interface PeerClientChannel {
-    List<NodeInfo> findPeers(BranchId branchId, Peer peer);
 
     Peer getPeer();
 

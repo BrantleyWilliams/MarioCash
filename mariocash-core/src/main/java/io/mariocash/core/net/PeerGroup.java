@@ -21,6 +21,7 @@ import dev.zhihexireng.core.BranchEventListener;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.exception.DuplicatedException;
+import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.core.store.PeerStore;
 import dev.zhihexireng.core.store.StoreBuilder;
 import dev.zhihexireng.proto.Pong;
@@ -60,7 +61,7 @@ public class PeerGroup implements BranchEventListener {
         return owner;
     }
 
-    public List<String> getBootstrappingSeedList() {
+    public void bootstrapping(DiscoveryClient discoveryClient) {
         List<String> seedPeerList;
 
         if (peerTables.containsKey(BranchId.stem())
@@ -71,10 +72,27 @@ public class PeerGroup implements BranchEventListener {
         }
 
         if (seedPeerList == null || seedPeerList.isEmpty()) {
-            return new ArrayList<>();
+            return;
         }
 
-        return seedPeerList;
+        for (String ynodeUri : seedPeerList) {
+            if (ynodeUri.equals(owner.getYnodeUri())) {
+                continue;
+            }
+            Peer peer = Peer.valueOf(ynodeUri);
+            log.info("Try connecting to SEED peer = {}", peer);
+
+            try {
+                List<String> foundedPeerList =
+                        discoveryClient.findPeers(peer.getHost(), peer.getPort(), owner);
+                foundedPeerList.forEach(u -> addPeerByYnodeUri(BranchId.stem(), u));
+            } catch (Exception e) {
+                log.error("Failed connecting to SEED peer = {}", peer);
+                continue;
+            }
+            DiscoverTask discoverTask = new DiscoverTask(this, discoveryClient);
+            discoverTask.run();
+        }
     }
 
     public void addPeerTable(BranchId branchId, boolean isProduction) {
@@ -93,7 +111,7 @@ public class PeerGroup implements BranchEventListener {
         }
     }
 
-    public void addPeerByYnodeUri(BranchId branchId, String ynodeUri) {
+    void addPeerByYnodeUri(BranchId branchId, String ynodeUri) {
         addPeer(branchId, Peer.valueOf(ynodeUri));
     }
 
@@ -120,7 +138,6 @@ public class PeerGroup implements BranchEventListener {
             PeerTable peerTable = peerTables.get(branchId);
             peerTable.getAllPeers().forEach(p -> peerList.add(p.toString()));
             peerTable.addPeer(peer);
-            log.debug("Added peer => " + peer);
             return peerList;
         } else {
             log.info("Ignore branchId => {}", branchId);
@@ -188,8 +205,8 @@ public class PeerGroup implements BranchEventListener {
     public void healthCheck() {
         if (peerTableChannels.isEmpty()) {
             log.trace("Active peer is empty to health check peer");
-            //throw new NonExistObjectException("Active peer is empty to health check peer");
-            return;
+            throw new NonExistObjectException("Active peer is empty to health check peer");
+            //return;
         }
         log.debug("peerTableChannel" + peerTableChannels);
 

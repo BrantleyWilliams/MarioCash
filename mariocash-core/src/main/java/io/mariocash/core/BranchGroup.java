@@ -39,6 +39,7 @@ public class BranchGroup {
             throw new DuplicatedException(branchId.toString() + " duplicated");
         }
         blockChain.addListener(branchEventListener);
+        blockChain.init();
         branches.put(branchId, blockChain);
     }
 
@@ -58,10 +59,7 @@ public class BranchGroup {
     }
 
     public long getLastIndex(BranchId id) {
-        if (branches.containsKey(id)) {
-            return branches.get(id).getLastIndex();
-        }
-        return 0L;
+        return branches.get(id).getLastIndex();
     }
 
     public Collection<TransactionHusk> getRecentTxs(BranchId branchId) {

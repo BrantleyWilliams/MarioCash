@@ -19,7 +19,6 @@ package dev.zhihexireng.core.net;
 import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.Transaction;
-import dev.zhihexireng.proto.NodeInfo;
 import dev.zhihexireng.proto.Pong;
 import dev.zhihexireng.proto.Proto;
 
@@ -33,12 +32,6 @@ public class ChannelMock implements PeerClientChannel {
 
     ChannelMock(String ynodeUri) {
         this.peer = Peer.valueOf(ynodeUri);
-    }
-
-
-    @Override
-    public List<NodeInfo> findPeers(BranchId branchId, Peer peer) {
-        return null;
     }
 
     @Override

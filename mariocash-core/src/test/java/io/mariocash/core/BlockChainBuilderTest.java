@@ -25,14 +25,15 @@ import static org.junit.Assert.assertEquals;
 public class BlockChainBuilderTest {
 
     @Test
-    public void buildBlockChainTest() {
+    public void buildBlockChainTest() throws InstantiationException, IllegalAccessException {
         GenesisBlock genesis = TestUtils.genesis();
         BlockChain blockChain = BlockChainBuilder.Builder().addGenesis(genesis).build();
         assertEquals(blockChain.getGenesisBlock().getHash(), genesis.getBlock().getHash());
     }
 
     @Test
-    public void buildProductionBlockChainTest() {
+    public void buildProductionBlockChainTest()
+            throws InstantiationException, IllegalAccessException {
         BlockChain bc1 = TestUtils.createBlockChain(false);
         BlockChain bc2 = TestUtils.createBlockChain(true);
 

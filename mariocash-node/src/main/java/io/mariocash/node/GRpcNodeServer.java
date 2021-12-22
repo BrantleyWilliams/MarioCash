@@ -26,23 +26,17 @@ import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.TransactionHusk;
 import dev.zhihexireng.core.account.Wallet;
-import dev.zhihexireng.core.net.DiscoverTask;
 import dev.zhihexireng.core.net.NodeManager;
 import dev.zhihexireng.core.net.NodeServer;
 import dev.zhihexireng.core.net.NodeStatus;
 import dev.zhihexireng.core.net.Peer;
-import dev.zhihexireng.core.net.PeerClientChannel;
 import dev.zhihexireng.core.net.PeerGroup;
 import dev.zhihexireng.proto.BlockChainGrpc;
 import dev.zhihexireng.proto.NetProto;
-import dev.zhihexireng.proto.NodeInfo;
-import dev.zhihexireng.proto.PeerGrpc;
-import dev.zhihexireng.proto.PeerList;
 import dev.zhihexireng.proto.Ping;
 import dev.zhihexireng.proto.PingPongGrpc;
 import dev.zhihexireng.proto.Pong;
 import dev.zhihexireng.proto.Proto;
-import dev.zhihexireng.proto.RequestPeer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +88,6 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
         this.server = ServerBuilder.forPort(port)
                 .addService(new PingPongImpl())
                 .addService(new BlockChainImpl(peerGroup, branchGroup, nodeStatus))
-                .addService(new PeerImpl())
                 .build()
                 .start();
         log.info("GRPC Server started, listening on " + port);
@@ -153,33 +146,8 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
     @Override
     public void bootstrapping() {
-        nodeDiscovery();
+        peerGroup.bootstrapping(new JsonRpcDiscoverClient());
         peerGroup.getClosestPeers().forEach(p -> addPeerChannel(BranchId.stem(), p));
-    }
-
-    private void nodeDiscovery() {
-        for (String ynodeUri : peerGroup.getBootstrappingSeedList()) {
-            if (ynodeUri.equals(peerGroup.getOwner().getYnodeUri())) {
-                continue;
-            }
-            Peer peer = Peer.valueOf(ynodeUri);
-            PeerClientChannel client = new GRpcClientChannel(peer);
-            log.info("Try connecting to SEED peer = {}", peer);
-
-            try {
-                List<NodeInfo> foundedPeerList
-                        = client.findPeers(BranchId.stem(), peerGroup.getOwner());
-                for (NodeInfo nodeInfo : foundedPeerList) {
-                    peerGroup.addPeerByYnodeUri(BranchId.stem(), nodeInfo.getUrl());
-                }
-            } catch (Exception e) {
-                log.error("Failed connecting to SEED peer = {}", peer);
-                continue;
-            }
-            DiscoverTask discoverTask = new GrpcDiscoverTask(peerGroup);
-            discoverTask.run();
-            return;
-        }
     }
 
     private void addPeerChannel(BranchId branchId, Peer peer) {
@@ -268,7 +236,7 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
 
             BranchId branchId = BranchId.of(syncLimit.getBranch().toByteArray());
             Proto.TransactionList.Builder builder = Proto.TransactionList.newBuilder();
-            for (TransactionHusk husk : branchGroup.getUnconfirmedTxs(branchId)) {
+            for (TransactionHusk husk : branchGroup.getRecentTxs(branchId)) {
                 builder.addTransactions(husk.getInstance());
             }
             responseObserver.onNext(builder.build());
@@ -370,34 +338,6 @@ public class GRpcNodeServer implements NodeServer, NodeManager {
                     return true;
                 }
             };
-        }
-    }
-
-    public class GrpcDiscoverTask extends DiscoverTask {
-        public GrpcDiscoverTask(PeerGroup peerGroup) {
-            super(peerGroup);
-        }
-
-        @Override
-        public PeerClientChannel getClient(Peer peer) {
-            return new GRpcClientChannel(peer);
-        }
-    }
-
-    class PeerImpl extends PeerGrpc.PeerImplBase {
-        @Override
-        public void findPeers(RequestPeer request, StreamObserver<PeerList> responseObserver) {
-            log.debug("Request Peer => "
-                    + request.getPubKey() + "@" + request.getIp() + ":" + request.getPort());
-            Peer peer = Peer.valueOf(request.getPubKey(), request.getIp(), request.getPort());
-            List<String> list = peerGroup.getPeers(BranchId.of(request.getBranchId()), peer);
-            PeerList.Builder peerListBuilder = PeerList.newBuilder();
-            for (String url : list) {
-                peerListBuilder.addNodes(NodeInfo.newBuilder().setUrl(url).build());
-            }
-            PeerList peerList = peerListBuilder.build();
-            responseObserver.onNext(peerList);
-            responseObserver.onCompleted();
         }
     }
 

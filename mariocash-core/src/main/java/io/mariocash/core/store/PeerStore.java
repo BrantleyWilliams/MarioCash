@@ -63,7 +63,7 @@ public class PeerStore implements Store<PeerId, Peer> {
         return peers.values().stream().map(Peer::toString).collect(Collectors.toList());
     }
 
-    public int size() {
-        return peers.size();
+    public boolean isEmpty() {
+        return peers.isEmpty();
     }
 }

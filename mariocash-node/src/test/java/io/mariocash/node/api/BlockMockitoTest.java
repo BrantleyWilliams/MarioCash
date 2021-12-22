@@ -4,6 +4,7 @@ import dev.zhihexireng.TestUtils;
 import dev.zhihexireng.core.BlockHusk;
 import dev.zhihexireng.core.BranchGroup;
 import dev.zhihexireng.core.BranchId;
+import dev.zhihexireng.core.exception.InternalErrorException;
 import dev.zhihexireng.core.exception.NonExistObjectException;
 import dev.zhihexireng.node.controller.BlockDto;
 import org.junit.Before;
@@ -42,11 +43,11 @@ public class BlockMockitoTest {
 
     @Test
     public void blockNumberTest() {
-        when(branchGroupMock.getLastIndex(stem)).thenReturn(1L);
+        when(branchGroupMock.getLastIndex(stem)).thenReturn(0L);
         assertThat(blockApiImpl.blockNumber(stem.toString())).isEqualTo(blockList.size());
     }
 
-    @Test(expected = NonExistObjectException.class)
+    @Test(expected = InternalErrorException.class)
     public void blockNumberExceptionTest() {
         when(branchGroupMock.getLastIndex(stem)).thenThrow(new RuntimeException());
         blockApiImpl.blockNumber(stem.toString());

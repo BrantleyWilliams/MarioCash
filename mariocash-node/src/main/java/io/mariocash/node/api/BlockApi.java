@@ -14,8 +14,8 @@ public interface BlockApi {
      * Returns the number of most recent block.
      */
     @JsonRpcErrors({
-            @JsonRpcError(exception = NonExistObjectException.class,
-                    code = NonExistObjectException.code)})
+            @JsonRpcError(exception = InternalErrorException.class,
+                    code = InternalErrorException.code)})
     long blockNumber(@JsonRpcParam(value = "branchId") String branchId);
 
     /**

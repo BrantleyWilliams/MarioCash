@@ -1,6 +1,7 @@
 package dev.zhihexireng.node.api;
 
 import com.googlecode.jsonrpc4j.spring.AutoJsonRpcServiceImpl;
+import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.net.PeerGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,11 @@ public class PeerApiImpl implements PeerApi {
     @Autowired
     public PeerApiImpl(PeerGroup peerGroup) {
         this.peerGroup = peerGroup;
+    }
+
+    @Override
+    public List<String> getPeers(PeerDto peerDto) {
+        return peerGroup.getPeers(BranchId.of(peerDto.getBranchId()), peerDto.toPeer());
     }
 
     @Override
