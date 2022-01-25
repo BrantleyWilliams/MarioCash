@@ -16,13 +16,10 @@
 
 package dev.zhihexireng.node.controller;
 
-import dev.zhihexireng.core.BranchId;
 import dev.zhihexireng.core.net.PeerGroup;
-import dev.zhihexireng.node.api.PeerDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,12 +32,6 @@ class PeerController {
     @Autowired
     public PeerController(PeerGroup peerGroup) {
         this.peerGroup = peerGroup;
-    }
-
-    @GetMapping
-    public ResponseEntity findPeers(@ModelAttribute PeerDto peerDto) {
-        BranchId branchId = BranchId.of(peerDto.getBranchId());
-        return ResponseEntity.ok(peerGroup.getPeers(branchId, peerDto.toPeer()));
     }
 
     @GetMapping("/active")
